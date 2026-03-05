@@ -1,0 +1,1075 @@
+openapi: 3.0.3
+info:
+  title: WASAPhoto Backend
+  description: |-
+    Keep in touch with your friends by sharing photos of special moments, thanks to WASAPhoto! You can
+    upload your photos directly from your PC, and they will be visible to everyone following you.
+  contact:
+    email: deodati.2025953@studenti.uniroma1.it
+  license:
+    name: GPL 3.0
+    url: https://www.gnu.org/licenses/gpl-3.0.en.html
+  version: 1.0.0
+servers:
+  - url: "http://localhost:3000"
+tags:
+  - name: Login
+  - name: Users
+  - name: Account management
+  - name: Followers
+  - name: Post tools
+  - name: Feed tools
+
+paths:
+  /session:
+    post:
+      tags:
+        - Login
+      summary: Logs in the user
+      description: Attempts to login, if successul the user token is returned.
+      operationId: doLogin
+      requestBody:
+        description: User details
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCredentials'
+        required: true
+      responses:
+        '200':
+          description: User log-in action successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessToken'
+        '403':
+          description: Access denied
+
+  /users:
+    get:
+      tags:
+        - Users
+      summary: Search for users
+      description: Search registered users on the website
+      operationId: searchUsers
+      parameters:
+        - in: query
+          name: q
+          description: Your search query
+          required: true
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 255
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserList'
+        '400':
+          description: Empty query
+    post:
+      tags:
+        - Login
+      summary: Register to the website
+      description: Registers a new user and issues an access token after successful registration
+      operationId: register
+      requestBody:
+        description: Registration data
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequest'
+      responses:
+        '200':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessToken'
+        '400':
+          description: Weak password
+        '409':
+          description: Username already taken
+
+  /users/{userID}:
+    get:
+      tags:
+        - Users
+      summary: Profile info
+      description: |-
+        Returns information about a user (follower count, following count, profile picture (B64-encoded!) and posts)
+        You need to be logged in (provide a valid auth token) in order to view posts. Otherwise, the 'posts' property
+        will be empty
+      operationId: getUserProfile
+      parameters:
+        - in: path
+          name: userID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '200':
+          description: Operation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '400':
+          description: Bad auth token or bad userID
+        '403':
+          description: 'Forbidden: user blocked you!'
+        '404':
+          description: User not found
+
+  /users/me:
+    get:
+      tags:
+        - Users
+      summary: Profile info
+      description: |-
+        Returns information about the current user (follower count, following count, profile picture (B64-encoded!) and posts)
+        You need to be logged in (provide a valid auth token) in order to view posts. Otherwise, the 'posts' property
+        will be empty
+      operationId: getMyProfile
+      responses:
+        '200':
+          description: Operation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '400':
+          description: Bad auth token
+
+  /users/me/username:
+    put:
+      tags:
+        - Account management
+      summary: Sets the username
+      description: Changes the logged in user's username. Returns the same username on success
+      operationId: setMyUserName
+      requestBody:
+        description: Username to set
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Username'
+      responses:
+        '200':
+          description: Operation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Username'
+        '400':
+          description: Username already taken
+        '401':
+          description: Unauthenticated
+
+  /users/me/pp:
+    put:
+      tags:
+        - Account management
+      summary: Set a profile picture
+      description: |-
+        Sets the profile picture for the logged in user, the picture should be provided in
+        the request body.
+      operationId: setProPic
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '204':
+          description: Operation successful
+        '400':
+          description: Bad image
+        '401':
+          description: Unauthenticated
+
+  /users/me/followers:
+    get:
+      tags:
+        - Followers
+      summary: List followers
+      description: See who is following you
+      operationId: getFollowers
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ID'
+        '400':
+          description: Bad auth token
+        '401':
+          description: Unauthenticated
+        '403':
+          description: "Forbidden: cannot view somebody else's followers"
+
+  /users/me/followers/{followerID}:
+    delete:
+      tags:
+        - Followers
+      summary: Remove follower
+      description: Removes a follower from your followers' list
+      operationId: removeFollower
+      parameters:
+        - in: path
+          name: followerID
+          description: Follower to remove
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '204':
+          description: Successful operation
+        '400':
+          description: Bad auth token or trying to remove yourself
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Trying to edit somebody else's followers
+        '404':
+          description: User not found or not following
+
+  /users/me/blocked:
+    get:
+      tags:
+        - Followers
+      summary: List blocked
+      description: See who you've blocked
+      operationId: getBlocked
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ID'
+        '400':
+          description: Bad auth token
+        '401':
+          description: Unauthenticated
+        '403':
+          description: "Forbidden: cannot view somebody else's blocks"
+    post:
+      tags:
+        - Followers
+      summary: Block user
+      description: |-
+        Blocks annoying user. On success returns the blocked user's ID.
+        Also removes the user from your followers
+      operationId: banUser
+      requestBody:
+        description: user ID to block
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ID'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/ID'
+        '400':
+          description: Bad auth token, bad userID, already blocked or trying to block yourself
+        '401':
+          description: Unauthenticated
+        '404':
+          description: User not found
+
+  /users/me/blocked/{blockedID}:
+    delete:
+      tags:
+        - Followers
+      summary: Ublock user
+      description: unblocks a previously blocked user
+      operationId: unbanUser
+      parameters:
+        - in: path
+          name: blockedID
+          description: User to unblock
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '204':
+          description: Successful operation
+        '400':
+          description: Bad auth token, bad userID or trying to unblock yourself
+        '401':
+          description: Unauthenticated
+        '404':
+          description: User not found or not blocked
+
+  /users/me/following:
+    get:
+      tags:
+        - Followers
+      summary: List follows
+      description: See who you're following
+      operationId: getFollowing
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ID'
+        '400':
+          description: Bad auth token
+        '401':
+          description: Unauthenticated
+        '403':
+          description: "Forbidden: cannot view somebody else's follows"
+    post:
+      tags:
+        - Followers
+      summary: Follow user
+      description: Follows a user. On success returns the followed user's ID
+      operationId: followUser
+      requestBody:
+        description: user ID to follow
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ID'
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/ID'
+        '400':
+          description: bad auth token, bad userID, already following or trying to follow yourself
+        '401':
+          description: Unauthenticated
+        '403':
+          description: 'Forbidden: user blocked you!'
+        '404':
+          description: User not found
+
+  /users/me/following/{followingID}:
+    delete:
+      tags:
+        - Followers
+      summary: Unfollow user
+      description: Unfollows a user
+      operationId: unfollowUser
+      parameters:
+        - in: path
+          name: followingID
+          description: User to unfollow
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '204':
+          description: Successful operation
+        '400':
+          description: Bad auth token, bad userID or trying to unfollow yourself
+        '401':
+          description: Unauthenticated
+        '404':
+          description: User not found or not following
+
+  /feed:
+    get:
+      tags:
+        - Feed tools
+      summary: Retrieve feed
+      description: Retrieves your feed made of the posts of the accounts you follow in reverse chronological order
+      operationId: getMyStream
+      responses:
+        '200':
+          description: Operation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feed'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Trying to view somebody else's feed
+
+  /users/me/posts:
+    get:
+      tags:
+        - Post tools
+      summary: User posts
+      description: Get your posts
+      operationId: getMyPosts
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feed'
+        '400':
+          description: Bad auth token or userID, malformed post object, image too big or caption too long
+        '401':
+          description: Unauthenticated
+    post:
+      tags:
+        - Post tools
+      summary: New post
+      description: Creates a new post with the supplied image and, optionally, a description. On success returns the post ID
+      operationId: uploadPhoto
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostParams'
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/ID'
+        '400':
+          description: Malformed post object, image too big or caption too long
+        '401':
+          description: Unauthenticated
+
+  /users/me/posts/{postID}:
+    get:
+      tags:
+        - Post tools
+      summary: Post info
+      description: Get information on your post
+      operationId: getMyPost
+      parameters:
+        - in: path
+          name: postID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '200':
+          description: Operation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '401':
+          description: Unauthenticated or bad auth token
+        '403':
+          description: User blocked you!
+        '404':
+          description: Post not found
+    delete:
+      tags:
+        - Post tools
+      summary: Delete post
+      description: Deletes one of your posts. Be careful! Once deleted, posts are lost forever!
+      operationId: deletePhoto
+      parameters:
+        - in: path
+          name: postID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '204':
+          description: Operation successful
+        '401':
+          description: Unauthenticated
+        '404':
+          description: Post not found
+
+  /users/me/posts/{postID}/likes:
+    get:
+      tags:
+        - Post tools
+      summary: Get likes
+      description: Get likes on YOUR post. Nobody but the author can see who liked a post
+      operationId: getLikes
+      parameters:
+        - in: path
+          name: postID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '200':
+          description: Operation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserList'
+        '400':
+          description: Bad auth token
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden
+        '404':
+          description: Post not found
+
+  /users/{userID}/posts:
+    get:
+      tags:
+        - Post tools
+      summary: User posts
+      description: Get a user's posts
+      operationId: getUserPosts
+      parameters:
+        - in: path
+          name: userID
+          description: user ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feed'
+        '400':
+          description: Bad auth token or userID, malformed post object, image too big or caption too long
+        '401':
+          description: Unauthenticated
+
+  /users/{userID}/posts/{postID}:
+    get:
+      tags:
+        - Post tools
+      summary: Post info
+      description: Get information on one post
+      operationId: getPost
+      parameters:
+        - in: path
+          name: userID
+          description: author ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - in: path
+          name: postID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '200':
+          description: Operation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '401':
+          description: Unauthenticated or bad auth token
+        '403':
+          description: User blocked you!
+        '404':
+          description: Post not found
+
+  /users/{userID}/posts/{postID}/like:
+    get:
+      tags:
+        - Feed tools
+      summary: Get liked
+      description: Checks whether the post has been liked by current user
+      operationId: isLiked
+      parameters:
+        - in: path
+          name: userID
+          description: author ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - in: path
+          name: postID
+          description: Post ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '200':
+          description: Operation successful
+          content:
+            text/plain:
+              schema:
+                type: boolean
+        '401':
+          description: Unauthenticated or bad authentication
+        '404':
+          description: Post not found
+    put:
+      tags:
+        - Feed tools
+      summary: Like a post
+      description: Adds a like as the logged user. On success returns the new like count
+      operationId: likePhoto
+      parameters:
+        - in: path
+          name: userID
+          description: author ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - in: path
+          name: postID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '201':
+          description: Operation successful
+          content:
+            text/plain:
+              schema:
+                type: integer
+        '400':
+          description: Bad auth token or bad post ID
+        '401':
+          description: Unauthenticated
+        '403':
+          description: "Forbidden: user blocked you!"
+        '404':
+          description: Post not found
+    delete:
+      tags:
+        - Feed tools
+      summary: Unlikes a post
+      description: Removes the like as the logged user (if any). On success returns the new like count
+      operationId: unlikePhoto
+      parameters:
+        - in: path
+          name: userID
+          description: author ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - in: path
+          name: postID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '200':
+          description: Operation successful
+          content:
+            text/plain:
+              schema:
+                type: integer
+        '400':
+          description: Bad auth token, bad post ID or post wasn't liked
+        '401':
+          description: Unauthenticated
+        '404':
+          description: Post not found
+
+  /users/{userID}/posts/{postID}/comments:
+    post:
+      tags:
+        - Feed tools
+      summary: Comment on a post
+      description: Comments on a post. On success returns the new comment ID
+      operationId: commentPhoto
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              $ref: '#/components/schemas/LargeText'
+      parameters:
+        - in: path
+          name: userID
+          description: post author ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - in: path
+          name: postID
+          description: Post ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '201':
+          description: Operation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ID'
+        '400':
+          description: Empty comment or comment too long
+        '401':
+          description: Unauthenticated
+        '403':
+          description: "Cannot comment no post: poster blocked you!"
+        '404':
+          description: Post not found
+
+  /users/{userID}/posts/{postID}/comments/{commentID}:
+    get:
+      tags:
+        - Feed tools
+      summary: Get comment
+      description: Retrieves the comment associated with the supplied ID
+      operationId: getComment
+      parameters:
+        - in: path
+          name: userID
+          description: post author ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - in: path
+          name: postID
+          description: Post ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - in: path
+          name: commentID
+          description: Comment ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '200':
+          description: Operation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '401':
+          description: Unauthenticated
+        '403':
+          description: "Forbidden: author blocked you!"
+        '404':
+          description: Comment not found
+    delete:
+      tags:
+        - Feed tools
+      summary: Remove a comment
+      description: Removes the specified comment. Only the author can do that!
+      operationId: uncommentPhoto
+      parameters:
+        - in: path
+          name: userID
+          description: post author ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - in: path
+          name: postID
+          description: Post ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - in: path
+          name: commentID
+          description: Comment ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '204':
+          description: Successful operation
+        '400':
+          description: Bad comment ID
+        '401':
+          description: Unauthenticated
+        '403':
+          description: Forbidden, you cannot delete somebody else's comment!
+        '404':
+          description: Comment not found
+
+  /users/{userID}/posts/{postID}/comments/{commentID}/like:
+    get:
+      tags:
+        - Feed tools
+      summary: Is comment liked?
+      description: Checks whether the comment has been liked by you
+      operationId: isCommentLiked
+      parameters:
+        - in: path
+          name: userID
+          description: post author ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - in: path
+          name: postID
+          description: Post ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - in: path
+          name: commentID
+          description: Comment ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '200':
+          description: Operation successful
+          content:
+            text/plain:
+              schema:
+                type: boolean
+        '401':
+          description: Unauthenticated or bad authentication
+        '404':
+          description: Post not found
+    put:
+      tags:
+        - Feed tools
+      summary: Likes a comment
+      description: Adds a like to a comment as the logged user. On success returns the new like count
+      operationId: likeComment
+      parameters:
+        - in: path
+          name: userID
+          description: post author ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - in: path
+          name: postID
+          description: Post ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - in: path
+          name: commentID
+          description: Comment ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '201':
+          description: Operation successful
+          content:
+            text/plain:
+              schema:
+                type: integer
+        '400':
+          description: Bad authentication token or bad comment ID
+        '401':
+          description: Unauthenticated
+        '403':
+          description: "Cannot like: author blocked you!"
+        '404':
+          description: Comment not found
+    delete:
+      tags:
+        - Feed tools
+      summary: Unlike a comment
+      description: Removes the like from a comment as the logged user (if any). On success returns the new like count
+      operationId: unlikeComment
+      parameters:
+        - in: path
+          name: userID
+          description: post author ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - in: path
+          name: postID
+          description: Post ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - in: path
+          name: commentID
+          description: Comment ID
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '200':
+          description: Operation successful
+          content:
+            text/plain:
+              schema:
+                type: integer
+        '400':
+          description: Bad authentication token, userID or comment ID
+        '401':
+          description: Unauthenticated
+        '404':
+          description: Comment not found or comment wasn't liked
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  schemas:
+    ID:
+      type: integer
+      format: uint64
+      description: ID represents an integer used as an identifier (such as postID and commentID)
+      minimum: 0
+      example: 32156
+
+    Counter:
+      type: integer
+      format: uint64
+      description: A counter used to represent likes/comments/followers counts
+      minimum: 0
+      example: 80
+
+    Username:
+      type: string
+      example: Maria
+      pattern: 'ˆ.*?$'
+      description: Case-insensitive username
+      minLength: 3
+      maxLength: 40
+
+    Password:
+      type: string
+      example: secret1234
+      description: A user's password
+      minLength: 8
+      maxLength: 255
+
+    UserCredentials:
+      type: object
+      description: Login credentials from a login form
+      properties: 
+        username:
+          $ref: '#/components/schemas/Username'
+        password:
+          $ref: '#/components/schemas/Password'
+
+    RegistrationRequest:
+      type: object
+      description: Registration info from a registration form
+      properties:
+        username:
+          $ref: '#/components/schemas/Username'
+        password:
+          $ref: '#/components/schemas/Password'
+
+    AccessToken:
+      type: string
+      description: A user's access token (opaque)
+
+    B64Image:
+      type: string
+      format: binary
+      maxLength: 6990508    # images up to 5 MB are supported
+      description: An image encoded in base64
+
+    LargeText:
+      type: string
+      description: A large text, used in post captions and comments
+      pattern: '^.*?$'
+      minLength: 0
+      maxLength: 2048
+      example: Currently working on WASAPhoto!
+
+    Account:
+      type: object
+      description: An object representing a user account
+      properties:
+        ID:
+          $ref: '#/components/schemas/ID'
+        proPicB64:
+          $ref: '#/components/schemas/B64Image'
+        followers:
+          $ref: '#/components/schemas/Counter'
+        following:
+          $ref: '#/components/schemas/Counter'
+        posts:
+          type: array
+          description: Posts by this user as postIDs
+          items:
+            $ref: '#/components/schemas/ID'
+
+    Post:
+      type: object
+      description: An object representing a post
+      properties:
+        postID:
+          $ref: '#/components/schemas/ID'
+        author:
+          $ref: '#/components/schemas/ID'
+        pubTime:
+          type: string
+          format: date-time
+          description: Publication time for this post
+          example: 2024-05-24T15:00:00
+        imageB64:
+          $ref: '#/components/schemas/B64Image'
+        caption:
+          $ref: '#/components/schemas/LargeText'
+        likeCount:
+          $ref: '#/components/schemas/Counter'
+        comments:
+          $ref: '#/components/schemas/CommentList'
+
+    PostParams:
+      type: object
+      description: |-
+        An object containing all the required parameters
+        to ask the backend to create a new post
+      properties:
+        image:
+          $ref: '#/components/schemas/B64Image'
+        caption:
+          $ref: '#/components/schemas/LargeText'
+
+    UserList:
+      type: array
+      description: A list of users
+      items:
+        $ref: '#/components/schemas/ID'
+
+    Comment:
+      type: object
+      description: An object representing a comment
+      properties:
+        id:
+          $ref: '#/components/schemas/ID'
+        author:
+          $ref: '#/components/schemas/ID'
+        likes:
+          $ref: '#/components/schemas/Counter'
+        content:
+          $ref: '#/components/schemas/LargeText'
+
+    CommentList:
+      type: array
+      description: A list of comments (as commentIDs) belonging to a specific post
+      items:
+        $ref: '#/components/schemas/ID'
+
+    Feed:
+      type: array
+      description: |-
+        A list of posts (as postIDs) in reverse chronological order, representing a user's feed
+      items:
+        $ref: '#/components/schemas/ID'
+
+security:
+  - bearerAuth: []
