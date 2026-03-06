@@ -26,7 +26,7 @@ paths:
       tags:
         - Login
       summary: Logs in the user
-      description: Attempts to login, if successul the user token is returned.
+      description: Attempts to login, if successful the user token is returned.
       operationId: doLogin
       requestBody:
         description: User details
@@ -440,7 +440,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PostParams'
+              $ref: '#/components/schemas/PostRequest'
       responses:
         '201':
           description: Successful operation
@@ -1028,7 +1028,7 @@ components:
         comments:
           $ref: '#/components/schemas/CommentList'
 
-    PostParams:
+    PostRequest:
       type: object
       description: |-
         An object containing all the required parameters
@@ -1053,6 +1053,11 @@ components:
           $ref: '#/components/schemas/ID'
         author:
           $ref: '#/components/schemas/ID'
+        pubTime:
+          type: string
+          format: date-time
+          description: Publication time for this comment
+          example: 2024-05-24T15:00:00
         likes:
           $ref: '#/components/schemas/Counter'
         content:
