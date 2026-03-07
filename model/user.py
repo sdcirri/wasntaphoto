@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, Base64Bytes
+from pydantic import BaseModel, Field, Base64Bytes, ConfigDict
 
 from .post import Post
 
@@ -23,9 +23,10 @@ class UserAccount(BaseModel):
     """
     A user account
     """
+
     user_id: int = Field(..., ge=0)
     username: str = Field(..., min_length=3, max_length=30)
     propic: Base64Bytes
-    followers: int = Field(..., ge=0)
-    following: int = Field(..., ge=0)
+    followers_cnt: int = Field(..., ge=0)
+    following_cnt: int = Field(..., ge=0)
     posts: list[Post]

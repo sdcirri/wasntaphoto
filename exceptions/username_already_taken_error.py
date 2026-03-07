@@ -1,0 +1,3 @@
+
+class UsernameAlreadyTakenError(Exception):
+    pass
