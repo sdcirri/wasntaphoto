@@ -23,7 +23,6 @@ class UserAccount(BaseModel):
     """
     A user account
     """
-
     user_id: int = Field(..., ge=0)
     username: str = Field(..., min_length=3, max_length=30)
     propic: Base64Bytes

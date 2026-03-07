@@ -1,0 +1,3 @@
+
+class SelfFollowError(Exception):
+    pass

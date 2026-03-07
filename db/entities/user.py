@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship, column_property
-from sqlalchemy import Integer, String, select, func
+from sqlalchemy import BigInteger, String, select, func
 
 from db.engine import Base
 
@@ -12,7 +12,7 @@ class UserModel(Base):
     """
     __tablename__ = 'users'
 
-    user_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     username: Mapped[str] = mapped_column(String(40), nullable=False, unique=True)
     password: Mapped[str] = mapped_column(String(255), nullable=False)
 
@@ -32,17 +32,20 @@ class UserModel(Base):
         foreign_keys='BlockRelationship.blocker_id',
         back_populates='blocker'
     )
+    posts = relationship(
+        'PostModel',
+        back_populates='author'
+    )
 
     followers_cnt = column_property(
         select(func.count())
-        .where(FollowingRelationship.following_id == user_id)
-        .correlate_except(FollowingRelationship)
-        .scalar_subquery()
+            .where(FollowingRelationship.following_id == user_id)
+            .correlate_except(FollowingRelationship)
+            .scalar_subquery()
     )
-
     following_cnt = column_property(
         select(func.count())
-        .where(FollowingRelationship.follower_id == user_id)
-        .correlate_except(FollowingRelationship)
-        .scalar_subquery()
+            .where(FollowingRelationship.follower_id == user_id)
+            .correlate_except(FollowingRelationship)
+            .scalar_subquery()
     )

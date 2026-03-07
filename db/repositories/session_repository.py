@@ -1,17 +1,14 @@
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from db.entities import UserSessionModel
+from ..entities import UserSessionModel
 
 from .db_repository import DBRepository
 
 
-class SessionRepository(DBRepository):
-    """
-    Repository for user sessions
-    """
-
-    async def find_all(self) -> list[UserSessionModel]:
-        return list((await self.session.scalars(select(UserSessionModel))).all())
+class SessionRepository(DBRepository[UserSessionModel]):
+    def __init__(self, session: AsyncSession) -> None:
+        super().__init__(session, UserSessionModel)
 
     async def find_by_id(self, session_id: str) -> UserSessionModel | None:
         return await self.session.scalar(

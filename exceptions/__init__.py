@@ -1,3 +1,5 @@
 from .username_already_taken_error import UsernameAlreadyTakenError
 from .weak_password_error import WeakPasswordError
 from .user_not_found_error import UserNotFoundError
+from .bad_image_error import BadImageError
+from .self_follow_error import SelfFollowError

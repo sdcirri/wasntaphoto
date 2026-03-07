@@ -22,7 +22,7 @@ class Post(BaseModel):
     pub_time: datetime
     image: Base64Bytes
     caption: Optional[str] = Field(None, max_length=2048)
-    like_count: int = Field(..., ge=0)
+    like_cnt: int = Field(..., ge=0)
     comments: list[Comment]
 
 
