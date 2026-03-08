@@ -120,5 +120,5 @@ class AuthService:
             username=username,
             password=self.ph.hash(password)
         )
-        await self.user_repo.save(db_user)
+        db_user = await self.user_repo.save(db_user)
         return await self.yield_session(db_user.user_id)

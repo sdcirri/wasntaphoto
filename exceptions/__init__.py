@@ -3,3 +3,5 @@ from .weak_password_error import WeakPasswordError
 from .user_not_found_error import UserNotFoundError
 from .bad_image_error import BadImageError
 from .self_follow_error import SelfFollowError
+from .post_not_found_error import PostNotFoundError
+from .access_denied_error import AccessDeniedError

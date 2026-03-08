@@ -2,7 +2,8 @@ from sqlalchemy.orm import mapped_column, Mapped, relationship, column_property
 from sqlalchemy import BigInteger, ForeignKey, String, DateTime, select, func
 from datetime import datetime, timezone
 
-from .like_relationship import LikeRelationship
+from . import PostLikeRelationship
+
 from ..engine import Base
 
 
@@ -19,10 +20,11 @@ class PostModel(Base):
     )
 
     author = relationship('UserModel', uselist=False, back_populates='posts')
+    comments = relationship('CommentModel', back_populates='post')
 
     like_cnt = column_property(
         select(func.count())
-            .where(LikeRelationship.post_id == post_id)
-            .correlate_except(LikeRelationship)
+            .where(PostLikeRelationship.post_id == post_id)
+            .correlate_except(PostLikeRelationship)
             .scalar_subquery()
     )

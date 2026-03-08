@@ -96,7 +96,6 @@ class UserService:
             raise UserNotFoundError
         await upload2propic(user.user_id, uploaded_image)
 
-
     async def follow(self, user_id: int, to_follow_id: int) -> None:
         """
         Follows the user

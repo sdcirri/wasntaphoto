@@ -23,8 +23,11 @@ class DBRepository(ABC, Generic[T]):
     async def find_all(self) -> list[T]:
         return list((await self.session.scalars(select(self.model))).all())
 
-    async def save(self, obj: T) -> None:
-        await self.session.merge(obj)
+    async def save(self, obj: T) -> T:
+        ret = await self.session.merge(obj)
+        await self.session.flush()
+        return ret
 
     async def delete(self, obj: T) -> None:
         await self.session.delete(obj)
+        await self.session.flush()
