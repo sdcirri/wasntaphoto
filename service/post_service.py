@@ -1,10 +1,9 @@
+from sqlalchemy.exc import IntegrityError
 import asyncio
 
-from sqlalchemy.exc import IntegrityError
-
-from db.entities import PostLikeRelationship
-from db.entities.post import PostModel
 from db.repositories import UserRepository, PostRepository, PostLikeRepository
+from db.entities import PostLikeRelationship, PostModel
+
 from exceptions import UserNotFoundError, PostNotFoundError, AccessDeniedError
 from model import Post, PostRequest
 
