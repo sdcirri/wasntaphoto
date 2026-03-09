@@ -1,16 +1,19 @@
-from pydantic import BaseModel, Field, Base64Bytes, Optional
+from pydantic import BaseModel, Field, Base64Bytes, ConfigDict
 from datetime import datetime
+from typing import Optional
 
 
 class Comment(BaseModel):
     """
     A comment on a post
     """
+    model_config = ConfigDict(from_attributes=True)
+
     comment_id: int = Field(..., ge=0)
     author_id: int = Field(..., ge=0)
     pub_time: datetime
     content: str = Field(..., max_length=2048)
-    like_count: int = Field(..., ge=0)
+    like_cnt: int = Field(..., ge=0)
 
 
 class Post(BaseModel):

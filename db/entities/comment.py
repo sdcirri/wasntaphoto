@@ -1,5 +1,5 @@
-from sqlalchemy import BigInteger, ForeignKey, String, DateTime, select, func
 from sqlalchemy.orm import Mapped, mapped_column, column_property, relationship
+from sqlalchemy import BigInteger, ForeignKey, String, DateTime, select, func
 from datetime import datetime, timezone
 
 from . import CommentLikeRelationship
@@ -7,7 +7,7 @@ from . import CommentLikeRelationship
 from ..engine import Base
 
 
-class Comment(Base):
+class CommentModel(Base):
     __tablename__ = 'comments'
 
     comment_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
