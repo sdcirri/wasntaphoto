@@ -255,12 +255,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ID'
-        '400':
-          description: Bad auth token
         '401':
           description: Unauthenticated
         '403':
           description: "Forbidden: cannot view somebody else's blocks"
+
+  /users/me/blocked/{blockedID}:
     post:
       tags:
         - Followers
@@ -269,13 +269,13 @@ paths:
         Blocks annoying user. On success returns the blocked user's ID.
         Also removes the user from your followers
       operationId: banUser
-      requestBody:
-        description: user ID to block
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ID'
+      parameters:
+        - in: path
+          name: blockedID
+          description: User to unblock
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
       responses:
         '200':
           description: Successful operation
@@ -284,13 +284,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/ID'
         '400':
-          description: Bad auth token, bad userID, already blocked or trying to block yourself
+          description: Bad userID, already blocked or trying to block yourself
         '401':
           description: Unauthenticated
         '404':
           description: User not found
-
-  /users/me/blocked/{blockedID}:
     delete:
       tags:
         - Followers
@@ -308,7 +306,7 @@ paths:
         '204':
           description: Successful operation
         '400':
-          description: Bad auth token, bad userID or trying to unblock yourself
+          description: Bad userID, not blocked or trying to unblock yourself
         '401':
           description: Unauthenticated
         '404':
@@ -336,36 +334,32 @@ paths:
           description: Unauthenticated
         '403':
           description: "Forbidden: cannot view somebody else's follows"
+
+  /users/me/following/{followingID}:
     post:
       tags:
         - Followers
       summary: Follow user
-      description: Follows a user. On success returns the followed user's ID
+      description: Follows a user.
       operationId: followUser
-      requestBody:
-        description: user ID to follow
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ID'
+      parameters:
+        - in: path
+          name: followingID
+          description: User to follow
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
       responses:
-        '201':
+        '204':
           description: Successful operation
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ID'
         '400':
-          description: bad auth token, bad userID, already following or trying to follow yourself
+          description: Bad userID, already following or trying to follow yourself
         '401':
           description: Unauthenticated
         '403':
           description: 'Forbidden: user blocked you!'
         '404':
           description: User not found
-
-  /users/me/following/{followingID}:
     delete:
       tags:
         - Followers
@@ -383,7 +377,7 @@ paths:
         '204':
           description: Successful operation
         '400':
-          description: Bad auth token, bad userID or trying to unfollow yourself
+          description: Bad userID, not following or trying to unfollow yourself
         '401':
           description: Unauthenticated
         '404':
