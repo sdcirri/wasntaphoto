@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, Request, Path
+from fastapi import APIRouter, Depends, Query, Request, Path, Body
 
 from providers.services import get_auth_service, get_user_service
 from model import RegistrationRequest, UserAccount
@@ -22,7 +22,7 @@ async def register_user(request: RegistrationRequest, auth_service: AuthService 
 
 @user_router.get('/')
 async def search_users(
-        user_service: UserService = Depends(get_auth_service),
+        user_service: UserService = Depends(get_user_service),
         q: str = Query(None, alias='q', min_length=3, max_length=40),
         limit: int = Query(10, alias='limit', ge=1, le=100)
 ) -> list[int]:
@@ -37,9 +37,9 @@ async def search_users(
 
 
 @user_router.get('/{user_id}')
-async def get_user(
-        user_service: UserService = Depends(get_user_service),
-        user_id: int = Depends(get_user)
+async def get_user_account(
+        user_id: int = Path(..., ge=0),
+        user_service: UserService = Depends(get_user_service)
 ) -> UserAccount:
     """
     Gets the specified user account info
@@ -66,7 +66,7 @@ async def get_current_user(
 
 @user_router.put('/me/username')
 async def update_username(
-        username: str,
+        username: str = Body(..., min_length=3, max_length=40),
         user_service: UserService = Depends(get_user_service),
         user_id: int = Depends(get_user)
 ) -> None:
@@ -209,4 +209,4 @@ async def unblock_user(
     :param user_service: user service
     :param user_id: authenticated user ID
     """
-    await user_service.block_user(user_id, to_unblock_id)
+    await user_service.unblock_user(user_id, to_unblock_id)
