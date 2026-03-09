@@ -45,7 +45,15 @@ class UserService:
             raise UserNotFoundError
         return await self.user_to_object(db_user)
 
-    async def change_username(self, user_id: int, new_username: str) -> None:
+    async def search_users(self, q: str, limit: int) -> list[int]:
+        """
+        Search users by username
+        :param q: search query
+        :param limit: number of results to return
+        :return: a list of user IDs
+        """
+
+    async def set_username(self, user_id: int, new_username: str) -> None:
         """
         Changes the user's username
         :param user_id: user ID
@@ -59,32 +67,29 @@ class UserService:
         except IntegrityError:
             raise UsernameAlreadyTakenError
 
-    async def get_followers(self, user_id: int) -> list[UserAccount]:
+    async def get_followers(self, user_id: int) -> list[int]:
         """
         Retrieves all the followers of the user
         :param user_id: user ID
         :return: the followers list
         """
-        users = await self.user_repo.find_by_following(user_id)
-        return list(await asyncio.gather(*[self.user_to_object(u) for u in users]))
+        return [u.user_id for u in await self.user_repo.find_by_following(user_id)]
 
-    async def get_following(self, user_id: int) -> list[UserAccount]:
+    async def get_following(self, user_id: int) -> list[int]:
         """
         Retrieves all users followed by the user
         :param user_id: user ID
         :return: the followed list
         """
-        users = await self.user_repo.find_by_follower(user_id)
-        return list(await asyncio.gather(*[self.user_to_object(u) for u in users]))
+        return [u.user_id for u in await self.user_repo.find_by_follower(user_id)]
 
-    async def get_blocked(self, user_id: int) -> list[UserAccount]:
+    async def get_blocked(self, user_id: int) -> list[int]:
         """
         Retrieves all users blocked by the user
         :param user_id: user ID
         :return: the blocked list
         """
-        users = await self.user_repo.find_by_blocker(user_id)
-        return list(await asyncio.gather(*[self.user_to_object(u) for u in users]))
+        return [u.user_id for u in await self.user_repo.find_by_blocker(user_id)]
 
     async def set_propic(self, user_id: int, uploaded_image: bytes) -> None:
         """

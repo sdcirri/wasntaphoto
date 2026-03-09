@@ -1,0 +1,3 @@
+
+class BadAuthError(Exception):
+    pass

@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 from ..entities import UserModel, FollowingRelationship, BlockRelationship
 
@@ -40,4 +40,12 @@ class UserRepository(DBRepository[UserModel]):
             select(UserModel)
                 .join(BlockRelationship, BlockRelationship.blocked_id == UserModel.user_id)
                 .where(BlockRelationship.blocker_id == blocker_id)
+        )).all())
+
+    async def find_by_text_query(self, query: str, limit: int=10) -> list[int]:
+        return list((await self.session.scalars(
+            select(UserModel)
+            .where(UserModel.username.ilike(f'%{query}%'))
+            .order_by(func.similarity(UserModel.username, query).desc())
+            .limit(limit)
         )).all())

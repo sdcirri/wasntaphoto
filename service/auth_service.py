@@ -5,7 +5,7 @@ import logging
 import time
 import re
 
-from exceptions import UsernameAlreadyTakenError, WeakPasswordError
+from exceptions import UsernameAlreadyTakenError, WeakPasswordError, BadAuthError, SessionExpiredError
 
 from db.repositories import SessionRepository, UserRepository
 from db.entities import UserModel, UserSessionModel
@@ -64,15 +64,6 @@ class AuthService:
         await self.session_repo.save(session)
         return token
 
-    async def extend_session(self, session: str) -> None:
-        """
-        Extends a session token validity
-        :param session: token to be extended
-        """
-        if db_session := await self.session_repo.find_by_id(session):
-            db_session.valid_until = int(time.time()) + 604800
-            await self.session_repo.save(db_session)
-
     async def revoke_session(self, session: str) -> None:
         """
         Revokes a session token
@@ -122,3 +113,21 @@ class AuthService:
         )
         db_user = await self.user_repo.save(db_user)
         return await self.yield_session(db_user.user_id)
+
+    async def resolve_token(self, token: str) -> int:
+        """
+        Resolves a bearer token to the corresponding user ID, also
+        prolonging the validity of the token
+        :param token: bearer token
+        :return: the corresponding user ID, if the token is valid
+        """
+        if not (session := await self.session_repo.find_by_id(token)):
+            raise BadAuthError
+        if session.valid_until < time.time():
+            await self.session_repo.delete(session)
+            raise SessionExpiredError
+
+        session.valid_until = int(time.time()) + 604800
+        await self.session_repo.save(session)
+
+        return session.user_id

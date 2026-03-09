@@ -160,12 +160,8 @@ paths:
             schema:
               $ref: '#/components/schemas/Username'
       responses:
-        '200':
+        '204':
           description: Operation successful
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Username'
         '400':
           description: Username already taken
         '401':

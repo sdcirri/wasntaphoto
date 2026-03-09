@@ -15,7 +15,7 @@ I chose FastAPI over Go because it provides:
 - I am an experienced Python + FastAPI dev, so it's just easier 🙂
 
 ## Features
-- A real database (Postgres, but it's designed to be quite DB-agnostic), the original project relied on SQLite
+- A real database (PostgreSQL), the original project relied on SQLite
   - Dedicated DB role to restrict attack surface in case of compromise (no DDL nor DCL) **[TBA]**
 - **Real** authentication, opaque token-based bearer auth, session management and secure credential 
   storage (argon2 hashing for passwords)

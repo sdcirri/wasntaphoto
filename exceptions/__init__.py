@@ -6,3 +6,5 @@ from .self_follow_error import SelfFollowError
 from .post_not_found_error import PostNotFoundError
 from .access_denied_error import AccessDeniedError
 from .comment_not_found_error import CommentNotFoundError
+from .bad_auth_error import BadAuthError
+from .session_expired_error import SessionExpiredError

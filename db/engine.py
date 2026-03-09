@@ -1,5 +1,5 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine, async_sessionmaker
+from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import MetaData
 
 
@@ -7,9 +7,9 @@ class Base(DeclarativeBase):
     metadata = MetaData(schema='wasntaphoto')
 
 
-def get_engine(pg_user: str, pg_pass: str|None, pg_host: str, pg_port: int, pg_dbname: str) -> AsyncEngine:
+def get_engine(conninfo: str) -> AsyncEngine:
     return create_async_engine(
-        f'postgresql+psycopg://{pg_user}:{pg_pass or ""}@{pg_host}:{pg_port}/{pg_dbname}',
+        conninfo,
         pool_size=10,
         max_overflow=20,
         pool_pre_ping=True,
@@ -17,5 +17,5 @@ def get_engine(pg_user: str, pg_pass: str|None, pg_host: str, pg_port: int, pg_d
     )
 
 
-def AsyncSessionLocal(engine: AsyncEngine) -> sessionmaker[AsyncSession]:
-    return sessionmaker(bind=engine, expire_on_commit=False, class_=AsyncSession)
+def get_sessionmaker(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
+    return async_sessionmaker(bind=engine, expire_on_commit=False, class_=AsyncSession)

@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship, column_property
-from sqlalchemy import BigInteger, String, select, func
+from sqlalchemy import BigInteger, String, select, func, Index
 
-from db.engine import Base
+from ..engine import Base
 
 from .following_relationship import FollowingRelationship
 
@@ -11,6 +11,14 @@ class UserModel(Base):
     User DB persistence
     """
     __tablename__ = 'users'
+    __table_args__ = (
+        Index(
+            'ix_users_username_trgm',
+            'username',
+            postgresql_using='gin',
+            postgresql_ops={'username': 'gin_trgm_ops'}
+        ),
+    )
 
     user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     username: Mapped[str] = mapped_column(String(40), nullable=False, unique=True)
