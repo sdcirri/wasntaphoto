@@ -11,7 +11,7 @@ info:
     url: https://www.gnu.org/licenses/gpl-3.0.en.html
   version: 1.0.0
 servers:
-  - url: "http://localhost:3000"
+  - url: "http://localhost:8000"
 tags:
   - name: Login
   - name: Users
@@ -294,7 +294,7 @@ paths:
     delete:
       tags:
         - Followers
-      summary: Ublock user
+      summary: Unblock user
       description: unblocks a previously blocked user
       operationId: unbanUser
       parameters:
