@@ -7,7 +7,9 @@ import pytest_asyncio
 os.environ['DATABASE_URL'] = 'postgresql+psycopg://test:test@localhost/test'
 
 from app import app
+from db.entities import UserModel
 from providers.repositories import get_user_repository, get_session_repository
+from service.auth_service import AuthService
 
 
 class _FakeUserRepo:
@@ -59,8 +61,22 @@ def _override_repositories():
 
     app.dependency_overrides[get_user_repository] = lambda: user_repo
     app.dependency_overrides[get_session_repository] = lambda: session_repo
-    yield
+    yield user_repo, session_repo
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def user_factory(_override_repositories):
+    user_repo, _ = _override_repositories
+
+    async def _create_user(username: str, password: str):
+        db_user = UserModel(
+            username=username,
+            password=AuthService.ph.hash(password)
+        )
+        return await user_repo.save(db_user)
+
+    return _create_user
 
 
 @pytest_asyncio.fixture

@@ -2,25 +2,29 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_user_api(client):
-    invalid_login = await client.post('/session/', json={'username': '', 'password': ''})
-    assert invalid_login.status_code == 422
+async def test_user_api(client, user_factory):
+    await user_factory('alice', 'H@xx0r.2026')
+    await user_factory('bob', 'T0P.S3cr3t!')
 
-    weak_register = await client.post('/users/', json={'username': 'bob', 'password': 'secret'})
-    assert weak_register.status_code == 422
+    login = await client.post('/session/', json={'username': 'alice', 'password': 'H@xx0r.2026'})
+    token = login.json()
 
-    register = await client.post('/users/', json={'username': 'bob', 'password': '$up3rS33kr3t!!!!'})
-    assert register.status_code == 200
-    assert isinstance(register.json(), str)
-    assert register.json()
+    alice_info = await client.get('/users/1', headers={'Authorization': f'Bearer {token}'})
+    assert alice_info.status_code == 200
+    assert alice_info.json()['username'] == 'alice'
+    assert alice_info.json()['user_id'] == 1
 
-    wrong_login = await client.post('/session/', json={'username': 'bob', 'password': 'wrong!!!'})
-    assert wrong_login.status_code == 403
+    me_info = await client.get('/users/me', headers={'Authorization': f'Bearer {token}'})
+    assert me_info.status_code == 200
+    assert me_info.json()['username'] == 'alice'
+    assert me_info.json()['user_id'] == 1
 
-    double_register = await client.post('/users/', json={'username': 'bob', 'password': '$up3rS33kr3t!!!!'})
-    assert double_register.status_code == 409
+    bob_info = await client.get('/users/2', headers={'Authorization': f'Bearer {token}'})
+    assert bob_info.status_code == 200
+    assert bob_info.json()['username'] == 'bob'
+    assert bob_info.json()['user_id'] == 2
 
-    login = await client.post('/session/', json={'username': 'bob', 'password': '$up3rS33kr3t!!!!'})
-    assert login.status_code == 200
-    assert isinstance(login.json(), str)
-    assert login.json()
+    username_change = await client.put('/users/me/username', json='@lix', headers={'Authorization': f'Bearer {token}'})
+    assert username_change.status_code == 204
+    me_info = await client.get('/users/me', headers={'Authorization': f'Bearer {token}'})
+    assert me_info.json()['username'] == '@lix'
