@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, Request, Path, Body, status
+from fastapi import APIRouter, Depends, Query, Request, Path, Body, status, HTTPException
 
 from providers.services import get_auth_service, get_user_service
 from model import RegistrationRequest, UserAccount
@@ -10,6 +10,16 @@ from .post_api import post_router
 
 user_router = APIRouter(prefix='/users', tags=['Users'])
 user_router.include_router(post_router)
+
+
+def target_user_id(request: Request, me_id: int = Depends(get_user)) -> int:
+    raw = request.path_params.get('user_id')
+    if raw in (None, 'me'):
+        return me_id
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=422)
 
 
 @user_router.post('/')
@@ -41,28 +51,14 @@ async def search_users(
 
 @user_router.get('/{user_id}')
 async def get_user_account(
-        user_id: int = Path(..., ge=0),
+        user_id: int = Depends(target_user_id),
         user_service: UserService = Depends(get_user_service)
 ) -> UserAccount:
     """
     Gets the specified user account info
     :param user_service: user service
-    :param user_id: user ID
+    :param user_id: user ID (can also be 'me')
     :return: the current user account info, if it exists
-    """
-    return await user_service.get_user(user_id)
-
-
-@user_router.get('/me')
-async def get_current_user(
-        user_service: UserService = Depends(get_user_service),
-        user_id: int = Depends(get_user)
-) -> UserAccount:
-    """
-    Gets the current user account info
-    :param user_service: user service
-    :param user_id: authenticated user ID
-    :return: the current user account info
     """
     return await user_service.get_user(user_id)
 

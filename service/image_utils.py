@@ -1,14 +1,17 @@
 from PIL import Image, UnidentifiedImageError
 from io import BytesIO
 import aiofiles
-import os.path
+import os
 
 from exceptions import BadImageError
 
 
-POST_STORAGE_ROOT = 'posts/'
-PROPIC_STORAGE_ROOT = 'propics/'
-DEFAULT_PROPIC = 'propics/default.jpg'
+STORAGE_ROOT = os.getenv('WASA_STORAGE_ROOT', '/tmp')
+POST_STORAGE_ROOT = os.path.join(STORAGE_ROOT, 'posts/')
+PROPIC_STORAGE_ROOT = os.path.join(STORAGE_ROOT, 'propics/')
+DEFAULT_PROPIC = os.path.join(STORAGE_ROOT, 'propics/default.jpg')
+os.makedirs(POST_STORAGE_ROOT, exist_ok=True)
+os.makedirs(PROPIC_STORAGE_ROOT, exist_ok=True)
 
 
 async def get_propic_bytes(user_id: int) -> bytes:
@@ -21,7 +24,7 @@ async def get_propic_bytes(user_id: int) -> bytes:
         async with aiofiles.open(os.path.join(PROPIC_STORAGE_ROOT, f'{user_id}.jpg'), 'rb') as f:
             return await f.read()
     except FileNotFoundError:
-        async with aiofiles.open(os.path.join(DEFAULT_PROPIC), 'rb') as f:
+        async with aiofiles.open(DEFAULT_PROPIC, 'rb') as f:
             return await f.read()
 
 
@@ -29,10 +32,10 @@ async def get_post_bytes(post_id: int) -> bytes:
     """
     Gets the post attached image.
     :param post_id: post ID
-    :return: the propic bytes
+    :return: the post image bytes
     """
     try:
-        async with aiofiles.open(os.path.join(PROPIC_STORAGE_ROOT, f'{post_id}.jpg'), 'rb') as f:
+        async with aiofiles.open(os.path.join(POST_STORAGE_ROOT, f'{post_id}.jpg'), 'rb') as f:
             return await f.read()
     except FileNotFoundError:
         raise RuntimeError('Post has no attached image!')
@@ -47,10 +50,10 @@ def upload2jpeg(uploaded_image: bytes, quality: int) -> bytes:
     """
     with BytesIO() as buf:
         try:
-            img = Image.open(BytesIO(uploaded_image))
+            img = Image.open(BytesIO(uploaded_image)).convert('RGB')
             img.save(buf, format='JPEG', quality=quality)
             return buf.getvalue()
-        except UnidentifiedImageError:
+        except (UnidentifiedImageError, OSError):
             raise BadImageError
 
 
