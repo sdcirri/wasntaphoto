@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, Query, Request, Path, Body
 
-from providers.services import get_auth_service, get_user_service, get_post_service
-from service import AuthService, UserService, PostService
-from model import RegistrationRequest, UserAccount, Post
+from providers.services import get_auth_service, get_user_service
+from model import RegistrationRequest, UserAccount
+from service import AuthService, UserService
 from security.bearer_auth import get_user
 
 from .posts_api import posts_router
