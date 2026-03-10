@@ -5,11 +5,11 @@ from model import RegistrationRequest, UserAccount
 from service import AuthService, UserService
 from security.bearer_auth import get_user
 
-from .posts_api import posts_router
+from .post_api import post_router
 
 
 user_router = APIRouter(prefix='/users', tags=['Users'])
-user_router.include_router(posts_router)
+user_router.include_router(post_router)
 
 
 @user_router.post('/')

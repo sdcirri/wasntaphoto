@@ -5,8 +5,11 @@ from security.bearer_auth import get_user
 from model import Post, PostRequest
 from service import PostService
 
+from .comment_api import comment_router
 
-posts_router = APIRouter(prefix='/{author_id}/posts', tags=['Posts'])
+
+post_router = APIRouter(prefix='/{author_id}/posts', tags=['Posts'])
+post_router.include_router(comment_router)
 
 
 def target_user_id(request: Request, me_id: int = Depends(get_user)) -> int:
@@ -19,7 +22,7 @@ def target_user_id(request: Request, me_id: int = Depends(get_user)) -> int:
         raise HTTPException(status_code=422)
 
 
-@posts_router.get('/{post_id}')
+@post_router.get('/{post_id}')
 async def get_post(
         post_id: int = Path(..., ge=0),
         post_service: PostService = Depends(get_post_service),
@@ -35,7 +38,7 @@ async def get_post(
     return await post_service.get_post(post_id)
 
 
-@posts_router.get('/{post_id}/like')
+@post_router.get('/{post_id}/like')
 async def is_liked(
         post_id: int = Path(..., ge=0),
         post_service: PostService = Depends(get_post_service),
@@ -51,7 +54,7 @@ async def is_liked(
     return await post_service.is_liked(user_id, post_id)
 
 
-@posts_router.put('/{post_id}/like')
+@post_router.put('/{post_id}/like')
 async def like_post(
         post_id: int = Path(..., ge=0),
         post_service: PostService = Depends(get_post_service),
@@ -66,7 +69,7 @@ async def like_post(
     await post_service.like_post(user_id, post_id)
 
 
-@posts_router.delete('/{post_id}/like')
+@post_router.delete('/{post_id}/like')
 async def unlike_post(
         post_id: int = Path(..., ge=0),
         post_service: PostService = Depends(get_post_service),
@@ -81,7 +84,7 @@ async def unlike_post(
     await post_service.unlike_post(user_id, post_id)
 
 
-@posts_router.post('/')
+@post_router.post('/')
 async def new_post(
         request: PostRequest,
         target_id: int = Depends(target_user_id),
@@ -101,7 +104,7 @@ async def new_post(
     return await post_service.new_post(user_id, request)
 
 
-@posts_router.get('/{post_id}/likes')
+@post_router.get('/{post_id}/likes')
 async def get_likes(
         target_id: int = Depends(target_user_id),
         post_id: int = Path(..., ge=0),
@@ -121,7 +124,7 @@ async def get_likes(
     return await post_service.get_post_likes(user_id, post_id)
 
 
-@posts_router.delete('/{post_id}')
+@post_router.delete('/{post_id}')
 async def delete_post(
         target_id: int = Depends(target_user_id),
         post_id: int = Path(..., ge=0),
