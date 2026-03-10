@@ -49,7 +49,7 @@ async def is_liked(
     :param post_id: post ID
     :param post_service: post service
     :param user_id: authenticated user ID
-    :return: the requested post
+    :return: whether the post was liked by the current user
     """
     return await post_service.is_liked(user_id, post_id)
 

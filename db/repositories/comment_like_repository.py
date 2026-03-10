@@ -12,3 +12,8 @@ class CommentLikeRepository(DBRepository[CommentLikeRelationship]):
             CommentLikeRelationship.user_id == user_id,
             CommentLikeRelationship.comment_id == comment_id
         ))
+
+    async def find_by_comment_id(self, comment_id: int) -> list[CommentLikeRelationship]:
+        return list((await self.session.scalars(
+            select(CommentLikeRelationship).where(CommentLikeRelationship.comment_id == comment_id)
+        )).all())

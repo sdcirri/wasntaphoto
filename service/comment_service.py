@@ -25,17 +25,32 @@ class CommentService:
             raise CommentNotFoundError
         return Comment.model_validate(db_comment)
 
-    async def create_comment(self, user_id: int, post_id: int, content: str) -> Comment:
+    async def create_comment(self, user_id: int, post_id: int, content: str) -> int:
         """
         Create a new comment
         :param user_id: user ID
         :param post_id: post ID
         :param content: comment content
-        :return: the newly created comment
+        :return: the newly created comment ID
         """
-        db_comment = CommentModel(user_id=user_id, post_id=post_id, content=content)
-        await self.comment_repo.save(db_comment)
-        return Comment.model_validate(db_comment)
+        db_comment = await self.comment_repo.save(
+            CommentModel(user_id=user_id, post_id=post_id, content=content)
+        )
+        return db_comment.comment_id
+
+    async def is_comment_liked(self, user_id: int, comment_id: int) -> bool:
+        """
+        Check if a comment is liked
+        :param user_id: user ID
+        :param comment_id: comment ID
+        :return: whether the comment is liked by the user
+        """
+        if not await self.comment_repo.find_by_id(comment_id):
+            raise CommentNotFoundError
+        return user_id in [
+            like.user_id
+            for like in await self.like_repo.find_by_comment_id(comment_id)
+        ]
 
     async def like_comment(self, user_id: int, comment_id: int) -> None:
         """

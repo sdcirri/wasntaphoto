@@ -648,7 +648,7 @@ paths:
           schema:
             $ref: '#/components/schemas/ID'
       responses:
-        '201':
+        '200':
           description: Operation successful
           content:
             application/json:
