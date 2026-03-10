@@ -37,31 +37,25 @@ class CommentService:
         await self.comment_repo.save(db_comment)
         return Comment.model_validate(db_comment)
 
-    async def like_comment(self, user_id: int, comment_id: int) -> int:
+    async def like_comment(self, user_id: int, comment_id: int) -> None:
         """
         Like a comment
         :param user_id: user ID
         :param comment_id: comment ID
-        :return: the new like count for the comment
         """
         if not await self.comment_repo.find_by_id(comment_id):
             raise CommentNotFoundError
-        _, db_comment = await asyncio.gather()
         await self.like_repo.save(CommentLikeRelationship(user_id=user_id, comment_id=comment_id))
-        db_comment = await self.comment_repo.find_by_id(comment_id)
-        return db_comment.like_cnt
 
-    async def unlike_comment(self, user_id: int, comment_id: int) -> int:
+    async def unlike_comment(self, user_id: int, comment_id: int) -> None:
         """
         unlike a comment
         :param user_id: user ID
         :param comment_id: comment ID
-        :return: the new like count for the comment
         """
         await self.like_repo.delete(CommentLikeRelationship(user_id=user_id, comment_id=comment_id))
-        if not (db_comment := await self.comment_repo.find_by_id(comment_id)):
+        if not await self.comment_repo.find_by_id(comment_id):
             raise CommentNotFoundError
-        return db_comment.like_cnt
 
     async def delete_comment(self, user_id: int, comment_id: int) -> None:
         """

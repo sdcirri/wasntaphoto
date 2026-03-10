@@ -89,12 +89,11 @@ class PostService:
             raise UserNotFoundError
         return await self.post_repo.find_feed(user_id, limit, limit * page)
 
-    async def like_post(self, user_id: int, post_id: int) -> int:
+    async def like_post(self, user_id: int, post_id: int) -> None:
         """
         Likes a post
         :param user_id: user ID
         :param post_id: post ID
-        :return: the new like count of the post
         """
         if not await self.post_repo.find_by_id(post_id):
             raise PostNotFoundError
@@ -102,20 +101,16 @@ class PostService:
             await self.like_repo.save(PostLikeRelationship(user_id=user_id, post_id=post_id))
         except IntegrityError:
             raise UserNotFoundError
-        post = await self.post_repo.find_by_id(post_id)
-        return post.like_cnt
 
-    async def unlike_post(self, user_id: int, post_id: int) -> int:
+    async def unlike_post(self, user_id: int, post_id: int) -> None:
         """
         Unlikes a post
         :param user_id: user ID
         :param post_id: post ID
-        :return: the new like count of the post
         """
         await self.like_repo.delete(PostLikeRelationship(user_id=user_id, post_id=post_id))
-        if not (post := await self.post_repo.find_by_id(post_id)):
+        if not await self.post_repo.find_by_id(post_id):
             raise PostNotFoundError
-        return post.like_cnt
 
     async def get_post_likes(self, user_id: int, post_id: int) -> list[int]:
         """
@@ -129,6 +124,18 @@ class PostService:
         if user_id != post.author_id:
             raise AccessDeniedError
         return [
+            like.user_id
+            for like in await self.like_repo.find_by_post_id(post_id)
+        ]
+
+    async def is_liked(self, user_id: int, post_id: int) -> bool:
+        """
+        Checks whether a post was liked by the user
+        :param user_id: user ID
+        :param post_id: post ID
+        :return: whether the post was liked by the user or not
+        """
+        return user_id in [
             like.user_id
             for like in await self.like_repo.find_by_post_id(post_id)
         ]

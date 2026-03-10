@@ -403,23 +403,6 @@ paths:
           description: Trying to view somebody else's feed
 
   /users/me/posts:
-    get:
-      tags:
-        - Post tools
-      summary: User posts
-      description: Get your posts
-      operationId: getMyPosts
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Feed'
-        '400':
-          description: Bad auth token or userID, malformed post object, image too big or caption too long
-        '401':
-          description: Unauthenticated
     post:
       tags:
         - Post tools
@@ -518,32 +501,6 @@ paths:
         '404':
           description: Post not found
 
-  /users/{userID}/posts:
-    get:
-      tags:
-        - Post tools
-      summary: User posts
-      description: Get a user's posts
-      operationId: getUserPosts
-      parameters:
-        - in: path
-          name: userID
-          description: user ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Feed'
-        '400':
-          description: Bad auth token or userID, malformed post object, image too big or caption too long
-        '401':
-          description: Unauthenticated
-
   /users/{userID}/posts/{postID}:
     get:
       tags:
@@ -601,7 +558,7 @@ paths:
         '200':
           description: Operation successful
           content:
-            text/plain:
+            application/json:
               schema:
                 type: boolean
         '401':
@@ -612,7 +569,7 @@ paths:
       tags:
         - Feed tools
       summary: Like a post
-      description: Adds a like as the logged user. On success returns the new like count
+      description: Adds a like as the logged user
       operationId: likePhoto
       parameters:
         - in: path
@@ -627,12 +584,8 @@ paths:
           schema:
             $ref: '#/components/schemas/ID'
       responses:
-        '201':
+        '204':
           description: Operation successful
-          content:
-            text/plain:
-              schema:
-                type: integer
         '400':
           description: Bad auth token or bad post ID
         '401':
@@ -645,7 +598,7 @@ paths:
       tags:
         - Feed tools
       summary: Unlikes a post
-      description: Removes the like as the logged user (if any). On success returns the new like count
+      description: Removes the like as the logged user (if any)
       operationId: unlikePhoto
       parameters:
         - in: path
@@ -660,12 +613,8 @@ paths:
           schema:
             $ref: '#/components/schemas/ID'
       responses:
-        '200':
+        '204':
           description: Operation successful
-          content:
-            text/plain:
-              schema:
-                type: integer
         '400':
           description: Bad auth token, bad post ID or post wasn't liked
         '401':
@@ -820,7 +769,7 @@ paths:
         '200':
           description: Operation successful
           content:
-            text/plain:
+            application/json:
               schema:
                 type: boolean
         '401':
@@ -831,7 +780,7 @@ paths:
       tags:
         - Feed tools
       summary: Likes a comment
-      description: Adds a like to a comment as the logged user. On success returns the new like count
+      description: Adds a like to a comment as the logged user
       operationId: likeComment
       parameters:
         - in: path
@@ -853,12 +802,8 @@ paths:
           schema:
             $ref: '#/components/schemas/ID'
       responses:
-        '201':
+        '204':
           description: Operation successful
-          content:
-            text/plain:
-              schema:
-                type: integer
         '400':
           description: Bad authentication token or bad comment ID
         '401':
@@ -871,7 +816,7 @@ paths:
       tags:
         - Feed tools
       summary: Unlike a comment
-      description: Removes the like from a comment as the logged user (if any). On success returns the new like count
+      description: Removes the like from a comment as the logged user (if any)
       operationId: unlikeComment
       parameters:
         - in: path
@@ -893,12 +838,8 @@ paths:
           schema:
             $ref: '#/components/schemas/ID'
       responses:
-        '200':
+        '204':
           description: Operation successful
-          content:
-            text/plain:
-              schema:
-                type: integer
         '400':
           description: Bad authentication token, userID or comment ID
         '401':

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, Query, Request, Path, Body
 
-from providers.services import get_auth_service, get_user_service
-from model import RegistrationRequest, UserAccount
-from service import AuthService, UserService
+from providers.services import get_auth_service, get_user_service, get_post_service
+from model import RegistrationRequest, UserAccount, Post, PostRequest
+from service import AuthService, UserService, PostService
 from security.bearer_auth import get_user
 
 
@@ -48,6 +48,68 @@ async def get_user_account(
     :return: the current user account info, if it exists
     """
     return await user_service.get_user(user_id)
+
+
+@user_router.get('/{user_id}/posts/{post_id}')
+async def get_post(
+        post_id: int = Path(..., ge=0),
+        post_service: PostService = Depends(get_post_service),
+        _: int = Depends(get_user)
+) -> Post:
+    """
+    Get a post
+    :param post_id: post ID
+    :param post_service: post service
+    :param _: authenticated user ID (unused)
+    :return: the requested post
+    """
+    return await post_service.get_post(post_id)
+
+
+@user_router.get('/{user_id}/posts/{post_id}/like')
+async def is_liked(
+        post_id: int = Path(..., ge=0),
+        post_service: PostService = Depends(get_post_service),
+        user_id: int = Depends(get_user)
+) -> bool:
+    """
+    Gets whether the post was liked by the current user
+    :param post_id: post ID
+    :param post_service: post service
+    :param user_id: authenticated user ID
+    :return: the requested post
+    """
+    return await post_service.is_liked(user_id, post_id)
+
+
+@user_router.put('/{user_id}/posts/{post_id}/like')
+async def like_post(
+        post_id: int = Path(..., ge=0),
+        post_service: PostService = Depends(get_post_service),
+        user_id: int = Depends(get_user)
+) -> None:
+    """
+    Likes a post
+    :param post_id: post ID
+    :param post_service: post service
+    :param user_id: authenticated user ID
+    """
+    await post_service.like_post(user_id, post_id)
+
+
+@user_router.delete('/{user_id}/posts/{post_id}/like')
+async def unlike_post(
+        post_id: int = Path(..., ge=0),
+        post_service: PostService = Depends(get_post_service),
+        user_id: int = Depends(get_user)
+) -> None:
+    """
+    Unlikes a post
+    :param post_id: post ID
+    :param post_service: post service
+    :param user_id: authenticated user ID
+    """
+    await post_service.unlike_post(user_id, post_id)
 
 
 @user_router.get('/me')
@@ -210,3 +272,66 @@ async def unblock_user(
     :param user_id: authenticated user ID
     """
     await user_service.unblock_user(user_id, to_unblock_id)
+
+
+@user_router.post('/me/posts')
+async def new_post(
+        request: PostRequest,
+        post_service: PostService = Depends(get_post_service),
+        user_id: int = Depends(get_user)
+) -> Post:
+    """
+    Get a post
+    :param request: post creation request
+    :param post_service: post service
+    :param user_id: authenticated user ID
+    :return: the requested post
+    """
+    return await post_service.new_post(user_id, request)
+
+
+@user_router.get('/me/posts/{post_id}')
+async def get_post(
+        post_id: int = Path(..., ge=0),
+        post_service: PostService = Depends(get_post_service),
+        _: int = Depends(get_user)
+) -> Post:
+    """
+    Get a post
+    :param post_id: post ID
+    :param post_service: post service
+    :param _: authenticated user ID (unused)
+    :return: the requested post
+    """
+    return await post_service.get_post(post_id)
+
+
+@user_router.get('/me/posts/{post_id}/likes')
+async def get_likes(
+        post_id: int = Path(..., ge=0),
+        post_service: PostService = Depends(get_post_service),
+        user_id: int = Depends(get_user)
+) -> list[int]:
+    """
+    Get your posts likes
+    :param post_id: post ID
+    :param post_service: post service
+    :param user_id: authenticated user ID
+    :return: list of users who liked the post
+    """
+    return await post_service.get_post_likes(user_id, post_id)
+
+
+@user_router.delete('/me/posts/{post_id}')
+async def delete_post(
+        post_id: int = Path(..., ge=0),
+        post_service: PostService = Depends(get_post_service),
+        user_id: int = Depends(get_user)
+) -> None:
+    """
+    Deletes a post
+    :param post_id: post ID
+    :param post_service: post service
+    :param user_id: authenticated user ID
+    """
+    await post_service.delete_post(post_id, user_id)
