@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, Request, Path, Body
+from fastapi import APIRouter, Depends, Query, Request, Path, Body, status
 
 from providers.services import get_auth_service, get_user_service
 from model import RegistrationRequest, UserAccount
@@ -67,7 +67,7 @@ async def get_current_user(
     return await user_service.get_user(user_id)
 
 
-@user_router.put('/me/username')
+@user_router.put('/me/username', status_code=status.HTTP_204_NO_CONTENT)
 async def update_username(
         username: str = Body(..., min_length=3, max_length=40),
         user_service: UserService = Depends(get_user_service),
@@ -82,7 +82,7 @@ async def update_username(
     await user_service.set_username(user_id, username)
 
 
-@user_router.put('/me/pp')
+@user_router.put('/me/pp', status_code=status.HTTP_204_NO_CONTENT)
 async def update_propic(
         request: Request,
         user_service: UserService = Depends(get_user_service),
@@ -112,7 +112,7 @@ async def get_followers(
     return await user_service.get_followers(user_id)
 
 
-@user_router.delete('/me/followers/{to_remove_id}')
+@user_router.delete('/me/followers/{to_remove_id}', status_code=status.HTTP_204_NO_CONTENT)
 async def remove_follower(
         to_remove_id: int = Path(..., ge=0),
         user_service: UserService = Depends(get_user_service),
@@ -156,7 +156,7 @@ async def follow_user(
     await user_service.follow(user_id, to_follow_id)
 
 
-@user_router.delete('/me/following/{to_unfollow_id}')
+@user_router.delete('/me/following/{to_unfollow_id}', status_code=status.HTTP_204_NO_CONTENT)
 async def unfollow_user(
         to_unfollow_id: int = Path(..., ge=0),
         user_service: UserService = Depends(get_user_service),
@@ -200,7 +200,7 @@ async def block_user(
     await user_service.block_user(user_id, to_block_id)
 
 
-@user_router.delete('/me/blocked/{to_unblock_id}')
+@user_router.delete('/me/blocked/{to_unblock_id}', status_code=status.HTTP_204_NO_CONTENT)
 async def unblock_user(
         to_unblock_id: int = Path(..., ge=0),
         user_service: UserService = Depends(get_user_service),

@@ -1,4 +1,4 @@
-from fastapi import Request, Depends, APIRouter, Path, HTTPException
+from fastapi import Request, Depends, APIRouter, Path, HTTPException, status
 
 from providers.services import get_post_service
 from security.bearer_auth import get_user
@@ -54,7 +54,7 @@ async def is_liked(
     return await post_service.is_liked(user_id, post_id)
 
 
-@post_router.put('/{post_id}/like')
+@post_router.put('/{post_id}/like', status_code=status.HTTP_204_NO_CONTENT)
 async def like_post(
         post_id: int = Path(..., ge=0),
         post_service: PostService = Depends(get_post_service),
@@ -69,7 +69,7 @@ async def like_post(
     await post_service.like_post(user_id, post_id)
 
 
-@post_router.delete('/{post_id}/like')
+@post_router.delete('/{post_id}/like', status_code=status.HTTP_204_NO_CONTENT)
 async def unlike_post(
         post_id: int = Path(..., ge=0),
         post_service: PostService = Depends(get_post_service),
@@ -124,7 +124,7 @@ async def get_likes(
     return await post_service.get_post_likes(user_id, post_id)
 
 
-@post_router.delete('/{post_id}')
+@post_router.delete('/{post_id}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_post(
         target_id: int = Depends(target_user_id),
         post_id: int = Path(..., ge=0),

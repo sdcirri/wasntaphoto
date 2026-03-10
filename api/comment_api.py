@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Path, Body, Depends
+from fastapi import APIRouter, Path, Body, Depends, status
 
 from providers.services import get_comment_service
 from security.bearer_auth import get_user
@@ -43,7 +43,7 @@ async def get_comment(
     return await comment_service.get_comment(comment_id)
 
 
-@comment_router.delete('/{comment_id}')
+@comment_router.delete('/{comment_id}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_comment(
         comment_id: int = Path(..., ge=0),
         comment_service: CommentService = Depends(get_comment_service),
@@ -74,7 +74,7 @@ async def is_liked(
     return await comment_service.is_comment_liked(user_id, comment_id)
 
 
-@comment_router.put('/{comment_id}/like')
+@comment_router.put('/{comment_id}/like', status_code=status.HTTP_204_NO_CONTENT)
 async def like_comment(
         comment_id: int = Path(..., ge=0),
         comment_service: CommentService = Depends(get_comment_service),
@@ -89,7 +89,7 @@ async def like_comment(
     await comment_service.like_comment(user_id, comment_id)
 
 
-@comment_router.delete('/{comment_id}/like')
+@comment_router.delete('/{comment_id}/like', status_code=status.HTTP_204_NO_CONTENT)
 async def unlike_comment(
         comment_id: int = Path(..., ge=0),
         comment_service: CommentService = Depends(get_comment_service),
