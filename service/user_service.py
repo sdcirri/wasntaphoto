@@ -7,7 +7,7 @@ from db.entities import UserModel, FollowingRelationship, BlockRelationship
 from exceptions import UserNotFoundError, UsernameAlreadyTakenError, SelfFollowError
 from model import UserAccount
 
-from image_utils import get_propic_bytes, upload2propic
+from .image_utils import get_propic_bytes, upload2propic
 
 
 class UserService:

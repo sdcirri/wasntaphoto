@@ -8,3 +8,4 @@ from .access_denied_error import AccessDeniedError
 from .comment_not_found_error import CommentNotFoundError
 from .bad_auth_error import BadAuthError
 from .session_expired_error import SessionExpiredError
+from .failed_login_error import FailedLoginError

@@ -2,7 +2,7 @@ from sqlalchemy.orm import Mapped, mapped_column, column_property, relationship
 from sqlalchemy import BigInteger, ForeignKey, String, DateTime, select, func
 from datetime import datetime, timezone
 
-from . import CommentLikeRelationship
+from .comment_like_relationship import CommentLikeRelationship
 
 from ..engine import Base
 

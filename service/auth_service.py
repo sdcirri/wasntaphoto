@@ -5,7 +5,7 @@ import logging
 import time
 import re
 
-from exceptions import UsernameAlreadyTakenError, WeakPasswordError, BadAuthError, SessionExpiredError
+from exceptions import UsernameAlreadyTakenError, WeakPasswordError, BadAuthError, SessionExpiredError, FailedLoginError
 
 from db.repositories import SessionRepository, UserRepository
 from db.entities import UserModel, UserSessionModel
@@ -53,12 +53,12 @@ class AuthService:
         :param user_id: user to be authorized
         :return: the token
         """
-        while (token := secrets.token_urlsafe(32)) in self.session_repo.find_all():
+        while (token := secrets.token_urlsafe(32)) in await self.session_repo.find_all():
             pass
 
         session = UserSessionModel(
             user_id=user_id,
-            token=token,
+            session_id=token,
             valid_until=int(time.time()) + 604800   # 1 week
         )
         await self.session_repo.save(session)
@@ -72,23 +72,23 @@ class AuthService:
         if db_session := await self.session_repo.find_by_id(session):
             await self.session_repo.delete(db_session)
 
-    async def login(self, username: str, password: str) -> str | None:
+    async def login(self, username: str, password: str) -> str:
         """
         Validates user credentials and returns a bearer token
         for the requested user on valid credentials
         :param username: username
         :param password: password
-        :return: the bearer token if the credentials are valid, None otherwise
+        :return: the bearer token if the credentials are valid
         """
         if not (db_user := await self.user_repo.find_by_username(username)):
-            return None
+            raise FailedLoginError
         try:
             self.ph.verify(db_user.password, password)
         except VerifyMismatchError:
-            return None
+            raise FailedLoginError
         except (VerificationError, InvalidHashError):
             self.logger.getChild('login').critical(f'Malformed creds for user ID#{db_user.user_id}: "{db_user.password}"')
-            return None
+            raise FailedLoginError
         return await self.yield_session(db_user.user_id)
 
     async def register(self, username: str, password: str) -> str:
@@ -101,7 +101,7 @@ class AuthService:
         :param password: chosen password
         :return: the new user's access token
         """
-        if self.user_repo.find_by_username(username):
+        if await self.user_repo.find_by_username(username):
             raise UsernameAlreadyTakenError
 
         if not self.strong_password(password):

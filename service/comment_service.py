@@ -1,5 +1,3 @@
-import asyncio
-
 from db.repositories import CommentRepository, CommentLikeRepository
 from db.entities import CommentModel, CommentLikeRelationship
 

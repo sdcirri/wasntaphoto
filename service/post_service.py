@@ -7,7 +7,7 @@ from db.entities import PostLikeRelationship, PostModel
 from exceptions import UserNotFoundError, PostNotFoundError, AccessDeniedError
 from model import Post, PostRequest
 
-from image_utils import get_post_bytes, upload2post
+from .image_utils import get_post_bytes, upload2post
 
 
 class PostService:
