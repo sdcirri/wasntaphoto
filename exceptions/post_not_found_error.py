@@ -1,3 +1,7 @@
 
-class PostNotFoundError(Exception):
-    pass
+from .app_error import AppError
+
+
+class PostNotFoundError(AppError):
+    status_code = 404
+    detail = 'Post not found'

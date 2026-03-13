@@ -1,3 +1,4 @@
+from .app_error import AppError
 from .username_already_taken_error import UsernameAlreadyTakenError
 from .weak_password_error import WeakPasswordError
 from .user_not_found_error import UserNotFoundError
