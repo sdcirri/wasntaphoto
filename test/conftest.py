@@ -5,6 +5,7 @@ from sqlalchemy.pool import StaticPool
 
 from typing import Coroutine, Any, Callable, AsyncGenerator
 from difflib import SequenceMatcher
+from PIL import Image
 import pytest_asyncio
 import httpx
 import os
@@ -50,13 +51,8 @@ def _configure_sqlite(dbapi_connection, _connection_record) -> None:
 
 
 with open(DEFAULT_PROPIC, 'wb') as f:
-    # One pixel JPEG.
-    f.write(bytes.fromhex(
-        'ffd8ffe000104a46494600010100000100010000'
-        'ffda0008010100003f00'
-        'ffd9'
-    ))
-
+    # One pixel JPEG
+    Image.new('RGB', (1, 1), (255, 0, 0)).save(f, format="JPEG")
 
 @pytest_asyncio.fixture(autouse=True)
 async def _sqlite_database() -> AsyncGenerator[None, None]:

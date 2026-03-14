@@ -1,5 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 import asyncio
+import base64
 
 from db.repositories import UserRepository, PostRepository, PostLikeRepository
 from db.entities import PostLikeRelationship, PostModel
@@ -7,7 +8,7 @@ from db.entities import PostLikeRelationship, PostModel
 from exceptions import UserNotFoundError, PostNotFoundError, AccessDeniedError
 from model import Post, PostRequest
 
-from .image_utils import get_post_bytes, upload2post
+from .image_utils import get_post_bytes, upload2post, delete_old_post
 
 
 class PostService:
@@ -26,15 +27,15 @@ class PostService:
         self.like_repo = like_repo
 
     @staticmethod
-    async def post_to_object(post: PostModel) -> Post:
+    async def post_to_object(post: PostModel, new_post: bool=False) -> Post:
         return Post(
             post_id=post.post_id,
             author_id=post.author_id,
             pub_time=post.pub_time,
-            image=await get_post_bytes(post.post_id),
+            image=base64.b64encode(await get_post_bytes(post.post_id)),
             caption=post.caption,
-            like_cnt=post.like_cnt,
-            comments=[c.comment_id for c in post.comments]
+            like_cnt=0 if new_post else post.like_cnt,
+            comments=[] if new_post else [c.comment_id for c in post.comments]
         )
 
     async def get_post(self, post_id: int) -> Post:
@@ -60,11 +61,8 @@ class PostService:
         except IntegrityError:
             raise UserNotFoundError
 
-        _, post = await asyncio.gather(
-            upload2post(db_post.post_id, request.image),
-            self.post_to_object(db_post)
-        )
-        return post
+        await upload2post(db_post.post_id, request.image),
+        return await self.post_to_object(db_post, new_post=True)
 
     async def delete_post(self, user_id: int, post_id: int) -> None:
         """
@@ -75,7 +73,10 @@ class PostService:
         if db_post := await self.post_repo.find_by_id(post_id):
             if user_id != db_post.author_id:
                 raise AccessDeniedError
-            await self.post_repo.delete(db_post)
+            await asyncio.gather(
+                self.post_repo.delete(db_post),
+                delete_old_post(post_id)
+            )
 
     async def get_user_feed(self, user_id: int, limit: int=100, page: int=0) -> list[int]:
         """

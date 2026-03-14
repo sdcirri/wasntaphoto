@@ -1,5 +1,6 @@
 from PIL import Image, UnidentifiedImageError
 from io import BytesIO
+import aiofiles.os
 import aiofiles
 import os
 
@@ -83,3 +84,11 @@ async def upload2post(post_id: int, uploaded_image: bytes) -> bytes:
     async with aiofiles.open(os.path.join(POST_STORAGE_ROOT, f'{post_id}.jpg'), 'wb') as f:
         await f.write(post)
     return post
+
+
+async def delete_old_post(post_id: int) -> None:
+    """
+    Deletes an orphaned image
+    :param post_id: deleted post
+    """
+    await aiofiles.os.remove(os.path.join(POST_STORAGE_ROOT, f'{post_id}.jpg'))
