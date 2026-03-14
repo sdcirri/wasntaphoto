@@ -43,7 +43,7 @@ class UserService:
         """
         if not (db_user := await self.user_repo.find_by_id(user_id)):
             raise UserNotFoundError
-        if self.block_repo.find_by_id((target_user_id, user_id)):
+        if await self.block_repo.find_by_id((target_user_id, user_id)):
             raise AccessDeniedError
         return await self.user_to_object(db_user)
 
@@ -115,7 +115,7 @@ class UserService:
             raise UserNotFoundError
         if not await self.user_repo.find_by_id(to_follow_id):
             raise UserNotFoundError
-        if self.block_repo.find_by_id((to_follow_id, user_id)):
+        if await self.block_repo.find_by_id((to_follow_id, user_id)):
             raise AccessDeniedError
 
         await self.follow_repo.save(

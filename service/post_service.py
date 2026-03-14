@@ -51,7 +51,7 @@ class PostService:
         """
         if not (post := await self.post_repo.find_by_id(post_id, load_comments=True)):
             raise PostNotFoundError
-        if self.block_repo.find_by_id((author_id, user_id)):
+        if await self.block_repo.find_by_id((author_id, user_id)):
             raise AccessDeniedError
         return await self.post_to_object(post)
 
@@ -92,7 +92,7 @@ class PostService:
         :param author_id: target user ID
         :return: the list of posts as IDs
         """
-        if self.block_repo.find_by_id((author_id, user_id)):
+        if await self.block_repo.find_by_id((author_id, user_id)):
             raise AccessDeniedError
         return await self.post_repo.find_by_author_id(author_id)
 
