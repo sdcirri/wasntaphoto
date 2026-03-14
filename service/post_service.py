@@ -2,7 +2,7 @@ from sqlalchemy.exc import IntegrityError
 import asyncio
 import base64
 
-from db.repositories import UserRepository, PostRepository, PostLikeRepository
+from db.repositories import UserRepository, PostRepository, PostLikeRepository, BlockRepository
 from db.entities import PostLikeRelationship, PostModel
 
 from exceptions import UserNotFoundError, PostNotFoundError, AccessDeniedError
@@ -15,16 +15,19 @@ class PostService:
     user_repo: UserRepository
     post_repo: PostRepository
     like_repo: PostLikeRepository
+    block_repo: BlockRepository
 
     def __init__(
             self,
             post_repo: PostRepository,
             user_repo: UserRepository,
-            like_repo: PostLikeRepository
+            like_repo: PostLikeRepository,
+            block_repo: BlockRepository
     ) -> None:
         self.post_repo = post_repo
         self.user_repo = user_repo
         self.like_repo = like_repo
+        self.block_repo = block_repo
 
     @staticmethod
     async def post_to_object(post: PostModel, new_post: bool=False) -> Post:
@@ -38,14 +41,18 @@ class PostService:
             comments=[] if new_post else [c.comment_id for c in post.comments]
         )
 
-    async def get_post(self, post_id: int) -> Post:
+    async def get_post(self, post_id: int, user_id: int, author_id: int) -> Post:
         """
         Gets a post by its post ID
         :param post_id: post ID
-        :return: the post, if it exists
+        :param user_id: authenticated user ID
+        :param author_id: author's user ID
+        :return: the post, if it exists and the user is not blocked
         """
         if not (post := await self.post_repo.find_by_id(post_id, load_comments=True)):
             raise PostNotFoundError
+        if self.block_repo.find_by_id((author_id, user_id)):
+            raise AccessDeniedError
         return await self.post_to_object(post)
 
     async def new_post(self, user_id: int, request: PostRequest) -> Post:
@@ -77,6 +84,17 @@ class PostService:
                 self.post_repo.delete(db_post),
                 delete_old_post(post_id)
             )
+
+    async def get_user_posts(self, user_id: int, author_id: int) -> list[int]:
+        """
+        Get all posts from a specific user
+        :param user_id: authenticated user ID
+        :param author_id: target user ID
+        :return: the list of posts as IDs
+        """
+        if self.block_repo.find_by_id((author_id, user_id)):
+            raise AccessDeniedError
+        return await self.post_repo.find_by_author_id(author_id)
 
     async def get_user_feed(self, user_id: int, limit: int=100, page: int=0) -> list[int]:
         """

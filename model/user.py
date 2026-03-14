@@ -28,4 +28,3 @@ class UserAccount(BaseModel):
     propic: Base64Bytes
     followers_cnt: int = Field(..., ge=0)
     following_cnt: int = Field(..., ge=0)
-    posts: list[Post]

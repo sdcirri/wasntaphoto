@@ -14,7 +14,7 @@ post_router.include_router(comment_router)
 
 def target_user_id(request: Request, me_id: int = Depends(get_user)) -> int:
     raw = request.path_params.get('author_id')
-    if raw in (None, "me"):
+    if raw in (None, 'me'):
         return me_id
     try:
         return int(raw)
@@ -22,20 +22,38 @@ def target_user_id(request: Request, me_id: int = Depends(get_user)) -> int:
         raise HTTPException(status_code=422)
 
 
+@post_router.get('/')
+async def get_user_posts(
+        author_id: int = Depends(target_user_id),
+        post_service: PostService = Depends(get_post_service),
+        _: int = Depends(target_user_id)
+) -> list[int]:
+    """
+    Get all posts from a specific user
+    :param author_id: user ID (can also be "me")
+    :param post_service: post service
+    :param _: authenticated user ID (unused)
+    :return: list of all posts from that user as IDs
+    """
+
+
+
 @post_router.get('/{post_id}')
 async def get_post(
+        author_id: int = Depends(target_user_id),
         post_id: int = Path(..., ge=0),
         post_service: PostService = Depends(get_post_service),
-        _: int = Depends(get_user)
+        user_id: int = Depends(get_user)
 ) -> Post:
     """
     Get a post
+    :param author_id: post author ID
     :param post_id: post ID
     :param post_service: post service
-    :param _: authenticated user ID (unused)
+    :param user_id: authenticated user ID
     :return: the requested post
     """
-    return await post_service.get_post(post_id)
+    return await post_service.get_post(post_id, user_id, author_id)
 
 
 @post_router.get('/{post_id}/like')

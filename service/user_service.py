@@ -31,8 +31,7 @@ class UserService:
             username=db_user.username,
             propic=await get_propic_bytes(db_user.user_id),
             followers_cnt=db_user.followers_cnt,
-            following_cnt=db_user.following_cnt,
-            posts=[p.post_id for p in db_user.posts]
+            following_cnt=db_user.following_cnt
         )
 
     async def get_user(self, user_id: int) -> UserAccount:
