@@ -20,10 +20,9 @@ async def test_post_api(client, user_factory):
     assert post_id.status_code == 200
     assert Post.model_validate(post_id.json()).post_id == 1
 
-    info = await client.get('/users/me/posts/', headers=headers)
+    info = await client.get('/users/me/posts/1', headers=headers)
     assert info.status_code == 200
-    assert len(info.json()) == 1
-    info = Post.model_validate(info.json()[0])
+    info = Post.model_validate(info.json())
     assert info.post_id == 1
     assert info.author_id == user.user_id
     assert info.caption == 'A nice pixel'

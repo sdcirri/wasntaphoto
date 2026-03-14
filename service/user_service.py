@@ -41,7 +41,7 @@ class UserService:
         :param user_id: authenticated user ID
         :return: the user info, if it exists and the requester isn't blocked by them
         """
-        if not (db_user := await self.user_repo.find_by_id(user_id)):
+        if not (db_user := await self.user_repo.find_by_id(target_user_id)):
             raise UserNotFoundError
         if await self.block_repo.find_by_id((target_user_id, user_id)):
             raise AccessDeniedError
