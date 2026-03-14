@@ -4,7 +4,7 @@ import asyncio
 from db.repositories import UserRepository, FollowRepository, BlockRepository
 from db.entities import UserModel, FollowingRelationship, BlockRelationship
 
-from exceptions import UserNotFoundError, UsernameAlreadyTakenError, SelfFollowError
+from exceptions import UserNotFoundError, UsernameAlreadyTakenError, SelfFollowError, AccessDeniedError
 from model import UserAccount
 
 from .image_utils import get_propic_bytes, upload2propic
@@ -34,14 +34,17 @@ class UserService:
             following_cnt=db_user.following_cnt
         )
 
-    async def get_user(self, user_id: int) -> UserAccount:
+    async def get_user(self, target_user_id: int, user_id: int) -> UserAccount:
         """
         Retrieves the user info
-        :param user_id: user ID
+        :param target_user_id: target user ID
+        :param user_id: authenticated user ID
         :return: the user info, if it exists and the requester isn't blocked by them
         """
-        if not (db_user := await self.user_repo.find_by_id(user_id, load_posts=True)):
+        if not (db_user := await self.user_repo.find_by_id(user_id)):
             raise UserNotFoundError
+        if self.block_repo.find_by_id((target_user_id, user_id)):
+            raise AccessDeniedError
         return await self.user_to_object(db_user)
 
     async def search_users(self, q: str, limit: int) -> list[int]:
@@ -112,11 +115,12 @@ class UserService:
             raise UserNotFoundError
         if not await self.user_repo.find_by_id(to_follow_id):
             raise UserNotFoundError
+        if self.block_repo.find_by_id((to_follow_id, user_id)):
+            raise AccessDeniedError
 
         await self.follow_repo.save(
             FollowingRelationship(follower_id=user_id, following_id=to_follow_id)
         )
-
 
     async def unfollow(self, user_id: int, to_unfollow_id: int) -> None:
         """

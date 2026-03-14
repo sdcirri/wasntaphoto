@@ -51,16 +51,18 @@ async def search_users(
 
 @user_router.get('/{user_id}')
 async def get_user_account(
-        user_id: int = Depends(target_user_id),
-        user_service: UserService = Depends(get_user_service)
+        target_uid: int = Depends(target_user_id),
+        user_service: UserService = Depends(get_user_service),
+        user_id: int = Depends(get_user)
 ) -> UserAccount:
     """
     Gets the specified user account info
     :param user_service: user service
-    :param user_id: user ID (can also be 'me')
+    :param target_uid: target user ID (can also be 'me')
+    :param user_id: authenticated user ID
     :return: the current user account info, if it exists
     """
-    return await user_service.get_user(user_id)
+    return await user_service.get_user(target_uid, user_id)
 
 
 @user_router.put('/me/username', status_code=status.HTTP_204_NO_CONTENT)
