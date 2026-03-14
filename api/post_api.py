@@ -26,16 +26,16 @@ def target_user_id(request: Request, me_id: int = Depends(get_user)) -> int:
 async def get_user_posts(
         author_id: int = Depends(target_user_id),
         post_service: PostService = Depends(get_post_service),
-        _: int = Depends(target_user_id)
+        user_id: int = Depends(target_user_id)
 ) -> list[int]:
     """
     Get all posts from a specific user
     :param author_id: user ID (can also be "me")
     :param post_service: post service
-    :param _: authenticated user ID (unused)
+    :param user_id: authenticated user ID
     :return: list of all posts from that user as IDs
     """
-
+    return await post_service.get_user_posts(user_id, author_id)
 
 
 @post_router.get('/{post_id}')
