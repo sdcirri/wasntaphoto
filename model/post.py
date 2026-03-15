@@ -33,5 +33,5 @@ class PostRequest(BaseModel):
     """
     A user request to create a new post
     """
-    caption: Optional[str] = Field(..., max_length=2048)
+    caption: Optional[str] = Field(None, max_length=2048)
     image: Base64Bytes
