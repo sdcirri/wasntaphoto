@@ -14,7 +14,7 @@ class PostModel(Base):
     author_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('users.user_id'), nullable=False)
     caption: Mapped[str] = mapped_column(String(2048), nullable=True)
     pub_time: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
+        DateTime(timezone=False),
         nullable=False,
         default=lambda: datetime.now(timezone.utc)
     )

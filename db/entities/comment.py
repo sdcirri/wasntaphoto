@@ -15,7 +15,7 @@ class CommentModel(Base):
     author_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('users.user_id'), nullable=False)
     content: Mapped[str] = mapped_column(String(2048), nullable=False)
     pub_time: Mapped[datetime] = mapped_column(
-        DateTime,
+        DateTime(timezone=False),
         nullable=False,
         default=lambda: datetime.now(timezone.utc)
     )
