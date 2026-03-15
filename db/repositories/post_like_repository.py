@@ -21,3 +21,7 @@ class PostLikeRepository(DBRepository[PostLikeRelationship]):
         return list((await self.session.scalars(
             select(PostLikeRelationship).where(PostLikeRelationship.post_id == post_id)
         )).all())
+
+    async def delete(self, like: PostLikeRelationship) -> None:
+        if db_like := await self.find_by_id((like.user_id, like.post_id)):
+            await super().delete(db_like)

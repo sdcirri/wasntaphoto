@@ -1,8 +1,9 @@
+from httpx import AsyncClient
 import pytest
 
 
 @pytest.mark.asyncio
-async def test_login_api(client):
+async def test_login_api(client: AsyncClient):
     invalid_login = await client.post('/session/', json={'username': '', 'password': ''})
     assert invalid_login.status_code == 422
 

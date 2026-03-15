@@ -1,9 +1,13 @@
+from typing import Callable, Coroutine, Any
+from httpx import AsyncClient
 import asyncio
 import pytest
 
+from db.entities import UserModel
+
 
 @pytest.mark.asyncio
-async def test_user_api(client, user_factory):
+async def test_user_api(client: AsyncClient, user_factory: Callable[[str, str], Coroutine[Any, Any, UserModel]]):
     alice_user, bob_user = await asyncio.gather(
         user_factory('alice', 'H@xx0r.2026'),
         user_factory('bob', 'T0P.S3cr3t!')
@@ -34,7 +38,7 @@ async def test_user_api(client, user_factory):
 
 
 @pytest.mark.asyncio
-async def test_following_mechanics(client, user_factory):
+async def test_following_mechanics(client: AsyncClient, user_factory: Callable[[str, str], Coroutine[Any, Any, UserModel]]):
     alice_user, bob_user, annoying_user = await asyncio.gather(
         user_factory('alice', 'H@xx0r.2026'),
         user_factory('bob', 'T0P.S3cr3t!'),
@@ -75,6 +79,12 @@ async def test_following_mechanics(client, user_factory):
     assert annoying_user.user_id in blocked.json()
     following = await client.get('/users/me/following', headers=alice_headers)
     assert annoying_user.user_id not in following.json()
+
+    profile = await client.get(f'/users/{alice_user.user_id}', headers=annoying_headers)
+    assert profile.status_code == 403
+
+    posts = await client.get(f'/users/{alice_user.user_id}/posts/', headers=annoying_headers)
+    assert posts.status_code == 403
 
     unblock = await client.delete(f'/users/me/blocked/{annoying_user.user_id}', headers=alice_headers)
     assert unblock.status_code == 204

@@ -21,3 +21,7 @@ class CommentLikeRepository(DBRepository[CommentLikeRelationship]):
         return list((await self.session.scalars(
             select(CommentLikeRelationship).where(CommentLikeRelationship.comment_id == comment_id)
         )).all())
+
+    async def delete(self, like: CommentLikeRelationship) -> None:
+        if db_like := await self.find_by_id((like.user_id, like.comment_id)):
+            await super().delete(db_like)
