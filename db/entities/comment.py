@@ -17,7 +17,8 @@ class CommentModel(Base):
     pub_time: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc)
+        # I want UTC but tz-naive
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
     )
 
     post = relationship('PostModel', uselist=False, back_populates='comments')

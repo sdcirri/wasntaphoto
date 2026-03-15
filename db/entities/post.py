@@ -16,7 +16,8 @@ class PostModel(Base):
     pub_time: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc)
+        # I want UTC but tz-naive
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
     )
 
     author = relationship('UserModel', uselist=False, back_populates='posts')
