@@ -26,7 +26,7 @@ def target_user_id(request: Request, me_id: int = Depends(get_user)) -> int:
 async def get_user_posts(
         author_id: int = Depends(target_user_id),
         post_service: PostService = Depends(get_post_service),
-        user_id: int = Depends(target_user_id)
+        user_id: int = Depends(get_user)
 ) -> list[int]:
     """
     Get all posts from a specific user
