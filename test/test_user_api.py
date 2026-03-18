@@ -4,10 +4,16 @@ import asyncio
 import pytest
 
 from db.entities import UserModel
+from model import UserAccount
+from test.conftest import rmsdiff
 
 
 @pytest.mark.asyncio
-async def test_user_api(client: AsyncClient, user_factory: Callable[[str, str], Coroutine[Any, Any, UserModel]]):
+async def test_user_api(
+        client: AsyncClient,
+        checkerboard: bytes,
+        user_factory: Callable[[str, str], Coroutine[Any, Any, UserModel]]
+):
     alice_user, bob_user = await asyncio.gather(
         user_factory('alice', 'H@xx0r.2026'),
         user_factory('bob', 'T0P.S3cr3t!')
@@ -23,18 +29,30 @@ async def test_user_api(client: AsyncClient, user_factory: Callable[[str, str], 
 
     me_info = await client.get('/users/me', headers=headers)
     assert me_info.status_code == 200
-    assert me_info.json()['username'] == 'alice'
-    assert me_info.json()['user_id'] == alice_user.user_id
+    me_info = UserAccount.model_validate(me_info.json())
+    assert me_info.username == 'alice'
+    assert me_info.user_id == alice_user.user_id
 
     bob_info = await client.get(f'/users/{bob_user.user_id}', headers=headers)
     assert bob_info.status_code == 200
-    assert bob_info.json()['username'] == 'bob'
-    assert bob_info.json()['user_id'] == bob_user.user_id
+    bob_info = UserAccount.model_validate(bob_info.json())
+    assert bob_info.username == 'bob'
+    assert bob_info.user_id == bob_user.user_id
 
     username_change = await client.put('/users/me/username', json='@lix', headers=headers)
     assert username_change.status_code == 204
     me_info = await client.get('/users/me', headers=headers)
     assert me_info.json()['username'] == '@lix'
+
+    pp_change = await client.put(
+        '/users/me/pp',
+        content=checkerboard,
+        headers=headers | {'Content-Type': 'image/png'}
+    )
+    assert pp_change.status_code == 204
+
+    me_info = await client.get('/users/me', headers=headers)
+    assert rmsdiff(UserAccount.model_validate(me_info.json()).propic, checkerboard) < 10
 
 
 @pytest.mark.asyncio

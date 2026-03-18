@@ -1,17 +1,8 @@
-from PIL import Image, ImageChops
-from io import BytesIO
-import numpy as np
 import pytest
 
 from service.image_utils import upload2jpeg
 
-
-def rmsdiff(img1: bytes, img2: bytes) -> float:
-    img1 = Image.open(BytesIO(img1)).convert('RGB')
-    img2 = Image.open(BytesIO(img2)).convert('RGB').resize(img1.size)
-    diff = ImageChops.difference(img1, img2)
-    h = np.array(diff)
-    return np.sqrt(np.mean(h**2))
+from test.conftest import rmsdiff
 
 
 ALL_IMAGE_FIXTURES = [

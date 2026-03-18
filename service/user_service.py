@@ -1,5 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 import asyncio
+import base64
 
 from db.repositories import UserRepository, FollowRepository, BlockRepository
 from db.entities import UserModel, FollowingRelationship, BlockRelationship
@@ -29,7 +30,7 @@ class UserService:
         return UserAccount(
             user_id=db_user.user_id,
             username=db_user.username,
-            propic=await get_propic_bytes(db_user.user_id),
+            propic=base64.b64encode(await get_propic_bytes(db_user.user_id)),
             followers_cnt=db_user.followers_cnt,
             following_cnt=db_user.following_cnt
         )
