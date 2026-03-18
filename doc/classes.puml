@@ -1,0 +1,425 @@
+@startuml
+hide empty members
+skinparam packageStyle folder
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+skinparam nodesep 18
+skinparam ranksep 18
+left to right direction
+title Python codebase diagram
+
+package "db" {
+class "Base" as db_engine_Base {
+  + metadata {static}
+}
+
+}
+
+package "db/entities" {
+class "BlockRelationship" as db_entities_block_relationship_BlockRelationship {
+  # __table_args__ {static}
+  # __tablename__ {static}
+  + blocked {static}
+  + blocked_id: Mapped[int] {static}
+  + blocker {static}
+  + blocker_id: Mapped[int] {static}
+}
+
+class "CommentLikeRelationship" as db_entities_comment_like_relationship_CommentLikeRelationship {
+  # __tablename__ {static}
+  + comment_id: Mapped[int] {static}
+  + user_id: Mapped[int] {static}
+}
+
+class "CommentModel" as db_entities_comment_CommentModel {
+  # __tablename__ {static}
+  + author {static}
+  + author_id: Mapped[int] {static}
+  + comment_id: Mapped[int] {static}
+  + content: Mapped[str] {static}
+  + like_cnt {static}
+  + post {static}
+  + post_id: Mapped[int] {static}
+  + pub_time: Mapped[datetime] {static}
+}
+
+class "FollowingRelationship" as db_entities_following_relationship_FollowingRelationship {
+  # __table_args__ {static}
+  # __tablename__ {static}
+  + follower {static}
+  + follower_id: Mapped[int] {static}
+  + following {static}
+  + following_id: Mapped[int] {static}
+}
+
+class "PostLikeRelationship" as db_entities_post_like_relationship_PostLikeRelationship {
+  # __tablename__ {static}
+  + post_id: Mapped[int] {static}
+  + user_id: Mapped[int] {static}
+}
+
+class "PostModel" as db_entities_post_PostModel {
+  # __tablename__ {static}
+  + author {static}
+  + author_id: Mapped[int] {static}
+  + caption: Mapped[str] {static}
+  + comments {static}
+  + like_cnt {static}
+  + post_id: Mapped[int] {static}
+  + pub_time: Mapped[datetime] {static}
+}
+
+class "UserModel" as db_entities_user_UserModel {
+  # __table_args__ {static}
+  # __tablename__ {static}
+  + blocked {static}
+  + followers {static}
+  + followers_cnt {static}
+  + following {static}
+  + following_cnt {static}
+  + password: Mapped[str] {static}
+  + posts {static}
+  + sessions {static}
+  + user_id: Mapped[int] {static}
+  + username: Mapped[str] {static}
+}
+
+class "UserSessionModel" as db_entities_user_session_UserSessionModel {
+  # __tablename__ {static}
+  + session_id: Mapped[str] {static}
+  + user {static}
+  + user_id: Mapped[int] {static}
+  + valid_until: Mapped[int] {static}
+}
+
+}
+
+package "db/repositories" {
+class "BlockRepository" as db_repositories_block_repository_BlockRepository {
+  # __init__(session: AsyncSession): None
+  + find_by_id(blocker_blocked_id: tuple[int, int]): BlockRelationship | None
+}
+
+class "CommentLikeRepository" as db_repositories_comment_like_repository_CommentLikeRepository {
+  # __init__(session: AsyncSession): None
+  + delete(like: CommentLikeRelationship): None
+  + find_by_comment_id(comment_id: int): list[CommentLikeRelationship]
+  + find_by_id(user_comment_ids: tuple[int, int]): CommentLikeRelationship | None
+}
+
+class "CommentRepository" as db_repositories_comment_repository_CommentRepository {
+  # __init__(session: AsyncSession): None
+  + find_by_id(comment_id: int): CommentModel | None
+}
+
+class "DBRepository" as db_repositories_db_repository_DBRepository {
+  + model: type[T] {static}
+  + session: AsyncSession {static}
+  --
+  # __init__(session: AsyncSession, model: type[T]): None
+  + delete(obj: T): None
+  + find_all(): list[T]
+  + find_by_id(_id: Any): T | None
+  + save(obj: T): T
+}
+
+class "FollowRepository" as db_repositories_follow_repository_FollowRepository {
+  # __init__(session: AsyncSession): None
+  + find_by_id(follower_following_id: tuple[int, int]): FollowingRelationship | None
+}
+
+class "PostLikeRepository" as db_repositories_post_like_repository_PostLikeRepository {
+  # __init__(session: AsyncSession): None
+  + delete(like: PostLikeRelationship): None
+  + find_by_id(user_post_ids: tuple[int, int]): PostLikeRelationship | None
+  + find_by_post_id(post_id: int): list[PostLikeRelationship]
+}
+
+class "PostRepository" as db_repositories_post_repository_PostRepository {
+  # __init__(session: AsyncSession): None
+  + find_by_author_id(author_id: int): list[int]
+  + find_by_id(post_id: int, load_comments: bool): PostModel | None
+  + find_feed(user_id: int, limit: int, offset: int): list[int]
+}
+
+class "SessionRepository" as db_repositories_session_repository_SessionRepository {
+  # __init__(session: AsyncSession): None
+  + delete(session: UserSessionModel): None
+  + find_by_id(session_id: str): UserSessionModel | None
+  + find_by_user_id(user_id: str): list[UserSessionModel]
+  + save(session: UserSessionModel): None
+}
+
+class "UserRepository" as db_repositories_user_repository_UserRepository {
+  # __init__(session: AsyncSession): None
+  + find_by_blocker(blocker_id: int): list[UserModel]
+  + find_by_follower(follower_id: int): list[UserModel]
+  + find_by_following(following_id: int): list[UserModel]
+  + find_by_id(user_id: int): UserModel | None
+  + find_by_text_query(query: str, limit: int): list[int]
+  + find_by_username(username: str): UserModel | None
+}
+
+}
+
+package "exceptions" {
+class "AccessDeniedError" as exceptions_access_denied_error_AccessDeniedError {
+  + detail {static}
+  + status_code {static}
+}
+
+class "AppError" as exceptions_app_error_AppError {
+  + detail: str {static}
+  + status_code: int {static}
+  --
+  # __init__(detail: str | None, status_code: int | None): None
+}
+
+class "BadAuthError" as exceptions_bad_auth_error_BadAuthError {
+  + detail {static}
+  + status_code {static}
+}
+
+class "BadImageError" as exceptions_bad_image_error_BadImageError {
+  + detail {static}
+  + status_code {static}
+}
+
+class "CommentNotFoundError" as exceptions_comment_not_found_error_CommentNotFoundError {
+  + detail {static}
+  + status_code {static}
+}
+
+class "FailedLoginError" as exceptions_failed_login_error_FailedLoginError {
+  + detail {static}
+  + status_code {static}
+}
+
+class "PostNotFoundError" as exceptions_post_not_found_error_PostNotFoundError {
+  + detail {static}
+  + status_code {static}
+}
+
+class "SelfFollowError" as exceptions_self_follow_error_SelfFollowError {
+  + detail {static}
+  + status_code {static}
+}
+
+class "SessionExpiredError" as exceptions_session_expired_error_SessionExpiredError {
+  + detail {static}
+  + status_code {static}
+}
+
+class "UserNotFoundError" as exceptions_user_not_found_error_UserNotFoundError {
+  + detail {static}
+  + status_code {static}
+}
+
+class "UsernameAlreadyTakenError" as exceptions_username_already_taken_error_UsernameAlreadyTakenError {
+  + detail {static}
+  + status_code {static}
+}
+
+class "WeakPasswordError" as exceptions_weak_password_error_WeakPasswordError {
+  + detail {static}
+  + status_code {static}
+}
+
+}
+
+package "model" {
+class "Comment" as model_post_Comment {
+  + author_id: int {static}
+  + comment_id: int {static}
+  + content: str {static}
+  + like_cnt: int {static}
+  + model_config {static}
+  + pub_time: datetime {static}
+}
+
+class "Post" as model_post_Post {
+  + author_id: int {static}
+  + caption: Optional[str] {static}
+  + comments: list[int] {static}
+  + image: Base64Bytes {static}
+  + like_cnt: int {static}
+  + post_id: int {static}
+  + pub_time: datetime {static}
+}
+
+class "PostRequest" as model_post_PostRequest {
+  + caption: Optional[str] {static}
+  + image: Base64Bytes {static}
+}
+
+class "RegistrationRequest" as model_user_RegistrationRequest {
+  + password: str {static}
+  + username: str {static}
+}
+
+class "UserAccount" as model_user_UserAccount {
+  + followers_cnt: int {static}
+  + following_cnt: int {static}
+  + propic: Base64Bytes {static}
+  + user_id: int {static}
+  + username: str {static}
+}
+
+class "UserCredentials" as model_user_UserCredentials {
+  + password: str {static}
+  + username: str {static}
+}
+
+}
+
+package "service" {
+class "AuthService" as service_auth_service_AuthService {
+  + logger {static}
+  + ph {static}
+  + session_repo: SessionRepository {static}
+  + user_repo: UserRepository {static}
+  --
+  # __init__(user_repo: UserRepository, session_repo: SessionRepository): None
+  + login(username: str, password: str): str
+  + register(username: str, password: str): str
+  + resolve_token(token: str): int
+  + revoke_session(session: str): None
+  + strong_password(password: str): bool
+  + yield_session(user_id: int): str
+}
+
+class "CommentService" as service_comment_service_CommentService {
+  + comment_repo: CommentRepository {static}
+  + like_repo: CommentLikeRepository {static}
+  --
+  # __init__(comment_repo: CommentRepository, like_repo: CommentLikeRepository): None
+  + create_comment(user_id: int, post_id: int, content: str): Comment
+  + delete_comment(user_id: int, comment_id: int): None
+  + get_comment(comment_id: int): Comment
+  + is_comment_liked(user_id: int, comment_id: int): bool
+  + like_comment(user_id: int, comment_id: int): None
+  + unlike_comment(user_id: int, comment_id: int): None
+}
+
+class "PostService" as service_post_service_PostService {
+  + block_repo: BlockRepository {static}
+  + like_repo: PostLikeRepository {static}
+  + post_repo: PostRepository {static}
+  + user_repo: UserRepository {static}
+  --
+  # __init__(post_repo: PostRepository, user_repo: UserRepository, like_repo: PostLikeRepository, block_repo: BlockRepository): None
+  + delete_post(user_id: int, post_id: int): None
+  + get_post(post_id: int, user_id: int, author_id: int): Post
+  + get_post_likes(user_id: int, post_id: int): list[int]
+  + get_user_feed(user_id: int, limit: int, page: int): list[int]
+  + get_user_posts(user_id: int, author_id: int): list[int]
+  + is_liked(user_id: int, post_id: int): bool
+  + like_post(user_id: int, post_id: int): None
+  + new_post(user_id: int, request: PostRequest): Post
+  + post_to_object(post: PostModel, new_post: bool): Post
+  + unlike_post(user_id: int, post_id: int): None
+}
+
+class "UserService" as service_user_service_UserService {
+  + block_repo: BlockRepository {static}
+  + follow_repo: FollowRepository {static}
+  + user_repo: UserRepository {static}
+  --
+  # __init__(user_repo: UserRepository, follow_repo: FollowRepository, block_repo: BlockRepository): None
+  + block_user(user_id: int, to_block_id: int): None
+  + follow(user_id: int, to_follow_id: int): None
+  + get_blocked(user_id: int): list[int]
+  + get_followers(user_id: int): list[int]
+  + get_following(user_id: int): list[int]
+  + get_user(target_user_id: int, user_id: int): UserAccount
+  + remove_follower(user_id: int, to_remove_id: int): None
+  + search_users(q: str, limit: int): list[int]
+  + set_propic(user_id: int, uploaded_image: bytes): None
+  + set_username(user_id: int, new_username: str): None
+  + unblock_user(user_id: int, to_unblock_id: int): None
+  + unfollow(user_id: int, to_unfollow_id: int): None
+  + user_to_object(db_user: UserModel): UserAccount
+}
+
+}
+
+db_entities_block_relationship_BlockRelationship --|> db_engine_Base
+db_entities_comment_CommentModel --|> db_engine_Base
+db_entities_comment_like_relationship_CommentLikeRelationship --|> db_engine_Base
+db_entities_following_relationship_FollowingRelationship --|> db_engine_Base
+db_entities_post_PostModel --|> db_engine_Base
+db_entities_post_like_relationship_PostLikeRelationship --|> db_engine_Base
+db_entities_user_UserModel --|> db_engine_Base
+db_entities_user_session_UserSessionModel --|> db_engine_Base
+db_repositories_block_repository_BlockRepository ..> db_entities_block_relationship_BlockRelationship : find_by_id()
+db_repositories_block_repository_BlockRepository --|> db_repositories_db_repository_DBRepository
+db_repositories_comment_like_repository_CommentLikeRepository ..> db_entities_comment_like_relationship_CommentLikeRelationship : delete
+db_repositories_comment_like_repository_CommentLikeRepository ..> db_entities_comment_like_relationship_CommentLikeRelationship : find_by_comment_id()
+db_repositories_comment_like_repository_CommentLikeRepository ..> db_entities_comment_like_relationship_CommentLikeRelationship : find_by_id()
+db_repositories_comment_like_repository_CommentLikeRepository --|> db_repositories_db_repository_DBRepository
+db_repositories_comment_repository_CommentRepository ..> db_entities_comment_CommentModel : find_by_id()
+db_repositories_comment_repository_CommentRepository --|> db_repositories_db_repository_DBRepository
+db_repositories_follow_repository_FollowRepository ..> db_entities_following_relationship_FollowingRelationship : find_by_id()
+db_repositories_follow_repository_FollowRepository --|> db_repositories_db_repository_DBRepository
+db_repositories_post_like_repository_PostLikeRepository ..> db_entities_post_like_relationship_PostLikeRelationship : delete
+db_repositories_post_like_repository_PostLikeRepository ..> db_entities_post_like_relationship_PostLikeRelationship : find_by_id()
+db_repositories_post_like_repository_PostLikeRepository ..> db_entities_post_like_relationship_PostLikeRelationship : find_by_post_id()
+db_repositories_post_like_repository_PostLikeRepository --|> db_repositories_db_repository_DBRepository
+db_repositories_post_repository_PostRepository ..> db_entities_post_PostModel : find_by_id()
+db_repositories_post_repository_PostRepository --|> db_repositories_db_repository_DBRepository
+db_repositories_session_repository_SessionRepository ..> db_entities_user_session_UserSessionModel : delete
+db_repositories_session_repository_SessionRepository ..> db_entities_user_session_UserSessionModel : find_by_id()
+db_repositories_session_repository_SessionRepository ..> db_entities_user_session_UserSessionModel : find_by_user_id()
+db_repositories_session_repository_SessionRepository ..> db_entities_user_session_UserSessionModel : save
+db_repositories_session_repository_SessionRepository --|> db_repositories_db_repository_DBRepository
+db_repositories_user_repository_UserRepository ..> db_entities_user_UserModel : find_by_blocker()
+db_repositories_user_repository_UserRepository ..> db_entities_user_UserModel : find_by_follower()
+db_repositories_user_repository_UserRepository ..> db_entities_user_UserModel : find_by_following()
+db_repositories_user_repository_UserRepository ..> db_entities_user_UserModel : find_by_id()
+db_repositories_user_repository_UserRepository ..> db_entities_user_UserModel : find_by_username()
+db_repositories_user_repository_UserRepository --|> db_repositories_db_repository_DBRepository
+exceptions_access_denied_error_AccessDeniedError --|> exceptions_app_error_AppError
+exceptions_bad_auth_error_BadAuthError --|> exceptions_app_error_AppError
+exceptions_bad_image_error_BadImageError --|> exceptions_app_error_AppError
+exceptions_comment_not_found_error_CommentNotFoundError --|> exceptions_app_error_AppError
+exceptions_failed_login_error_FailedLoginError --|> exceptions_app_error_AppError
+exceptions_post_not_found_error_PostNotFoundError --|> exceptions_app_error_AppError
+exceptions_self_follow_error_SelfFollowError --|> exceptions_app_error_AppError
+exceptions_session_expired_error_SessionExpiredError --|> exceptions_app_error_AppError
+exceptions_user_not_found_error_UserNotFoundError --|> exceptions_app_error_AppError
+exceptions_username_already_taken_error_UsernameAlreadyTakenError --|> exceptions_app_error_AppError
+exceptions_weak_password_error_WeakPasswordError --|> exceptions_app_error_AppError
+service_auth_service_AuthService *-- db_repositories_session_repository_SessionRepository : session_repo
+service_auth_service_AuthService ..> db_repositories_session_repository_SessionRepository : __init__
+service_auth_service_AuthService *-- db_repositories_user_repository_UserRepository : user_repo
+service_auth_service_AuthService ..> db_repositories_user_repository_UserRepository : __init__
+service_comment_service_CommentService *-- db_repositories_comment_like_repository_CommentLikeRepository : like_repo
+service_comment_service_CommentService ..> db_repositories_comment_like_repository_CommentLikeRepository : __init__
+service_comment_service_CommentService *-- db_repositories_comment_repository_CommentRepository : comment_repo
+service_comment_service_CommentService ..> db_repositories_comment_repository_CommentRepository : __init__
+service_comment_service_CommentService ..> model_post_Comment : create_comment()
+service_comment_service_CommentService ..> model_post_Comment : get_comment()
+service_post_service_PostService ..> db_entities_post_PostModel : post_to_object
+service_post_service_PostService *-- db_repositories_block_repository_BlockRepository : block_repo
+service_post_service_PostService ..> db_repositories_block_repository_BlockRepository : __init__
+service_post_service_PostService *-- db_repositories_post_like_repository_PostLikeRepository : like_repo
+service_post_service_PostService ..> db_repositories_post_like_repository_PostLikeRepository : __init__
+service_post_service_PostService *-- db_repositories_post_repository_PostRepository : post_repo
+service_post_service_PostService ..> db_repositories_post_repository_PostRepository : __init__
+service_post_service_PostService *-- db_repositories_user_repository_UserRepository : user_repo
+service_post_service_PostService ..> db_repositories_user_repository_UserRepository : __init__
+service_post_service_PostService ..> model_post_Post : get_post()
+service_post_service_PostService ..> model_post_Post : new_post()
+service_post_service_PostService ..> model_post_Post : post_to_object()
+service_post_service_PostService ..> model_post_PostRequest : new_post
+service_user_service_UserService ..> db_entities_user_UserModel : user_to_object
+service_user_service_UserService *-- db_repositories_block_repository_BlockRepository : block_repo
+service_user_service_UserService ..> db_repositories_block_repository_BlockRepository : __init__
+service_user_service_UserService *-- db_repositories_follow_repository_FollowRepository : follow_repo
+service_user_service_UserService ..> db_repositories_follow_repository_FollowRepository : __init__
+service_user_service_UserService *-- db_repositories_user_repository_UserRepository : user_repo
+service_user_service_UserService ..> db_repositories_user_repository_UserRepository : __init__
+service_user_service_UserService ..> model_user_UserAccount : get_user()
+service_user_service_UserService ..> model_user_UserAccount : user_to_object()
+@enduml
