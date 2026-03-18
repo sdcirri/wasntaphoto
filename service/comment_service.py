@@ -19,22 +19,40 @@ class CommentService:
         :param comment_id: comment ID
         :return: the comment, if it exists
         """
-        if not (db_comment := self.comment_repo.find_by_id(comment_id)):
+        if not (db_comment := await self.comment_repo.find_by_id(comment_id)):
             raise CommentNotFoundError
         return Comment.model_validate(db_comment)
 
-    async def create_comment(self, user_id: int, post_id: int, content: str) -> int:
+    async def create_comment(self, user_id: int, post_id: int, content: str) -> Comment:
         """
         Create a new comment
         :param user_id: user ID
         :param post_id: post ID
         :param content: comment content
-        :return: the newly created comment ID
+        :return: the newly created comment
         """
         db_comment = await self.comment_repo.save(
-            CommentModel(user_id=user_id, post_id=post_id, content=content)
+            CommentModel(author_id=user_id, post_id=post_id, content=content)
         )
-        return db_comment.comment_id
+        return Comment(
+            comment_id=db_comment.comment_id,
+            author_id=db_comment.author_id,
+            pub_time=db_comment.pub_time,
+            content=db_comment.content,
+            like_cnt=0,
+        )
+
+    async def delete_comment(self, user_id: int, comment_id: int) -> None:
+        """
+        Delete a comment
+        :param user_id: user ID
+        :param comment_id: comment ID
+        """
+        if not (db_comment := await self.comment_repo.find_by_id(comment_id)):
+            raise CommentNotFoundError
+        if user_id != db_comment.author_id:
+            raise AccessDeniedError
+        await self.comment_repo.delete(db_comment)
 
     async def is_comment_liked(self, user_id: int, comment_id: int) -> bool:
         """
@@ -69,15 +87,3 @@ class CommentService:
         await self.like_repo.delete(CommentLikeRelationship(user_id=user_id, comment_id=comment_id))
         if not await self.comment_repo.find_by_id(comment_id):
             raise CommentNotFoundError
-
-    async def delete_comment(self, user_id: int, comment_id: int) -> None:
-        """
-        Delete a comment
-        :param user_id: user ID
-        :param comment_id: comment ID
-        """
-        if not (db_comment := await self.comment_repo.find_by_id(comment_id)):
-            raise CommentNotFoundError
-        if user_id != db_comment.author_id:
-            raise AccessDeniedError
-        await self.like_repo.delete(CommentLikeRelationship(user_id=user_id, comment_id=comment_id))

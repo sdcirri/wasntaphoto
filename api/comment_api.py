@@ -15,14 +15,14 @@ async def comment_post(
         post_id: int = Path(..., ge=0),
         comment_service: CommentService = Depends(get_comment_service),
         user_id: int = Depends(get_user)
-) -> int:
+) -> Comment:
     """
     Comment on a post
     :param content: the comment text
     :param post_id: post ID of the post to comment
     :param comment_service: comment service
     :param user_id: authenticated user ID
-    :return: the comment ID
+    :return: the newly created comment
     """
     return await comment_service.create_comment(user_id, post_id, content)
 

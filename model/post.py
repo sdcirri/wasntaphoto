@@ -26,7 +26,7 @@ class Post(BaseModel):
     image: Base64Bytes
     caption: Optional[str] = Field(None, max_length=2048)
     like_cnt: int = Field(..., ge=0)
-    comments: list[Comment]
+    comments: list[int]
 
 
 class PostRequest(BaseModel):
