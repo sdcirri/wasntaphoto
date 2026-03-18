@@ -8,8 +8,8 @@ from typing import Coroutine, Any, Callable, AsyncGenerator
 from difflib import SequenceMatcher
 import pytest_asyncio
 
-from db.repositories import UserRepository, PostRepository
-from db.entities import UserModel, PostModel
+from db.repositories import UserRepository, PostRepository, CommentRepository
+from db.entities import UserModel, PostModel, CommentModel
 from db.engine import Base
 
 from service.auth_service import AuthService
@@ -95,3 +95,21 @@ async def post_factory() -> Callable[[int, bytes, str], Coroutine[Any, Any, Post
             return db_post
 
     return _create_post
+
+
+@pytest_asyncio.fixture
+async def comment_factory() -> Callable[[int, int, str], Coroutine[Any, Any, CommentModel]]:
+    async def _create_comment(author_id: int, post_id: int, content: str) -> CommentModel:
+        async with TestSessionLocal() as session:
+            comment_repo = CommentRepository(session)
+            db_comment = CommentModel(
+                author_id=author_id,
+                post_id=post_id,
+                content=content
+            )
+            db_comment = await comment_repo.save(db_comment)
+            await session.commit()
+
+            return db_comment
+
+    return _create_comment
