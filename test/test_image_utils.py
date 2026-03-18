@@ -19,7 +19,6 @@ def any_image(request) -> bytes:
     return request.getfixturevalue(request.param)
 
 
-@pytest.mark.asyncio
 def test_image_utils(any_image: bytes):
     post_format = upload2jpeg(any_image, 90, 720)
     assert rmsdiff(any_image, post_format) < 6
