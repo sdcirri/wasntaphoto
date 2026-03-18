@@ -55,6 +55,7 @@ class UserService:
         :param limit: number of results to return
         :return: a list of user IDs
         """
+        return await self.user_repo.find_by_text_query(q, limit)
 
     async def set_username(self, user_id: int, new_username: str) -> None:
         """

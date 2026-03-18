@@ -22,6 +22,22 @@ def target_user_id(request: Request, me_id: int = Depends(get_user)) -> int:
         raise HTTPException(status_code=422)
 
 
+@user_router.get('/')
+async def search_users(
+        user_service: UserService = Depends(get_user_service),
+        q: str = Query(..., min_length=3, max_length=40),
+        l: int = Query(10, alias='limit', ge=1, le=100)
+) -> list[int]:
+    """
+    Search for users
+    :param user_service: user service
+    :param q: query string
+    :param l: number of results to return (max 100, default 10)
+    :return: the list of the first *l* matching user IDs
+    """
+    return await user_service.search_users(q, l)
+
+
 @user_router.post('/')
 async def register_user(request: RegistrationRequest, auth_service: AuthService = Depends(get_auth_service)) -> str:
     """
