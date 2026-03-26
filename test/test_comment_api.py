@@ -80,7 +80,6 @@ async def test_comment_interaction_api(
 
     login = await client.post('/session/', json={'username': 'alice', 'password': 'H@xx0r.2026'})
     post_author_auth = {'Authorization': f'Bearer {login.json()}'}
-    login = await client.post('/session/', json={'username': 'bob', 'password': 'H@xx0r.2026'})
 
     like = await client.get(
         f'/users/{post_author.user_id}/posts/{post.post_id}/comments/{comment.comment_id}/like',

@@ -2,7 +2,6 @@ import asyncio
 from typing import Callable, Coroutine, Any
 from model import PostRequest, Post
 from httpx import AsyncClient
-from PIL import Image
 import base64
 import pytest
 

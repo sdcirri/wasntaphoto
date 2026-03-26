@@ -4,7 +4,7 @@ from sqlalchemy import select
 
 from ..entities import PostModel, FollowingRelationship
 
-from .db_repository import DBRepository, T
+from .db_repository import DBRepository
 
 
 class PostRepository(DBRepository[PostModel]):

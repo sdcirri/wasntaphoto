@@ -1,6 +1,4 @@
-from pydantic import BaseModel, Field, Base64Bytes, ConfigDict
-
-from .post import Post
+from pydantic import BaseModel, Field, Base64Bytes
 
 
 class UserCredentials(BaseModel):
