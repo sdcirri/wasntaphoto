@@ -1,5 +1,5 @@
 <script>
-import b64AsBlob from '../services/b64AsBlob'
+import b64AsBlob from '../utils/b64AsBlob'
 import { authStatus } from '../services/login'
 import getProfile from '../services/getProfile'
 import { reactive } from 'vue';

@@ -5,7 +5,7 @@ import isLiked from '../services/isLiked'
 import likePost from '../services/likePost'
 import unlikePost from '../services/unlikePost'
 import rmPost from '../services/rmPost'
-import timeAgo from '../services/timeAgo'
+import timeAgo from '../utils/timeAgo'
 
 export default {
     props: {

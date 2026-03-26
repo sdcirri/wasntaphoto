@@ -5,7 +5,7 @@ import likeComment from '../services/likeComment'
 import unlikeComment from '../services/unlikeComment'
 import getComment from '../services/getComment'
 import rmComment from '../services/rmComment'
-import timeAgo from '../services/timeAgo'
+import timeAgo from '../utils/timeAgo'
 
 export default {
     props: {
