@@ -1,12 +1,11 @@
-import asyncio
 from typing import Callable, Coroutine, Any
 from model import PostRequest, Post
 from httpx import AsyncClient
+import asyncio
 import base64
 import pytest
 
 from db.entities import UserModel, PostModel
-from test.fixtures.db import post_factory
 
 
 @pytest.mark.asyncio
