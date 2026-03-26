@@ -1,31 +1,32 @@
-import api from './axios'
+import api from "./axios";
 
+import { authHeaders, clearAuth, ensureAuthenticated } from "./login";
 import {
-    BadFollowOperation,
-    BadAuthException,
-    InternalServerError,
-    BlockedException,
-    UserNotFoundException
-} from './apiErrors'
-import { authStatus } from './login'
+	BadFollowOperation,
+	BadAuthException,
+	BlockedException,
+	InternalServerError,
+	UserNotFoundException
+} from "./apiErrors";
 
 export default async function follow(toFollow) {
-    if (authStatus.status == null) throw BadAuthException;
-    let resp = await api.post(`/users/${authStatus.status}/follow/${toFollow}`, {},
-        { "headers": { "Authorization": `bearer ${authStatus.status}` } }
-    );
-    switch (resp.status) {
-        case 201:
-            return;
-        case 400:
-            throw BadFollowOperation;
-        case 401:
-            throw BadAuthException;
-        case 403:
-            throw BlockedException;
-        case 404:
-            throw UserNotFoundException;
-        default:
-            throw InternalServerError;
-    }
+	await ensureAuthenticated();
+	const resp = await api.post(`/users/me/following/${toFollow}`, null, {
+		headers: authHeaders()
+	});
+	switch (resp.status) {
+		case 200:
+			return;
+		case 400:
+			throw BadFollowOperation;
+		case 401:
+			clearAuth();
+			throw BadAuthException;
+		case 403:
+			throw BlockedException;
+		case 404:
+			throw UserNotFoundException;
+		default:
+			throw InternalServerError;
+	}
 }

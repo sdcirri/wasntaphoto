@@ -1,26 +1,28 @@
+import api from "./axios";
+
+import { authHeaders, clearAuth, ensureAuthenticated } from "./login";
 import {
-    AccessDeniedException,
-    BadAuthException,
-    InternalServerError,
-    LikeImpersonationException
-} from './apiErrors';
-import { authStatus } from './login';
-import api from './axios'
+	BadAuthException,
+	CommentNotFoundException,
+	InternalServerError
+} from "./apiErrors";
+import { resolveCommentContext } from "./getPost";
 
 export default async function unlikeComment(cid) {
-    if (authStatus.status == null) throw BadAuthException;
-    let resp = await api.delete(`/comments/${cid}/unlike/${authStatus.status}`,
-        { "headers": { "Authorization": `bearer ${authStatus.status}` } });
-    switch (resp.status) {
-        case 201:
-            return;
-        case 401:
-            throw BadAuthException;
-        case 403:
-            throw AccessDeniedException;
-        case 404:
-            throw LikeImpersonationException;
-        default:
-            throw InternalServerError;
-    }
+	await ensureAuthenticated();
+	const { postId, authorId } = await resolveCommentContext(cid);
+	const resp = await api.delete(`/users/${authorId}/posts/${postId}/comments/${cid}/like`, {
+		headers: authHeaders()
+	});
+	switch (resp.status) {
+		case 204:
+			return;
+		case 401:
+			clearAuth();
+			throw BadAuthException;
+		case 404:
+			throw CommentNotFoundException;
+		default:
+			throw InternalServerError;
+	}
 }

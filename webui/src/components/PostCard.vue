@@ -49,7 +49,7 @@ export default {
             try {
                 this.post = await getPost(this.ppostID);
                 this.likeCount = this.post.likeCount;
-                this.ownPost = (this.post.author == authStatus.status);
+                this.ownPost = (this.post.author == authStatus.userId);
                 this.post.pubTime = new Date(this.post.pubTime);
                 this.loading = false;
                 this.indicatorsRefresh();

@@ -27,7 +27,7 @@ export default {
 			this.errormsg = "";
 			try {
 				this.profile = await getProfile(this.userID);
-				this.ownProfile = (authStatus.status == this.profile.userID);
+				this.ownProfile = (authStatus.userId == this.profile.userID);
 				const blob = b64AsBlob(this.profile.proPicB64);
 				this.blobUrl = URL.createObjectURL(blob);
 				this.loading = false;
@@ -67,18 +67,18 @@ export default {
 					</div>
 					<div v-else>
 						<h6>
-							<RouterLink :to="`/profile/${authStatus.status}/followers`">{{ this.profile.followers }}
+							<RouterLink to="/profile/me/followers">{{ this.profile.followers }}
 								followers</RouterLink>
 						</h6>
 						<h6>
-							<RouterLink :to="`/profile/${authStatus.status}/following`">{{ this.profile.following }}
+							<RouterLink to="/profile/me/following">{{ this.profile.following }}
 								following</RouterLink>
 						</h6>
 						<h6>
-							<RouterLink :to="`/profile/${authStatus.status}/blocked`">Manage blocked users</RouterLink>
+							<RouterLink to="/profile/me/blocked">Manage blocked users</RouterLink>
 						</h6>
 						<h6>
-							<RouterLink :to="`/profile/${authStatus.status}/edit`">Edit profile</RouterLink>
+							<RouterLink to="/profile/me/edit">Edit profile</RouterLink>
 						</h6>
 					</div>
 				</h4>

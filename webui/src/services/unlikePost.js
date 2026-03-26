@@ -1,26 +1,24 @@
-import {
-    AccessDeniedException,
-    BadAuthException,
-    InternalServerError,
-    LikeImpersonationException
-} from './apiErrors';
-import { authStatus } from './login';
-import api from './axios'
+import api from "./axios";
+
+import { authHeaders, clearAuth, ensureAuthenticated } from "./login";
+import { BadAuthException, InternalServerError, PostNotFoundException } from "./apiErrors";
+import { resolvePostAuthorId } from "./getPost";
 
 export default async function unlikePost(pid) {
-    if (authStatus.status == null) throw BadAuthException;
-    let resp = await api.delete(`/posts/${pid}/unlike/${authStatus.status}`,
-        { "headers": { "Authorization": `bearer ${authStatus.status}` } });
-    switch (resp.status) {
-        case 201:
-            return;
-        case 401:
-            throw BadAuthException;
-        case 403:
-            throw AccessDeniedException;
-        case 404:
-            throw LikeImpersonationException;
-        default:
-            throw InternalServerError;
-    }
+	await ensureAuthenticated();
+	const authorId = await resolvePostAuthorId(pid);
+	const resp = await api.delete(`/users/${authorId}/posts/${pid}/like`, {
+		headers: authHeaders()
+	});
+	switch (resp.status) {
+		case 204:
+			return;
+		case 401:
+			clearAuth();
+			throw BadAuthException;
+		case 404:
+			throw PostNotFoundException;
+		default:
+			throw InternalServerError;
+	}
 }

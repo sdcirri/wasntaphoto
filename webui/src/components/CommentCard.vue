@@ -5,7 +5,6 @@ import likeComment from '../services/likeComment'
 import unlikeComment from '../services/unlikeComment'
 import getComment from '../services/getComment'
 import rmComment from '../services/rmComment'
-import getPost from '../services/getPost'
 import timeAgo from '../services/timeAgo'
 
 export default {
@@ -18,7 +17,6 @@ export default {
     data: function () {
         return {
             comment: null,
-            ownPost: null,
             ownComment: null,
             likeCount: 0,
             loading: true
@@ -46,11 +44,9 @@ export default {
             this.loading = true;
             try {
                 this.comment = await getComment(this.commentID);
-                let post = await getPost(this.comment.postID);
                 this.comment.time = new Date(this.comment.time);
                 this.likeCount = this.comment.likes;
-                this.ownPost = (post.author == authStatus.status);
-                this.ownComment = (this.comment.author == authStatus.status);
+                this.ownComment = (this.comment.author == authStatus.userId);
                 this.loading = false;
                 this.indicatorsRefresh();
             } catch (e) {
@@ -97,7 +93,7 @@ export default {
         <div v-else class="postContainer">
             <span class="flex d-flex align-items-center">
                 <ProCard :userID="comment.author" :showControls="!ownComment" @profileError="propagateProCardError" />
-                <button class="delBtn" v-if="ownPost || ownComment" @click="rmComment">
+                <button class="delBtn" v-if="ownComment" @click="rmComment">
                     <svg class="feather featherBtn">
                         <use href="/feather-sprite-v4.29.0.svg#trash-2" />
                     </svg>

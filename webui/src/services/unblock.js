@@ -1,25 +1,32 @@
-import api from './axios'
+import api from "./axios";
 
-import { BadFollowOperation, BadAuthException, InternalServerError, BlockedException, UserNotFoundException } from './apiErrors'
-import { authStatus } from './login'
+import { authHeaders, clearAuth, ensureAuthenticated } from "./login";
+import {
+	BadFollowOperation,
+	BadAuthException,
+	BlockedException,
+	InternalServerError,
+	UserNotFoundException
+} from "./apiErrors";
 
 export default async function unblock(toUnblock) {
-    if (authStatus.status == null) throw BadAuthException;
-    let resp = await api.delete(`/users/${authStatus.status}/unblock/${toUnblock}`,
-        { "headers": { "Authorization": `bearer ${authStatus.status}` } }
-    );
-    switch (resp.status) {
-        case 204:
-            return;
-        case 400:
-            throw BadFollowOperation;
-        case 401:
-            throw BadAuthException;
-        case 403:
-            throw BlockedException;
-        case 404:
-            throw UserNotFoundException;
-        default:
-            throw InternalServerError;
-    }
+	await ensureAuthenticated();
+	const resp = await api.delete(`/users/me/blocked/${toUnblock}`, {
+		headers: authHeaders()
+	});
+	switch (resp.status) {
+		case 204:
+			return;
+		case 400:
+			throw BadFollowOperation;
+		case 401:
+			clearAuth();
+			throw BadAuthException;
+		case 403:
+			throw BlockedException;
+		case 404:
+			throw UserNotFoundException;
+		default:
+			throw InternalServerError;
+	}
 }

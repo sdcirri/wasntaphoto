@@ -1,27 +1,29 @@
-import {
-    AccessDeniedException,
-    BadAuthException,
-    InternalServerError,
-    PostNotFoundException
-} from './apiErrors'
-import api from './axios'
+import api from "./axios";
 
-import { authStatus } from './login'
+import { authHeaders, clearAuth, ensureAuthenticated } from "./login";
+import {
+	AccessDeniedException,
+	BadAuthException,
+	InternalServerError,
+	PostNotFoundException
+} from "./apiErrors";
 
 export default async function rmPost(postID) {
-    if (authStatus.status == null) throw BadAuthException;
-    let resp = await api.delete(`/posts/${postID}/delete`,
-        { "headers": { "Authorization": `bearer ${authStatus.status}` } });
-    switch (resp.status) {
-        case 204:
-            return;
-        case 401:
-            throw BadAuthException;
-        case 403:
-            throw AccessDeniedException;
-        case 404:
-            throw PostNotFoundException;
-        default:
-            throw InternalServerError;
-    }
+	await ensureAuthenticated();
+	const resp = await api.delete(`/users/me/posts/${postID}`, {
+		headers: authHeaders()
+	});
+	switch (resp.status) {
+		case 204:
+			return;
+		case 401:
+			clearAuth();
+			throw BadAuthException;
+		case 403:
+			throw AccessDeniedException;
+		case 404:
+			throw PostNotFoundException;
+		default:
+			throw InternalServerError;
+	}
 }

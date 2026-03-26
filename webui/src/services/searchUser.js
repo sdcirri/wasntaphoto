@@ -1,9 +1,17 @@
-import { InternalServerError } from './apiErrors'
-import api from './axios'
+import api from "./axios";
+
+import { InternalServerError } from "./apiErrors";
 
 export default async function searchUser(query) {
-    if (query == "") return;
-    let resp = await api.get(`/searchUser?q=${query}`, {});
-    if (resp.status == 200) return resp.data;
-    throw InternalServerError;
+	const trimmed = query?.trim() ?? "";
+	if (trimmed.length < 3)
+		return [];
+
+	const resp = await api.get("/users/", {
+		params: { q: trimmed, limit: 10 }
+	});
+
+	if (resp.status === 200)
+		return resp.data;
+	throw InternalServerError;
 }

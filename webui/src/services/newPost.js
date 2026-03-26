@@ -1,28 +1,32 @@
-import api from './axios'
+import api from "./axios";
+
+import { authHeaders, clearAuth, ensureAuthenticated } from "./login";
 import {
-    BadUploadException,
-    BadPostAuthException,
-    BadAuthException,
-    InternalServerError
-} from './apiErrors';
-import { authStatus } from './login'
+	BadAuthException,
+	BadUploadException,
+	InternalServerError
+} from "./apiErrors";
+import { cachePostPayload, normalizePost } from "./getPost";
 
 export default async function newPost(image, caption) {
-    if (authStatus.status == null) throw BadAuthException;
-    let resp = await api.post(`/users/${authStatus.status}/newpost`,
-        { "image": image, "caption": caption },
-        { "headers": { "Authorization": `bearer ${authStatus.status}` } }
-    );
-    switch (resp.status) {
-        case 201:
-            return resp.data;
-        case 400:
-            throw BadUploadException;
-        case 401:
-            throw BadAuthException;
-        case 403:
-            throw BadPostAuthException;
-        default:
-            throw InternalServerError;
-    }
+	await ensureAuthenticated();
+	const resp = await api.post("/users/me/posts/", {
+		image,
+		caption
+	}, {
+		headers: authHeaders({ "Content-Type": "application/json" })
+	});
+	switch (resp.status) {
+		case 200:
+			cachePostPayload(resp.data);
+			return normalizePost(resp.data);
+		case 400:
+		case 422:
+			throw BadUploadException;
+		case 401:
+			clearAuth();
+			throw BadAuthException;
+		default:
+			throw InternalServerError;
+	}
 }

@@ -28,7 +28,7 @@ export default {
             this.loading = true;
             this.errormsg = "";
             try {
-                this.profile = await getProfile(authStatus.status);
+                this.profile = await getProfile("me");
                 this.usernamebuf = ref(this.profile.username);
                 this.uploadB64 = "data:image/jpg;base64," + this.profile.proPicB64;
                 this.uploadNotOG = false;

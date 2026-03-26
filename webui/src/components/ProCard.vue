@@ -23,7 +23,7 @@ export default {
     },
     methods: {
         emitError(e) {
-            this.$emit("profileError", { "error": e, "userID": this.userID });
+            this.$emit("profileError", { "error": e.toString(), "userID": this.userID });
         },
         propagateFRM(uid) {
             this.$emit("followerRm", uid);
@@ -47,7 +47,7 @@ export default {
     async mounted() {
         await this.refresh();
         if (this.profile != null)
-            this.ownProfile = (this.profile.userID == authStatus.status);
+            this.ownProfile = (this.profile.userID == authStatus.userId);
     }
 }
 </script>

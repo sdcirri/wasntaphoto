@@ -1,24 +1,29 @@
-import api from './axios'
+import api from "./axios";
 
-import { BadAuthException, InternalServerError, AccessDeniedException, PostNotFoundException } from './apiErrors'
-import { authStatus } from './login'
+import { authHeaders, clearAuth, ensureAuthenticated } from "./login";
+import {
+	AccessDeniedException,
+	BadAuthException,
+	InternalServerError,
+	PostNotFoundException
+} from "./apiErrors";
 
 export default async function getLikes(postID) {
-    if (authStatus.status == null) throw BadAuthException;
-    let resp = await api.get(`/posts/${postID}/likes`,
-        { "headers": { "Authorization": `bearer ${authStatus.status}` } }
-    );
-    switch (resp.status) {
-        case 200:
-            return resp.data;
-        case 400:
-        case 401:
-            throw BadAuthException;
-        case 403:
-            throw AccessDeniedException;
-        case 404:
-            throw PostNotFoundException;
-        default:
-            throw InternalServerError;
-    }
+	await ensureAuthenticated();
+	const resp = await api.get(`/users/me/posts/${postID}/likes`, {
+		headers: authHeaders()
+	});
+	switch (resp.status) {
+		case 200:
+			return resp.data;
+		case 401:
+			clearAuth();
+			throw BadAuthException;
+		case 403:
+			throw AccessDeniedException;
+		case 404:
+			throw PostNotFoundException;
+		default:
+			throw InternalServerError;
+	}
 }

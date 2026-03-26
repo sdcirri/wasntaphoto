@@ -6,15 +6,13 @@ const instance = axios.create({
 });
 
 instance.interceptors.response.use(
-	function (response) {		// 2xx
+	function (response) {
 		return response;
 	},
 	function (error) {
-		if (error.response &&
-			error.response.status >= 400 &&
-			error.response.status <= 404)
+		if (error.response != null)
 			return Promise.resolve(error.response);
-		Promise.reject(error);
+		return Promise.reject(error);
 	}
 );
 

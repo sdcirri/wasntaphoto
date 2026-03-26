@@ -51,7 +51,7 @@ export default {
 								</RouterLink>
 							</li>
 							<li class="nav-item">
-								<RouterLink :to="`/profile/${authStatus.status}`" class="nav-link"
+								<RouterLink to="/profile/me" class="nav-link"
 									v-if="authStatus.status">
 									<svg class="feather">
 										<use href="/feather-sprite-v4.29.0.svg#user" />

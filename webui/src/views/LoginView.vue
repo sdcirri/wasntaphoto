@@ -8,13 +8,14 @@ export default {
 		return {
 			errormsg: null,
 			username: ref(),
+			password: ref(),
 			userID: null
 		}
 	},
 	methods: {
 		async login() {
 			try {
-				this.userID = await login(this.username);
+				this.userID = await login(this.username, this.password);
 				this.$emit("loggedIn");
 				if (this.$router.options.history.state.back == null)
 					this.$router.replace("/");
@@ -39,6 +40,7 @@ export default {
 		</div>
 		<div class="d-flex flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 centerDiv">
 			<input v-model="username" placeholder="username" @keyup.enter="this.login" />
+			<input v-model="password" type="password" placeholder="password" @keyup.enter="this.login" />
 			<button type="button" class="btn btn-sm btn-outline-primary" @click="this.login">
 				Login
 			</button>

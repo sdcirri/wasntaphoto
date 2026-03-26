@@ -1,29 +1,39 @@
-import api from './axios'
+import api from "./axios";
 
-import { authStatus } from './login'
+import { authHeaders, clearAuth, ensureAuthenticated } from "./login";
 import {
-    BadIdsException,
-    BlockedException,
-    UserNotFoundException,
-    InternalServerError,
-    BadAuthException
-} from './apiErrors'
+	BadAuthException,
+	CommentNotFoundException,
+	InternalServerError
+} from "./apiErrors";
+import { resolveCommentContext } from "./getPost";
+
+function normalizeComment(comment, postId) {
+	return {
+		commentID: comment.comment_id,
+		postID: postId,
+		author: comment.author_id,
+		time: comment.pub_time,
+		content: comment.content,
+		likes: comment.like_cnt
+	};
+}
 
 export default async function getComment(cid) {
-    if (authStatus.status == null) throw BadAuthException;
-    let resp = await api.get(`/comments/${cid}`, { "headers": { "Authorization": `bearer ${authStatus.status}` } });
-    switch (resp.status) {
-        case 200:
-            return resp.data;
-        case 400:
-            throw BadIdsException;
-        case 401:
-            throw BadAuthException;
-        case 403:
-            throw BlockedException;
-        case 404:
-            throw UserNotFoundException;
-        default:
-            throw InternalServerError;
-    }
+	await ensureAuthenticated();
+	const { postId, authorId } = await resolveCommentContext(cid);
+	const resp = await api.get(`/users/${authorId}/posts/${postId}/comments/${cid}`, {
+		headers: authHeaders()
+	});
+	switch (resp.status) {
+		case 200:
+			return normalizeComment(resp.data, postId);
+		case 401:
+			clearAuth();
+			throw BadAuthException;
+		case 404:
+			throw CommentNotFoundException;
+		default:
+			throw InternalServerError;
+	}
 }
