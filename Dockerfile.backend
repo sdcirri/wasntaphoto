@@ -1,0 +1,19 @@
+FROM python:3.12-alpine
+LABEL authors="sdcirri"
+
+COPY requirements.txt .
+RUN pip install -r requirements.txt && rm requirements.txt
+
+RUN mkdir /storage
+COPY assets/propic_default.jpg /storage/
+ENV WASA_STORAGE_ROOT=/storage
+
+WORKDIR /app
+COPY alembic api db exceptions model providers security service app.py .
+
+RUN addgroup -S -g 1000 wasntaphoto && \
+    adduser -S -u 1000 -G wasntaphoto -h /dev/null -s /sbin/nologin wasntaphoto
+USER wasntaphoto
+
+EXPOSE 8000
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app", "--workers", "4"]

@@ -5,6 +5,8 @@ from sqlalchemy import pool
 
 from alembic import context
 
+from os import environ
+
 from db.engine import Base
 from db.entities import *
 
@@ -16,6 +18,8 @@ config = context.config
 # This line sets up loggers basically.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
+
+config.set_main_option("sqlalchemy.url", environ["DATABASE_URL"])
 
 # add your model's MetaData object here
 # for 'autogenerate' support
