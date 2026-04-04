@@ -9,7 +9,16 @@ COPY assets/propic_default.jpg /storage/
 ENV WASA_STORAGE_ROOT=/storage
 
 WORKDIR /app
-COPY alembic api db exceptions model providers security service app.py .
+COPY alembic ./alembic/
+COPY api ./api/
+COPY db ./db/
+COPY exceptions ./exceptions/
+COPY model ./model/
+COPY providers ./providers/
+COPY security ./security/
+COPY service ./service/
+COPY app.py alembic.ini .
+RUN chmod -R a+r /app
 
 RUN addgroup -S -g 1000 wasntaphoto && \
     adduser -S -u 1000 -G wasntaphoto -h /dev/null -s /sbin/nologin wasntaphoto
