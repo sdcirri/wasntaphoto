@@ -4,7 +4,7 @@ argon2-cffi==25.1.0
 pydantic==2.12.5
 aiofiles==25.1.0
 pillow==12.1.1
-psycopg==3.3.3
+psycopg[binary]==3.3.3
 alembic==1.18.4
 ## The following requirements were added by pip freeze:
 annotated-doc==0.0.4
