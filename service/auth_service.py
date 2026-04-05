@@ -1,5 +1,7 @@
 from argon2.exceptions import VerifyMismatchError, VerificationError, InvalidHashError
 from argon2 import PasswordHasher
+
+from sqlalchemy.exc import IntegrityError
 import secrets
 import logging
 import time
@@ -53,16 +55,19 @@ class AuthService:
         :param user_id: user to be authorized
         :return: the token
         """
-        while (token := secrets.token_urlsafe(32)) in await self.session_repo.find_all():
-            pass
+        while True:
+            try:
+                token = secrets.token_urlsafe(32)
+                session = UserSessionModel(
+                    user_id=user_id,
+                    session_id=token,
+                    valid_until=int(time.time()) + 604800   # 1 week
+                )
 
-        session = UserSessionModel(
-            user_id=user_id,
-            session_id=token,
-            valid_until=int(time.time()) + 604800   # 1 week
-        )
-        await self.session_repo.save(session)
-        return token
+                await self.session_repo.save(session)
+                return token
+            except IntegrityError:
+                pass
 
     async def revoke_session(self, session: str) -> None:
         """
