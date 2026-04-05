@@ -10,6 +10,12 @@ services:
     restart: unless-stopped
     volumes:
       - ./initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U wasntaphoto -d wasntaphoto" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
   backend:
     build:
       context: .
@@ -20,12 +26,13 @@ services:
       DATABASE_URL: postgresql+psycopg://wasntaphoto:wasntaphoto@db/wasntaphoto
     restart: unless-stopped
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     working_dir: /app
     command: >
       sh -c "
         PYTHONPATH=. alembic upgrade head &&
-        gunicorn --bind 0.0.0.0:8000 app:app --workers 3"
+        gunicorn --bind 0.0.0.0:8000 app:app --workers 3 --worker-tmp-dir /dev/shm"
   frontend:
     build:
       context: .
