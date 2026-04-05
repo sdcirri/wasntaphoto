@@ -8,6 +8,8 @@ services:
       POSTGRES_PASSWORD: wasntaphoto
       POSTGRES_DB: wasntaphoto
     restart: unless-stopped
+    volumes:
+      - ./initdb:/docker-entrypoint-initdb.d:ro
   backend:
     build:
       context: .
