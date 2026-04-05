@@ -18,10 +18,10 @@ COPY providers ./providers/
 COPY security ./security/
 COPY service ./service/
 COPY app.py alembic.ini .
-RUN chmod -R a+r /app
 
 RUN addgroup -S -g 1000 wasntaphoto && \
     adduser -S -u 1000 -G wasntaphoto -h /dev/null -s /sbin/nologin wasntaphoto
+RUN chown -R wasntaphoto:wasntaphoto /app
 USER wasntaphoto
 
 EXPOSE 8000
