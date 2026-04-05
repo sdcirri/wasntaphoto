@@ -21,8 +21,7 @@ COPY app.py alembic.ini .
 
 RUN addgroup -S -g 1000 wasntaphoto && \
     adduser -S -u 1000 -G wasntaphoto -h /dev/null -s /sbin/nologin wasntaphoto
-RUN chown -R wasntaphoto:wasntaphoto /app
+RUN chown -R wasntaphoto:wasntaphoto /app /storage
 USER wasntaphoto
 
 EXPOSE 8000
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app", "--workers", "4"]
