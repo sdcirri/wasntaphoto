@@ -1,6 +1,7 @@
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi import FastAPI, Request
+from starlette import status
 
 from api.login_api import login_router
 from api.feed_api import feed_router
@@ -21,6 +22,12 @@ app.add_middleware(
 app.include_router(login_router)
 app.include_router(user_router)
 app.include_router(feed_router)
+
+
+@app.get('/liveness')
+async def liveness() -> JSONResponse:
+    return JSONResponse({'status': 'healthy'}, status_code=status.HTTP_200_OK)
+
 
 @app.exception_handler(AppError)
 async def app_error_handler(_: Request, exc: AppError) -> JSONResponse:

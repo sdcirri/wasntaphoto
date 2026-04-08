@@ -25,20 +25,25 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://wasntaphoto:wasntaphoto@db/wasntaphoto
     restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "python -c \"import requests; requests.get('http://localhost:8000/liveness')\"" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     depends_on:
       db:
         condition: service_healthy
     working_dir: /app
     command: >
-      sh -c "
-        PYTHONPATH=. alembic upgrade head &&
-        gunicorn --bind 0.0.0.0:8000 app:app --workers 3 --worker-tmp-dir /dev/shm"
+      sh -c "PYTHONPATH=. alembic upgrade head && gunicorn app:app"
   frontend:
     build:
       context: .
       dockerfile: Dockerfile.frontend
     ports:
-      - "8080:80"
+      - "8080:8080"
     restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
