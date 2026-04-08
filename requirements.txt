@@ -8,6 +8,7 @@ aiofiles==25.1.0
 pillow==12.1.1
 psycopg[binary]==3.3.3
 alembic==1.18.4
+requests==2.33.1
 ## The following requirements were added by pip freeze:
 annotated-doc==0.0.4
 annotated-types==0.7.0
