@@ -26,7 +26,7 @@ services:
       DATABASE_URL: postgresql+psycopg://wasntaphoto:wasntaphoto@db/wasntaphoto
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD-SHELL", "python -c \"import requests; requests.get('http://localhost:8000/liveness')\"" ]
+      test: [ "CMD-SHELL", "python -c \"import requests; requests.get('http://localhost:8000/liveness').raise_for_status()\"" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -42,7 +42,7 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
     ports:
-      - "8080:8080"
+      - "8080:80"
     restart: unless-stopped
     depends_on:
       backend:
