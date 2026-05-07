@@ -15,7 +15,7 @@ export default defineConfig(({command, mode, ssrBuild}) => {
 	};
 	ret.define = {
 		// Do not modify this constant, it is used in the evaluation.
-		"__API_URL__": JSON.stringify("http://backend:8000"),
+		"__API_URL__": JSON.stringify("http://localhost:8000"),
 	};
 	return ret;
 })
