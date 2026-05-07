@@ -4,8 +4,8 @@ LABEL authors="sdcirri"
 COPY requirements.txt .
 RUN pip install -r requirements.txt && rm requirements.txt
 
-RUN mkdir /storage
-COPY assets/propic_default.jpg /storage/
+RUN mkdir -p /storage/posts/
+COPY assets/propic_default.jpg /storage/propics/default.jpg
 ENV WASA_STORAGE_ROOT=/storage
 
 WORKDIR /app
