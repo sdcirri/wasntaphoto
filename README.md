@@ -41,7 +41,16 @@ I chose FastAPI over Go because it provides:
 - Cleaned up the mess in the old API design (that's on me 😅)
 
 ## Build and run
-**[TBA]**
+Clone the repo:
+```shell
+$ git clone https://github.com/sdcirri/wasntaphoto
+$ cd wasntaphoto/
+```
+Install [Docker Compose](https://docs.docker.com/compose/install), then, on the project root, simply run:
+```shell
+$ docker compose up -d
+```
+Everything will build and start automatically. When it's done, visit http://localhost:8080/.
 
 ## The name
 The original project was named "WASAPhoto" → "Was-A-Photo" → "Wasn't-A-Photo".
