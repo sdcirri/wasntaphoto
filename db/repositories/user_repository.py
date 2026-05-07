@@ -39,7 +39,7 @@ class UserRepository(DBRepository[UserModel]):
 
     async def find_by_text_query(self, query: str, limit: int=10) -> list[int]:
         return list((await self.session.scalars(
-            select(UserModel)
+            select(UserModel.user_id)
             .where(UserModel.username.ilike(f'%{query}%'))
             .order_by(func.similarity(UserModel.username, query).desc())
             .limit(limit)
