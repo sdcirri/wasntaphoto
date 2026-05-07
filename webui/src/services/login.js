@@ -69,8 +69,6 @@ export async function syncCurrentUserId(force = false) {
 	if (syncCurrentUserPromise != null)
 		return syncCurrentUserPromise;
 
-	// The backend session token is opaque, so the UI keeps the numeric user id
-	// separately after resolving `/users/me`.
 	syncCurrentUserPromise = (async function () {
 		const resp = await api.get("/users/me", {
 			headers: authHeaders()
