@@ -42,7 +42,7 @@ export default {
 									Home
 								</RouterLink>
 							</li>
-							<li class="nav-item">
+							<li class="nav-item" v-if="authStatus.status">
 								<RouterLink to="/newpost" class="nav-link">
 									<svg class="feather">
 										<use href="/feather-sprite-v4.29.0.svg#plus" />
@@ -50,16 +50,15 @@ export default {
 									New post
 								</RouterLink>
 							</li>
-							<li class="nav-item">
-								<RouterLink to="/profile/me" class="nav-link"
-									v-if="authStatus.status">
+							<li class="nav-item" v-if="authStatus.status">
+								<RouterLink to="/profile/me" class="nav-link">
 									<svg class="feather">
 										<use href="/feather-sprite-v4.29.0.svg#user" />
 									</svg>
 									My profile
 								</RouterLink>
 							</li>
-							<li class="nav-item">
+							<li class="nav-item" v-if="authStatus.status">
 								<RouterLink to="/search" class="nav-link">
 									<svg class="feather">
 										<use href="/feather-sprite-v4.29.0.svg#search" />
@@ -67,12 +66,20 @@ export default {
 									Search
 								</RouterLink>
 							</li>
-							<li class="nav-item">
+							<li class="nav-item" v-if="authStatus.status">
 								<RouterLink to="/login" class="nav-link" @click="logout">
 									<svg class="feather">
-										<use href="/feather-sprite-v4.29.0.svg#key" />
+										<use href="/feather-sprite-v4.29.0.svg#log-out" />
 									</svg>
 									Logout
+								</RouterLink>
+							</li>
+							<li class="nav-item" v-if="!authStatus.status">
+								<RouterLink to="/login" class="nav-link">
+									<svg class="feather">
+										<use href="/feather-sprite-v4.29.0.svg#log-in" />
+									</svg>
+									Login
 								</RouterLink>
 							</li>
 						</ul>
