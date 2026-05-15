@@ -1,35 +1,24 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
-  title: WASAPhoto Backend
+  title: WASNTPhoto Backend
   description: |-
     Keep in touch with your friends by sharing photos of special moments, thanks to WASAPhoto! You can
     upload your photos directly from your PC, and they will be visible to everyone following you.
-  contact:
-    email: deodati.2025953@studenti.uniroma1.it
-  license:
-    name: GPL 3.0
-    url: https://www.gnu.org/licenses/gpl-3.0.en.html
-  version: 1.0.0
-servers:
-  - url: "http://localhost:8000"
-tags:
-  - name: Login
-  - name: Users
-  - name: Account management
-  - name: Followers
-  - name: Post tools
-  - name: Feed tools
-
 paths:
-  /session:
+  /session/:
     post:
       tags:
-        - Login
-      summary: Logs in the user
-      description: Attempts to login, if successful the user token is returned.
-      operationId: doLogin
+      - Login
+      summary: Login
+      description: 'Logs in the user
+
+        :param request: login request
+
+        :param auth_service: auth service
+
+        :return: the session token on successful login'
+      operationId: login_session__post
       requestBody:
-        description: User details
         content:
           application/json:
             schema:
@@ -37,47 +26,602 @@ paths:
         required: true
       responses:
         '200':
-          description: User log-in action successful
+          description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccessToken'
-        '403':
-          description: Access denied
-
-  /users:
-    get:
-      tags:
-        - Users
-      summary: Search for users
-      description: Search registered users on the website
-      operationId: searchUsers
-      parameters:
-        - in: query
-          name: q
-          description: Your search query
-          required: true
-          schema:
-            type: string
-            minLength: 3
-            maxLength: 255
-      responses:
-        '200':
-          description: Successful operation
+                type: string
+                title: Response Login Session  Post
+        '422':
+          description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserList'
-        '400':
-          description: Empty query
+                $ref: '#/components/schemas/HTTPValidationError'
+  /users/{author_id}/posts/{post_id}/comments/:
     post:
       tags:
-        - Login
-      summary: Register to the website
-      description: Registers a new user and issues an access token after successful registration
-      operationId: register
+      - Users
+      - Posts
+      - Comments
+      summary: Comment Post
+      description: 'Comment on a post
+
+        :param content: the comment text
+
+        :param post_id: post ID of the post to comment
+
+        :param comment_service: comment service
+
+        :param user_id: authenticated user ID
+
+        :return: the newly created comment'
+      operationId: comment_post_users__author_id__posts__post_id__comments__post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 0
+          title: Post Id
       requestBody:
-        description: Registration data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+              minLength: 1
+              maxLength: 2048
+              title: Content
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /users/{author_id}/posts/{post_id}/comments/{comment_id}:
+    get:
+      tags:
+      - Users
+      - Posts
+      - Comments
+      summary: Get Comment
+      description: 'Gets a comment
+
+        :param comment_id: comment ID
+
+        :param comment_service: comment service
+
+        :param _: authenticated user ID (unused)
+
+        :return: the comment info'
+      operationId: get_comment_users__author_id__posts__post_id__comments__comment_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: comment_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 0
+          title: Comment Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Users
+      - Posts
+      - Comments
+      summary: Delete Comment
+      description: 'Deletes a comment
+
+        :param comment_id: comment ID
+
+        :param comment_service: comment service
+
+        :param user_id: authenticated user ID'
+      operationId: delete_comment_users__author_id__posts__post_id__comments__comment_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: comment_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 0
+          title: Comment Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /users/{author_id}/posts/{post_id}/comments/{comment_id}/like:
+    get:
+      tags:
+      - Users
+      - Posts
+      - Comments
+      summary: Is Liked
+      description: 'Gets whether the comment was liked by the current user
+
+        :param comment_id: comment ID
+
+        :param comment_service: comment service
+
+        :param user_id: authenticated user ID
+
+        :return: whether the comment was liked by the current user'
+      operationId: is_liked_users__author_id__posts__post_id__comments__comment_id__like_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: comment_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 0
+          title: Comment Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: boolean
+                title: Response Is Liked Users  Author Id  Posts  Post Id  Comments  Comment
+                  Id  Like Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    put:
+      tags:
+      - Users
+      - Posts
+      - Comments
+      summary: Like Comment
+      description: 'Likes a comment
+
+        :param comment_id: comment ID
+
+        :param comment_service: comment service
+
+        :param user_id: authenticated user ID'
+      operationId: like_comment_users__author_id__posts__post_id__comments__comment_id__like_put
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: comment_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 0
+          title: Comment Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Users
+      - Posts
+      - Comments
+      summary: Unlike Comment
+      description: 'Unlikes a comment
+
+        :param comment_id: comment ID
+
+        :param comment_service: comment service
+
+        :param user_id: authenticated user ID'
+      operationId: unlike_comment_users__author_id__posts__post_id__comments__comment_id__like_delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: comment_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 0
+          title: Comment Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /users/{author_id}/posts/:
+    get:
+      tags:
+      - Users
+      - Posts
+      summary: Get User Posts
+      description: 'Get all posts from a specific user
+
+        :param author_id: user ID (can also be "me")
+
+        :param post_service: post service
+
+        :param user_id: authenticated user ID
+
+        :return: list of all posts from that user as IDs'
+      operationId: get_user_posts_users__author_id__posts__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  type: integer
+                type: array
+                title: Response Get User Posts Users  Author Id  Posts  Get
+      security:
+      - HTTPBearer: []
+    post:
+      tags:
+      - Users
+      - Posts
+      summary: New Post
+      description: 'Get a post
+
+        :param request: post creation request
+
+        :param target_id: user ID (must be "me")
+
+        :param post_service: post service
+
+        :param user_id: authenticated user ID
+
+        :return: the requested post'
+      operationId: new_post_users__author_id__posts__post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /users/{author_id}/posts/{post_id}:
+    get:
+      tags:
+      - Users
+      - Posts
+      summary: Get Post
+      description: 'Get a post
+
+        :param author_id: post author ID
+
+        :param post_id: post ID
+
+        :param post_service: post service
+
+        :param user_id: authenticated user ID
+
+        :return: the requested post'
+      operationId: get_post_users__author_id__posts__post_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 0
+          title: Post Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Users
+      - Posts
+      summary: Delete Post
+      description: 'Deletes a post
+
+        :param target_id: user ID (must be "me")
+
+        :param post_id: post ID
+
+        :param post_service: post service
+
+        :param user_id: authenticated user ID'
+      operationId: delete_post_users__author_id__posts__post_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 0
+          title: Post Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /users/{author_id}/posts/{post_id}/like:
+    get:
+      tags:
+      - Users
+      - Posts
+      summary: Is Liked
+      description: 'Gets whether the post was liked by the current user
+
+        :param post_id: post ID
+
+        :param post_service: post service
+
+        :param user_id: authenticated user ID
+
+        :return: whether the post was liked by the current user'
+      operationId: is_liked_users__author_id__posts__post_id__like_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 0
+          title: Post Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: boolean
+                title: Response Is Liked Users  Author Id  Posts  Post Id  Like Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    put:
+      tags:
+      - Users
+      - Posts
+      summary: Like Post
+      description: 'Likes a post
+
+        :param post_id: post ID
+
+        :param post_service: post service
+
+        :param user_id: authenticated user ID'
+      operationId: like_post_users__author_id__posts__post_id__like_put
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 0
+          title: Post Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Users
+      - Posts
+      summary: Unlike Post
+      description: 'Unlikes a post
+
+        :param post_id: post ID
+
+        :param post_service: post service
+
+        :param user_id: authenticated user ID'
+      operationId: unlike_post_users__author_id__posts__post_id__like_delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 0
+          title: Post Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /users/{author_id}/posts/{post_id}/likes:
+    get:
+      tags:
+      - Users
+      - Posts
+      summary: Get Likes
+      description: 'Get your posts likes
+
+        :param target_id: user ID (must be "me")
+
+        :param post_id: post ID
+
+        :param post_service: post service
+
+        :param user_id: authenticated user ID
+
+        :return: list of users who liked the post'
+      operationId: get_likes_users__author_id__posts__post_id__likes_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 0
+          title: Post Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: integer
+                title: Response Get Likes Users  Author Id  Posts  Post Id  Likes
+                  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /users/:
+    get:
+      tags:
+      - Users
+      summary: Search Users
+      description: 'Run a text search on users
+
+        :param user_service: user service
+
+        :param q: search query
+
+        :param limit: number of results to return (max 100, default 10)
+
+        :return: the list of the first matching user IDs'
+      operationId: search_users_users__get
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+          minLength: 3
+          maxLength: 40
+          title: Q
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 10
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: integer
+                title: Response Search Users Users  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - Users
+      summary: Register User
+      description: 'Registers in the user
+
+        :param request: registration request
+
+        :param auth_service: auth service
+
+        :return: the session token on successful registration'
+      operationId: register_user_users__post
+      requestBody:
         required: true
         content:
           application/json:
@@ -85,927 +629,594 @@ paths:
               $ref: '#/components/schemas/RegistrationRequest'
       responses:
         '200':
-          description: Registration successful
+          description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccessToken'
-        '400':
-          description: Weak password
-        '409':
-          description: Username already taken
-
-  /users/{userID}:
+                type: string
+                title: Response Register User Users  Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /users/{user_id}:
     get:
       tags:
-        - Users
-      summary: Profile info
-      description: |-
-        Returns information about a user (follower count, following count, profile picture (B64-encoded!) and posts)
-        You need to be logged in (provide a valid auth token) in order to view posts. Otherwise, the 'posts' property
-        will be empty
-      operationId: getUserProfile
-      parameters:
-        - in: path
-          name: userID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
+      - Users
+      summary: Get User Account
+      description: 'Gets the specified user account info
+
+        :param user_service: user service
+
+        :param target_uid: target user ID (can also be ''me'')
+
+        :param user_id: authenticated user ID
+
+        :return: the current user account info, if it exists'
+      operationId: get_user_account_users__user_id__get
       responses:
         '200':
-          description: Operation successful
+          description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Account'
-        '400':
-          description: Bad auth token or bad userID
-        '403':
-          description: 'Forbidden: user blocked you!'
-        '404':
-          description: User not found
-
-  /users/me:
-    get:
-      tags:
-        - Users
-      summary: Profile info
-      description: |-
-        Returns information about the current user (follower count, following count, profile picture (B64-encoded!) and posts)
-        You need to be logged in (provide a valid auth token) in order to view posts. Otherwise, the 'posts' property
-        will be empty
-      operationId: getMyProfile
-      responses:
-        '200':
-          description: Operation successful
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Account'
-        '400':
-          description: Bad auth token
-
+                $ref: '#/components/schemas/UserAccount'
+      security:
+      - HTTPBearer: []
   /users/me/username:
     put:
       tags:
-        - Account management
-      summary: Sets the username
-      description: Changes the logged in user's username. Returns the same username on success
-      operationId: setMyUserName
+      - Users
+      summary: Update Username
+      description: 'Updates the current user username
+
+        :param username: new username to set
+
+        :param user_service: user service
+
+        :param user_id: authenticated user ID'
+      operationId: update_username_users_me_username_put
       requestBody:
-        description: Username to set
-        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Username'
+              type: string
+              maxLength: 40
+              minLength: 3
+              title: Username
+        required: true
       responses:
         '204':
-          description: Operation successful
-        '400':
-          description: Username already taken
-        '401':
-          description: Unauthenticated
-
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
   /users/me/pp:
     put:
       tags:
-        - Account management
-      summary: Set a profile picture
-      description: |-
-        Sets the profile picture for the logged in user, the picture should be provided in
-        the request body.
-      operationId: setProPic
-      requestBody:
-        content:
-          application/octet-stream:
-            schema:
-              type: string
-              format: binary
+      - Users
+      summary: Update Propic
+      description: 'Updates the current user propic
+
+        :param request: new propic (raw bytes)
+
+        :param user_service: user service
+
+        :param user_id: authenticated user ID'
+      operationId: update_propic_users_me_pp_put
       responses:
         '204':
-          description: Operation successful
-        '400':
-          description: Bad image
-        '401':
-          description: Unauthenticated
-
+          description: Successful Response
+      security:
+      - HTTPBearer: []
   /users/me/followers:
     get:
       tags:
-        - Followers
-      summary: List followers
-      description: See who is following you
-      operationId: getFollowers
+      - Users
+      summary: Get Followers
+      description: 'Get the current user followers
+
+        :param user_service: user service
+
+        :param user_id: authenticated user ID
+
+        :return: the current user followers'
+      operationId: get_followers_users_me_followers_get
       responses:
         '200':
-          description: successful operation
+          description: Successful Response
           content:
             application/json:
               schema:
-                type: array
                 items:
-                  $ref: '#/components/schemas/ID'
-        '400':
-          description: Bad auth token
-        '401':
-          description: Unauthenticated
-        '403':
-          description: "Forbidden: cannot view somebody else's followers"
-
-  /users/me/followers/{followerID}:
+                  type: integer
+                type: array
+                title: Response Get Followers Users Me Followers Get
+      security:
+      - HTTPBearer: []
+  /users/me/followers/{to_remove_id}:
     delete:
       tags:
-        - Followers
-      summary: Remove follower
-      description: Removes a follower from your followers' list
-      operationId: removeFollower
+      - Users
+      summary: Remove Follower
+      description: 'Removes a follower
+
+        :param to_remove_id: user ID of the follower to remove
+
+        :param user_service: user service
+
+        :param user_id: authenticated user ID'
+      operationId: remove_follower_users_me_followers__to_remove_id__delete
+      security:
+      - HTTPBearer: []
       parameters:
-        - in: path
-          name: followerID
-          description: Follower to remove
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
+      - name: to_remove_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 0
+          title: To Remove Id
       responses:
         '204':
-          description: Successful operation
-        '400':
-          description: Bad auth token or trying to remove yourself
-        '401':
-          description: Unauthenticated
-        '403':
-          description: Trying to edit somebody else's followers
-        '404':
-          description: User not found or not following
-
-  /users/me/blocked:
-    get:
-      tags:
-        - Followers
-      summary: List blocked
-      description: See who you've blocked
-      operationId: getBlocked
-      responses:
-        '200':
-          description: Successful operation
+          description: Successful Response
+        '422':
+          description: Validation Error
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ID'
-        '401':
-          description: Unauthenticated
-        '403':
-          description: "Forbidden: cannot view somebody else's blocks"
-
-  /users/me/blocked/{blockedID}:
-    post:
-      tags:
-        - Followers
-      summary: Block user
-      description: |-
-        Blocks annoying user. On success returns the blocked user's ID.
-        Also removes the user from your followers
-      operationId: banUser
-      parameters:
-        - in: path
-          name: blockedID
-          description: User to unblock
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ID'
-        '400':
-          description: Bad userID, already blocked or trying to block yourself
-        '401':
-          description: Unauthenticated
-        '404':
-          description: User not found
-    delete:
-      tags:
-        - Followers
-      summary: Unblock user
-      description: unblocks a previously blocked user
-      operationId: unbanUser
-      parameters:
-        - in: path
-          name: blockedID
-          description: User to unblock
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-      responses:
-        '204':
-          description: Successful operation
-        '400':
-          description: Bad userID, not blocked or trying to unblock yourself
-        '401':
-          description: Unauthenticated
-        '404':
-          description: User not found or not blocked
-
+                $ref: '#/components/schemas/HTTPValidationError'
   /users/me/following:
     get:
       tags:
-        - Followers
-      summary: List follows
-      description: See who you're following
-      operationId: getFollowing
+      - Users
+      summary: Get Following
+      description: 'Get the current user followed accounts
+
+        :param user_service: user service
+
+        :param user_id: authenticated user ID
+
+        :return: the current user followed accounts'
+      operationId: get_following_users_me_following_get
       responses:
         '200':
-          description: Successful operation
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  type: integer
+                type: array
+                title: Response Get Following Users Me Following Get
+      security:
+      - HTTPBearer: []
+  /users/me/following/{to_follow_id}:
+    post:
+      tags:
+      - Users
+      summary: Follow User
+      description: 'Follows a user
+
+        :param to_follow_id: user ID of the user to follow
+
+        :param user_service: user service
+
+        :param user_id: authenticated user ID'
+      operationId: follow_user_users_me_following__to_follow_id__post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: to_follow_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 0
+          title: To Follow Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /users/me/following/{to_unfollow_id}:
+    delete:
+      tags:
+      - Users
+      summary: Unfollow User
+      description: 'Unfollows a user
+
+        :param to_unfollow_id: user ID of the user to unfollow
+
+        :param user_service: user service
+
+        :param user_id: authenticated user ID'
+      operationId: unfollow_user_users_me_following__to_unfollow_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: to_unfollow_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 0
+          title: To Unfollow Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /users/me/blocked:
+    get:
+      tags:
+      - Users
+      summary: Get Blocked
+      description: 'Get the current user blocked accounts
+
+        :param user_service: user service
+
+        :param user_id: authenticated user ID
+
+        :return: the current user blocked accounts'
+      operationId: get_blocked_users_me_blocked_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  type: integer
+                type: array
+                title: Response Get Blocked Users Me Blocked Get
+      security:
+      - HTTPBearer: []
+  /users/me/blocked/{to_block_id}:
+    post:
+      tags:
+      - Users
+      summary: Block User
+      description: 'Blocks a user
+
+        :param to_block_id: user ID of the user to block
+
+        :param user_service: user service
+
+        :param user_id: authenticated user ID'
+      operationId: block_user_users_me_blocked__to_block_id__post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: to_block_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 0
+          title: To Block Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /users/me/blocked/{to_unblock_id}:
+    delete:
+      tags:
+      - Users
+      summary: Unblock User
+      description: 'Unblocks a user
+
+        :param to_unblock_id: user ID of the user to block
+
+        :param user_service: user service
+
+        :param user_id: authenticated user ID'
+      operationId: unblock_user_users_me_blocked__to_unblock_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: to_unblock_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 0
+          title: To Unblock Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /feed/:
+    get:
+      tags:
+      - Feed
+      summary: Get Feed
+      description: 'Gets the user''s feed
+
+        :param post_service: post service
+
+        :param user_id: user ID
+
+        :param page_size: max number of posts to return (for pagination, default=100)
+
+        :param page_number: page number (for pagination, default=0)
+
+        :return: list of posts in the user''s feed in descending chronological order'
+      operationId: get_feed_feed__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: n
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 100
+          title: N
+      - name: p
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+          title: P
+      responses:
+        '200':
+          description: Successful Response
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ID'
-        '400':
-          description: Bad auth token
-        '401':
-          description: Unauthenticated
-        '403':
-          description: "Forbidden: cannot view somebody else's follows"
-
-  /users/me/following/{followingID}:
-    post:
-      tags:
-        - Followers
-      summary: Follow user
-      description: Follows a user.
-      operationId: followUser
-      parameters:
-        - in: path
-          name: followingID
-          description: User to follow
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-      responses:
-        '204':
-          description: Successful operation
-        '400':
-          description: Bad userID, already following or trying to follow yourself
-        '401':
-          description: Unauthenticated
-        '403':
-          description: 'Forbidden: user blocked you!'
-        '404':
-          description: User not found
-    delete:
-      tags:
-        - Followers
-      summary: Unfollow user
-      description: Unfollows a user
-      operationId: unfollowUser
-      parameters:
-        - in: path
-          name: followingID
-          description: User to unfollow
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-      responses:
-        '204':
-          description: Successful operation
-        '400':
-          description: Bad userID, not following or trying to unfollow yourself
-        '401':
-          description: Unauthenticated
-        '404':
-          description: User not found or not following
-
-  /feed:
+                  type: integer
+                title: Response Get Feed Feed  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /liveness:
     get:
-      tags:
-        - Feed tools
-      summary: Retrieve feed
-      description: Retrieves your feed made of the posts of the accounts you follow in reverse chronological order
-      operationId: getMyStream
+      summary: Liveness
+      operationId: liveness_liveness_get
       responses:
         '200':
-          description: Operation successful
+          description: Successful Response
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/Feed'
-        '401':
-          description: Unauthenticated
-        '403':
-          description: Trying to view somebody else's feed
-
-  /users/me/posts:
-    post:
-      tags:
-        - Post tools
-      summary: New post
-      description: Creates a new post with the supplied image and, optionally, a description. On success returns the post ID
-      operationId: uploadPhoto
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PostRequest'
-      responses:
-        '201':
-          description: Successful operation
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ID'
-        '400':
-          description: Malformed post object, image too big or caption too long
-        '401':
-          description: Unauthenticated
-
-  /users/me/posts/{postID}:
-    get:
-      tags:
-        - Post tools
-      summary: Post info
-      description: Get information on your post
-      operationId: getMyPost
-      parameters:
-        - in: path
-          name: postID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-      responses:
-        '200':
-          description: Operation successful
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Post'
-        '401':
-          description: Unauthenticated or bad auth token
-        '403':
-          description: User blocked you!
-        '404':
-          description: Post not found
-    delete:
-      tags:
-        - Post tools
-      summary: Delete post
-      description: Deletes one of your posts. Be careful! Once deleted, posts are lost forever!
-      operationId: deletePhoto
-      parameters:
-        - in: path
-          name: postID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-      responses:
-        '204':
-          description: Operation successful
-        '401':
-          description: Unauthenticated
-        '404':
-          description: Post not found
-
-  /users/me/posts/{postID}/likes:
-    get:
-      tags:
-        - Post tools
-      summary: Get likes
-      description: Get likes on YOUR post. Nobody but the author can see who liked a post
-      operationId: getLikes
-      parameters:
-        - in: path
-          name: postID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-      responses:
-        '200':
-          description: Operation successful
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserList'
-        '400':
-          description: Bad auth token
-        '401':
-          description: Unauthenticated
-        '403':
-          description: Forbidden
-        '404':
-          description: Post not found
-
-  /users/{userID}/posts/{postID}:
-    get:
-      tags:
-        - Post tools
-      summary: Post info
-      description: Get information on one post
-      operationId: getPost
-      parameters:
-        - in: path
-          name: userID
-          description: author ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-        - in: path
-          name: postID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-      responses:
-        '200':
-          description: Operation successful
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Post'
-        '401':
-          description: Unauthenticated or bad auth token
-        '403':
-          description: User blocked you!
-        '404':
-          description: Post not found
-
-  /users/{userID}/posts/{postID}/like:
-    get:
-      tags:
-        - Feed tools
-      summary: Get liked
-      description: Checks whether the post has been liked by current user
-      operationId: isLiked
-      parameters:
-        - in: path
-          name: userID
-          description: author ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-        - in: path
-          name: postID
-          description: Post ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-      responses:
-        '200':
-          description: Operation successful
-          content:
-            application/json:
-              schema:
-                type: boolean
-        '401':
-          description: Unauthenticated or bad authentication
-        '404':
-          description: Post not found
-    put:
-      tags:
-        - Feed tools
-      summary: Like a post
-      description: Adds a like as the logged user
-      operationId: likePhoto
-      parameters:
-        - in: path
-          name: userID
-          description: author ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-        - in: path
-          name: postID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-      responses:
-        '204':
-          description: Operation successful
-        '400':
-          description: Bad auth token or bad post ID
-        '401':
-          description: Unauthenticated
-        '403':
-          description: "Forbidden: user blocked you!"
-        '404':
-          description: Post not found
-    delete:
-      tags:
-        - Feed tools
-      summary: Unlikes a post
-      description: Removes the like as the logged user (if any)
-      operationId: unlikePhoto
-      parameters:
-        - in: path
-          name: userID
-          description: author ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-        - in: path
-          name: postID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-      responses:
-        '204':
-          description: Operation successful
-        '400':
-          description: Bad auth token, bad post ID or post wasn't liked
-        '401':
-          description: Unauthenticated
-        '404':
-          description: Post not found
-
-  /users/{userID}/posts/{postID}/comments:
-    post:
-      tags:
-        - Feed tools
-      summary: Comment on a post
-      description: Comments on a post. On success returns the new comment ID
-      operationId: commentPhoto
-      requestBody:
-        content:
-          text/plain:
-            schema:
-              $ref: '#/components/schemas/LargeText'
-      parameters:
-        - in: path
-          name: userID
-          description: post author ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-        - in: path
-          name: postID
-          description: Post ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-      responses:
-        '200':
-          description: Operation successful
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ID'
-        '400':
-          description: Empty comment or comment too long
-        '401':
-          description: Unauthenticated
-        '403':
-          description: "Cannot comment no post: poster blocked you!"
-        '404':
-          description: Post not found
-
-  /users/{userID}/posts/{postID}/comments/{commentID}:
-    get:
-      tags:
-        - Feed tools
-      summary: Get comment
-      description: Retrieves the comment associated with the supplied ID
-      operationId: getComment
-      parameters:
-        - in: path
-          name: userID
-          description: post author ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-        - in: path
-          name: postID
-          description: Post ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-        - in: path
-          name: commentID
-          description: Comment ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-      responses:
-        '200':
-          description: Operation successful
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Comment'
-        '401':
-          description: Unauthenticated
-        '403':
-          description: "Forbidden: author blocked you!"
-        '404':
-          description: Comment not found
-    delete:
-      tags:
-        - Feed tools
-      summary: Remove a comment
-      description: Removes the specified comment. Only the author can do that!
-      operationId: uncommentPhoto
-      parameters:
-        - in: path
-          name: userID
-          description: post author ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-        - in: path
-          name: postID
-          description: Post ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-        - in: path
-          name: commentID
-          description: Comment ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-      responses:
-        '204':
-          description: Successful operation
-        '400':
-          description: Bad comment ID
-        '401':
-          description: Unauthenticated
-        '403':
-          description: Forbidden, you cannot delete somebody else's comment!
-        '404':
-          description: Comment not found
-
-  /users/{userID}/posts/{postID}/comments/{commentID}/like:
-    get:
-      tags:
-        - Feed tools
-      summary: Is comment liked?
-      description: Checks whether the comment has been liked by you
-      operationId: isCommentLiked
-      parameters:
-        - in: path
-          name: userID
-          description: post author ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-        - in: path
-          name: postID
-          description: Post ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-        - in: path
-          name: commentID
-          description: Comment ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-      responses:
-        '200':
-          description: Operation successful
-          content:
-            application/json:
-              schema:
-                type: boolean
-        '401':
-          description: Unauthenticated or bad authentication
-        '404':
-          description: Post not found
-    put:
-      tags:
-        - Feed tools
-      summary: Likes a comment
-      description: Adds a like to a comment as the logged user
-      operationId: likeComment
-      parameters:
-        - in: path
-          name: userID
-          description: post author ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-        - in: path
-          name: postID
-          description: Post ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-        - in: path
-          name: commentID
-          description: Comment ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-      responses:
-        '204':
-          description: Operation successful
-        '400':
-          description: Bad authentication token or bad comment ID
-        '401':
-          description: Unauthenticated
-        '403':
-          description: "Cannot like: author blocked you!"
-        '404':
-          description: Comment not found
-    delete:
-      tags:
-        - Feed tools
-      summary: Unlike a comment
-      description: Removes the like from a comment as the logged user (if any)
-      operationId: unlikeComment
-      parameters:
-        - in: path
-          name: userID
-          description: post author ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-        - in: path
-          name: postID
-          description: Post ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-        - in: path
-          name: commentID
-          description: Comment ID
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-      responses:
-        '204':
-          description: Operation successful
-        '400':
-          description: Bad authentication token, userID or comment ID
-        '401':
-          description: Unauthenticated
-        '404':
-          description: Comment not found or comment wasn't liked
-
+              schema: {}
 components:
+  schemas:
+    Comment:
+      properties:
+        comment_id:
+          type: integer
+          minimum: 0.0
+          title: Comment Id
+        author_id:
+          type: integer
+          minimum: 0.0
+          title: Author Id
+        pub_time:
+          type: string
+          format: date-time
+          title: Pub Time
+        content:
+          type: string
+          maxLength: 2048
+          title: Content
+        like_cnt:
+          type: integer
+          minimum: 0.0
+          title: Like Cnt
+      type: object
+      required:
+      - comment_id
+      - author_id
+      - pub_time
+      - content
+      - like_cnt
+      title: Comment
+      description: A comment on a post
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    Post:
+      properties:
+        post_id:
+          type: integer
+          minimum: 0.0
+          title: Post Id
+        author_id:
+          type: integer
+          minimum: 0.0
+          title: Author Id
+        pub_time:
+          type: string
+          format: date-time
+          title: Pub Time
+        image:
+          type: string
+          format: base64
+          contentMediaType: application/octet-stream
+          title: Image
+        caption:
+          anyOf:
+          - type: string
+            maxLength: 2048
+          - type: 'null'
+          title: Caption
+        like_cnt:
+          type: integer
+          minimum: 0.0
+          title: Like Cnt
+        comments:
+          items:
+            type: integer
+          type: array
+          title: Comments
+      type: object
+      required:
+      - post_id
+      - author_id
+      - pub_time
+      - image
+      - like_cnt
+      - comments
+      title: Post
+      description: A user post
+    PostRequest:
+      properties:
+        caption:
+          anyOf:
+          - type: string
+            maxLength: 2048
+          - type: 'null'
+          title: Caption
+        image:
+          type: string
+          format: base64
+          contentMediaType: application/octet-stream
+          title: Image
+      type: object
+      required:
+      - image
+      title: PostRequest
+      description: A user request to create a new post
+    RegistrationRequest:
+      properties:
+        username:
+          type: string
+          maxLength: 30
+          minLength: 3
+          title: Username
+        password:
+          type: string
+          maxLength: 255
+          minLength: 8
+          title: Password
+      type: object
+      required:
+      - username
+      - password
+      title: RegistrationRequest
+      description: Data required in order to register a new user
+    UserAccount:
+      properties:
+        user_id:
+          type: integer
+          minimum: 0.0
+          title: User Id
+        username:
+          type: string
+          maxLength: 30
+          minLength: 3
+          title: Username
+        propic:
+          type: string
+          format: base64
+          contentMediaType: application/octet-stream
+          title: Propic
+        followers_cnt:
+          type: integer
+          minimum: 0.0
+          title: Followers Cnt
+        following_cnt:
+          type: integer
+          minimum: 0.0
+          title: Following Cnt
+      type: object
+      required:
+      - user_id
+      - username
+      - propic
+      - followers_cnt
+      - following_cnt
+      title: UserAccount
+      description: A user account
+    UserCredentials:
+      properties:
+        username:
+          type: string
+          maxLength: 30
+          minLength: 3
+          title: Username
+        password:
+          type: string
+          maxLength: 255
+          minLength: 8
+          title: Password
+      type: object
+      required:
+      - username
+      - password
+      title: UserCredentials
+      description: Credentials from a login form
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
   securitySchemes:
-    bearerAuth:
+    HTTPBearer:
       type: http
       scheme: bearer
-
-  schemas:
-    ID:
-      type: integer
-      format: uint64
-      description: ID represents an integer used as an identifier (such as postID and commentID)
-      minimum: 0
-      example: 32156
-
-    Counter:
-      type: integer
-      format: uint64
-      description: A counter used to represent likes/comments/followers counts
-      minimum: 0
-      example: 80
-
-    Username:
-      type: string
-      example: Maria
-      pattern: 'ˆ.*?$'
-      description: Case-insensitive username
-      minLength: 3
-      maxLength: 40
-
-    Password:
-      type: string
-      example: secret1234
-      description: A user's password
-      minLength: 8
-      maxLength: 255
-
-    UserCredentials:
-      type: object
-      description: Login credentials from a login form
-      properties: 
-        username:
-          $ref: '#/components/schemas/Username'
-        password:
-          $ref: '#/components/schemas/Password'
-
-    RegistrationRequest:
-      type: object
-      description: Registration info from a registration form
-      properties:
-        username:
-          $ref: '#/components/schemas/Username'
-        password:
-          $ref: '#/components/schemas/Password'
-
-    AccessToken:
-      type: string
-      description: A user's access token (opaque)
-
-    B64Image:
-      type: string
-      format: binary
-      maxLength: 6990508    # images up to 5 MB are supported
-      description: An image encoded in base64
-
-    LargeText:
-      type: string
-      description: A large text, used in post captions and comments
-      pattern: '^.*?$'
-      minLength: 0
-      maxLength: 2048
-      example: Currently working on WASAPhoto!
-
-    Account:
-      type: object
-      description: An object representing a user account
-      properties:
-        ID:
-          $ref: '#/components/schemas/ID'
-        proPicB64:
-          $ref: '#/components/schemas/B64Image'
-        followers:
-          $ref: '#/components/schemas/Counter'
-        following:
-          $ref: '#/components/schemas/Counter'
-        posts:
-          type: array
-          description: Posts by this user as postIDs
-          items:
-            $ref: '#/components/schemas/ID'
-
-    Post:
-      type: object
-      description: An object representing a post
-      properties:
-        postID:
-          $ref: '#/components/schemas/ID'
-        author:
-          $ref: '#/components/schemas/ID'
-        pubTime:
-          type: string
-          format: date-time
-          description: Publication time for this post
-          example: 2024-05-24T15:00:00
-        imageB64:
-          $ref: '#/components/schemas/B64Image'
-        caption:
-          $ref: '#/components/schemas/LargeText'
-        likeCount:
-          $ref: '#/components/schemas/Counter'
-        comments:
-          $ref: '#/components/schemas/CommentList'
-
-    PostRequest:
-      type: object
-      description: |-
-        An object containing all the required parameters
-        to ask the backend to create a new post
-      properties:
-        image:
-          $ref: '#/components/schemas/B64Image'
-        caption:
-          $ref: '#/components/schemas/LargeText'
-
-    UserList:
-      type: array
-      description: A list of users
-      items:
-        $ref: '#/components/schemas/ID'
-
-    Comment:
-      type: object
-      description: An object representing a comment
-      properties:
-        id:
-          $ref: '#/components/schemas/ID'
-        author:
-          $ref: '#/components/schemas/ID'
-        pubTime:
-          type: string
-          format: date-time
-          description: Publication time for this comment
-          example: 2024-05-24T15:00:00
-        likes:
-          $ref: '#/components/schemas/Counter'
-        content:
-          $ref: '#/components/schemas/LargeText'
-
-    CommentList:
-      type: array
-      description: A list of comments (as commentIDs) belonging to a specific post
-      items:
-        $ref: '#/components/schemas/ID'
-
-    Feed:
-      type: array
-      description: |-
-        A list of posts (as postIDs) in reverse chronological order, representing a user's feed
-      items:
-        $ref: '#/components/schemas/ID'
-
-security:
-  - bearerAuth: []
