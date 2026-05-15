@@ -8,6 +8,7 @@ import uvicorn
 import os
 
 os.environ['DATABASE_URL'] = 'postgresql+psycopg://wasntaphoto:wasntaphoto@localhost/wasntaphoto'
+os.environ['DATABASE_URL_MIGRATIONS'] = 'postgresql+psycopg://wasntaphoto:wasntaphoto@localhost/wasntaphoto'
 os.environ['WASA_STORAGE_ROOT'] = '/tmp/wasntaphoto'
 
 from app import app
@@ -52,10 +53,16 @@ def setup_fs() -> None:
             o.write(i.read())
 
 
+def run_migrations() -> None:
+    cfg = Config('alembic.ini')
+    cfg.set_main_option('sqlalchemy.url', os.environ['DATABASE_URL_MIGRATIONS'])
+    command.upgrade(cfg, 'head')
+
+
 def main() -> None:
     start_demo_db()
     setup_fs()
-    command.upgrade(Config('alembic.ini'), 'head')
+    run_migrations()
     uvicorn.run(app, host="0.0.0.0", port=8000)
     stop_demo_db()
 

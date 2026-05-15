@@ -23,7 +23,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql+psycopg://wasntaphoto:wasntaphoto@db/wasntaphoto
+      DATABASE_URL_MIGRATIONS: postgresql+psycopg://wasntaphoto:wasntaphoto@db/wasntaphoto
+      DATABASE_URL: postgresql+psycopg://wasntaphoto_app:wasntaphoto@db/wasntaphoto
     restart: unless-stopped
     healthcheck:
       test: [ "CMD-SHELL", "python -c \"import requests; requests.get('http://localhost:8000/liveness').raise_for_status()\"" ]
@@ -36,7 +37,7 @@ services:
         condition: service_healthy
     working_dir: /app
     command: >
-      sh -c "PYTHONPATH=. alembic upgrade head && gunicorn app:app"
+      sh -c "PYTHONPATH=. DATABASE_URL=$$DATABASE_URL_MIGRATIONS alembic upgrade head && gunicorn app:app"
   frontend:
     build:
       context: .

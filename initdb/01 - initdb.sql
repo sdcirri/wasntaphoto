@@ -1,3 +1,20 @@
 
 CREATE SCHEMA IF NOT EXISTS wasntaphoto;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+CREATE ROLE wasntaphoto_app;
+
+GRANT CONNECT ON DATABASE wasntaphoto TO wasntaphoto_app;
+GRANT USAGE ON SCHEMA wasntaphoto TO wasntaphoto_app;
+
+-- Full DML, no DDL
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA wasntaphoto TO wasntaphoto_app;
+GRANT SELECT, USAGE ON ALL SEQUENCES IN SCHEMA wasntaphoto TO wasntaphoto_app;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA wasntaphoto TO wasntaphoto_app;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA wasntaphoto
+    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO wasntaphoto_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA wasntaphoto
+    GRANT SELECT, USAGE ON SEQUENCES TO wasntaphoto_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA wasntaphoto
+    GRANT EXECUTE ON FUNCTIONS TO wasntaphoto_app;
