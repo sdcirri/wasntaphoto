@@ -52,5 +52,22 @@ $ docker compose up -d
 ```
 Everything will build and start automatically. When it's done, visit http://localhost:8080/.
 
+## Debug
+
+### Backend
+To run the backend in debug mode:
+```shell
+$ python backend_demo.py
+```
+It will also initialize a demo DB and file storage under `/tmp/wasntaphoto`.
+
+### Frontend
+In the `webui` folder:
+```shell
+$ npm install
+$ npm run dev
+```
+Then follow the link on your terminal.
+
 ## The name
 The original project was named "WASAPhoto" → "Was-A-Photo" → "Wasn't-A-Photo".
