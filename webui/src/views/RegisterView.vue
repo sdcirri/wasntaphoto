@@ -24,6 +24,10 @@ export default {
 				this.errormsg = "Please choose a password";
 				return;
 			}
+			if(this.password.length < 8) {
+				this.errormsg = "Password must be at least 8 characters";
+				return;
+			}
 
 			if(this.password !== this.password_confirm) {
 				this.errormsg = "Password must match";
@@ -33,9 +37,7 @@ export default {
 			try {
 				this.userID = await registerAndLogin(this.username, this.password);
 				this.$emit("loggedIn");
-				if (this.$router.options.history.state.back == null)
-					this.$router.replace("/");
-				else this.$router.back();
+				this.$router.replace("/");
 			} catch (e) {
 				this.errormsg = e.toString();
 			}
