@@ -9,7 +9,7 @@
 ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
 ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
 
-# ⚠️🚧[WIP] WASNTAPhoto - A production-ready implementation of WASAPhoto in FastAPI
+# WASNTAPhoto - A production-ready implementation of WASAPhoto in FastAPI
 
 ![wasa-screenshot](https://github.com/user-attachments/assets/f2860f88-6ccc-47b3-bc59-328d06eb585c)
 Keep in touch with your friends by sharing photos of special moments, thanks to WASAPhoto! You can
@@ -31,12 +31,12 @@ I chose FastAPI over Go because it provides:
 
 ## Features
 - A real database (PostgreSQL), the original project relied on SQLite
-  - Dedicated DB role to restrict attack surface in case of compromise (no DDL nor DCL) **[TBA]**
+  - Dedicated DB role to restrict attack surface in case of compromise (no DDL nor DCL)
 - **Real** authentication, opaque token-based bearer auth, session management and secure credential 
   storage (argon2 hashing for passwords)
   - Hence login and registration are now distinct
 - CORS and rate limiting
-- UI and UX are essentially the same as in my original project, just extended to work with the new API
+- UI and UX are essentially the same as in my original project, just with minor fixes and extensions to work with the new API
 - Scalable and fully reproducible application deployment and configuration with docker-compose
 - Cleaned up the mess in the old API design (that's on me 😅)
 
