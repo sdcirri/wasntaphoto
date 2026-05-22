@@ -2,8 +2,10 @@ from argon2.exceptions import VerifyMismatchError, VerificationError, InvalidHas
 from argon2 import PasswordHasher
 
 from sqlalchemy.exc import IntegrityError
+from hashlib import sha1
 import secrets
 import logging
+import httpx
 import time
 import re
 
@@ -11,6 +13,7 @@ from exceptions import UsernameAlreadyTakenError, WeakPasswordError, BadAuthErro
 
 from db.repositories import SessionRepository, UserRepository
 from db.entities import UserModel, UserSessionModel
+from exceptions.pwned_password_error import PwnedPasswordError
 
 
 class AuthService:
@@ -28,6 +31,23 @@ class AuthService:
     def __init__(self, user_repo: UserRepository, session_repo: SessionRepository) -> None:
         self.user_repo = user_repo
         self.session_repo = session_repo
+
+    @staticmethod
+    async def hibp_lookup(password: str) -> bool:
+        """
+        Checks whether password was involved in a data breach
+        calling the HIBP API
+        :param password: plaintext password to be checked
+        :return: whether password was found or not
+        """
+        sha1sum = sha1(password.encode()).hexdigest().upper()
+        prefix = sha1sum[:5]
+        async with httpx.AsyncClient() as client:
+            res = await client.get(f'https://api.pwnedpasswords.com/range/{prefix}')
+            for l in res.text.splitlines():
+                if prefix + l.split(':')[0].upper() == sha1sum:
+                    return True
+        return False
 
     @staticmethod
     def strong_password(password: str) -> bool:
@@ -111,6 +131,9 @@ class AuthService:
 
         if not self.strong_password(password):
             raise WeakPasswordError
+
+        if await self.hibp_lookup(password):
+            raise PwnedPasswordError
 
         db_user = UserModel(
             username=username,
