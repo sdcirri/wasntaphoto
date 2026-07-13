@@ -1,5 +1,8 @@
 [run]
 source = .
+branch = true
+core = ctrace
+concurrency = thread, greenlet
 omit =
     */alembic/*
     */webui/*
@@ -9,4 +12,3 @@ omit =
 
 [report]
 show_missing = true
-
