@@ -1,10 +1,12 @@
 from typing import Callable, Coroutine, Any
 from httpx import AsyncClient
+from random import randint
 import asyncio
 import pytest
 
 from db.entities import UserModel
 from model import UserAccount
+
 from test.conftest import rmsdiff
 
 
@@ -38,6 +40,13 @@ async def test_user_api(
     bob_info = UserAccount.model_validate(bob_info.json())
     assert bob_info.username == 'bob'
     assert bob_info.user_id == bob_user.user_id
+
+    bad_id = randint(1, 1_000_000_000)
+    while bad_id in (alice_user.user_id, bob_user.user_id):
+        bad_id = randint(1, 1_000_000_000)
+
+    bad_request = await client.get(f'/users/{bad_id}', headers=headers)
+    assert bad_request.status_code == 404
 
     username_change = await client.put('/users/me/username', json='@lix', headers=headers)
     assert username_change.status_code == 204
