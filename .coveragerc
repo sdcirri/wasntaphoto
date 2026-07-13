@@ -1,0 +1,12 @@
+[run]
+source = .
+omit =
+    */alembic/*
+    */webui/*
+    */test/*
+    backend_demo.py
+    gunicorn.conf.py
+
+[report]
+show_missing = true
+
