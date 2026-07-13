@@ -7,6 +7,7 @@ omit =
     */alembic/*
     */webui/*
     */test/*
+    */db/*
     backend_demo.py
     gunicorn.conf.py
 
