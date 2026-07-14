@@ -104,3 +104,18 @@ async def alice_blocked_annoying(following_setup: FollowingSetup) -> FollowingSe
     resp = await s.client.post(f'/users/me/blocked/{s.annoying.user_id}', headers=s.alice_headers)
     assert resp.status_code in (200, 204)
     return s
+
+
+@pytest_asyncio.fixture
+async def extra_users_for_search(user_api_setup: UserApiSetup) -> UserApiSetup:
+    """
+    Creates a bunch of users with similar usernames for testing search mechanics
+    """
+
+    s = user_api_setup
+    for i in range(20):
+        resp = await s.client.post('/users/', json={'username': f'bob{i}', 'password': '$up3rS33kr3t!!!!'})
+        assert resp.status_code == 200
+        resp = await s.client.post('/users/', json={'username': f'user{i}', 'password': '$up3rS33kr3t!!!!'})
+        assert resp.status_code == 200
+    return s
