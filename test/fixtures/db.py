@@ -43,7 +43,7 @@ def _configure_sqlite(dbapi_connection, _connection_record) -> None:
     dbapi_connection.create_function('similarity', 2, _similarity)
 
 
-@pytest_asyncio.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True, scope='function')
 async def _sqlite_database() -> AsyncGenerator[None, None]:
     async with TEST_ENGINE.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
