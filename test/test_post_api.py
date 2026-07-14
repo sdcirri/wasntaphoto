@@ -2,7 +2,7 @@ from model import PostRequest, Post
 import base64
 import pytest
 
-from test.fixtures.posts import PostInteractionSetup, PostCrudSetup
+from .fixtures.posts import PostInteractionSetup, PostCrudSetup
 
 
 def _like_url(s: PostInteractionSetup) -> str:

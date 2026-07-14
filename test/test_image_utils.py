@@ -2,7 +2,7 @@ import pytest
 
 from service.image_utils import upload2jpeg
 
-from test.conftest import rmsdiff
+from .conftest import rmsdiff
 
 
 ALL_IMAGE_FIXTURES = [
