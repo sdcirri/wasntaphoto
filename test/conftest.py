@@ -12,6 +12,8 @@ pytest_plugins = (
     'test.fixtures.http',
     'test.fixtures.db',
     'test.fixtures.comments',
+    'test.fixtures.users',
+    'test.fixtures.posts',
 )
 
 from service.image_utils import DEFAULT_PROPIC

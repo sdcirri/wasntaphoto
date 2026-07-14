@@ -3,25 +3,42 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_login_api(client: AsyncClient):
-    invalid_login = await client.post('/session/', json={'username': '', 'password': ''})
-    assert invalid_login.status_code == 422
+async def test_login_with_empty_credentials_is_rejected(client: AsyncClient):
+    resp = await client.post('/session/', json={'username': '', 'password': ''})
+    assert resp.status_code == 422
 
-    weak_register = await client.post('/users/', json={'username': 'bob', 'password': 'secret'})
-    assert weak_register.status_code == 422
 
-    register = await client.post('/users/', json={'username': 'bob', 'password': '$up3rS33kr3t!!!!'})
-    assert register.status_code == 200
-    assert isinstance(register.json(), str)
-    assert register.json()
+@pytest.mark.asyncio
+async def test_register_with_weak_password_is_rejected(client: AsyncClient):
+    resp = await client.post('/users/', json={'username': 'bob', 'password': 'secret'})
+    assert resp.status_code == 422
 
-    wrong_login = await client.post('/session/', json={'username': 'bob', 'password': 'wrong!!!'})
-    assert wrong_login.status_code == 403
 
-    double_register = await client.post('/users/', json={'username': 'bob', 'password': '$up3rS33kr3t!!!!'})
-    assert double_register.status_code == 409
+@pytest.mark.asyncio
+async def test_register_with_valid_credentials_returns_token(client: AsyncClient):
+    resp = await client.post('/users/', json={'username': 'bob', 'password': '$up3rS33kr3t!!!!'})
 
-    login = await client.post('/session/', json={'username': 'bob', 'password': '$up3rS33kr3t!!!!'})
-    assert login.status_code == 200
-    assert isinstance(login.json(), str)
-    assert login.json()
+    assert resp.status_code == 200
+    assert isinstance(resp.json(), str)
+    assert resp.json()
+
+
+@pytest.mark.asyncio
+async def test_login_with_wrong_password_is_rejected(client: AsyncClient, registered_user: None):
+    resp = await client.post('/session/', json={'username': 'bob', 'password': 'wrong!!!'})
+    assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_registering_duplicate_username_is_rejected(client: AsyncClient, registered_user: None):
+    resp = await client.post('/users/', json={'username': 'bob', 'password': '$up3rS33kr3t!!!!'})
+    assert resp.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_login_with_correct_credentials_returns_token(client: AsyncClient, registered_user: None):
+    resp = await client.post('/session/', json={'username': 'bob', 'password': '$up3rS33kr3t!!!!'})
+
+    assert resp.status_code == 200
+    assert isinstance(resp.json(), str)
+    assert resp.json()
