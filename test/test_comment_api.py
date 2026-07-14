@@ -5,11 +5,11 @@ from model import Comment
 from .fixtures.comments import CommentSetup
 
 
-def _like_url(s):
+def _like_url(s: CommentSetup) -> str:
     return f'/users/{s.post_author.user_id}/posts/{s.post.post_id}/comments/{s.comment.comment_id}/like'
 
 
-def _comment_url(s):
+def _comment_url(s: CommentSetup) -> str:
     return f'/users/{s.post_author.user_id}/posts/{s.post.post_id}/comments/{s.comment.comment_id}'
 
 
