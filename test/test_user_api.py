@@ -157,12 +157,49 @@ async def test_unfollowing_user_removes_from_following_list(alice_following_bob:
 
 
 @pytest.mark.asyncio
+async def test_unfollowing_nonexisting_user_errors(alice_following_bob: FollowingSetup):
+    s = alice_following_bob
+    bad_id = randint(1, 1_000_000_000)
+    while bad_id in (s.alice.user_id, s.bob.user_id):
+        bad_id = randint(1, 1_000_000_000)
+    resp = await s.client.delete(f'/users/me/following/{bad_id}', headers=s.alice_headers)
+    assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_unfollowing_existing_but_not_followed_user_ignored(following_setup: FollowingSetup):
+    s = following_setup
+    # Alice is not following Bob
+    resp = await s.client.delete(f'/users/me/following/{s.bob.user_id}', headers=s.alice_headers)
+    assert resp.status_code == 204
+    resp = await s.client.delete(f'/users/me/following/{s.bob.user_id}', headers=s.alice_headers)
+    assert resp.status_code == 204
+
+
+@pytest.mark.asyncio
 async def test_blocking_user_adds_to_blocked_list(alice_blocked_annoying: FollowingSetup):
     s = alice_blocked_annoying
     resp = await s.client.get('/users/me/blocked', headers=s.alice_headers)
 
     assert resp.status_code == 200
     assert s.annoying.user_id in resp.json()
+
+
+@pytest.mark.asyncio
+async def test_blocking_self_errors(following_setup: FollowingSetup):
+    s = following_setup
+    resp = await s.client.post(f'/users/me/blocked/{s.alice.user_id}', headers=s.alice_headers)
+    assert resp.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_blocking_nonexisting_user_errors(following_setup: FollowingSetup):
+    s = following_setup
+    bad_id = randint(1, 1_000_000_000)
+    while bad_id in (s.alice.user_id, s.bob.user_id):
+        bad_id = randint(1, 1_000_000_000)
+    resp = await s.client.post(f'/users/me/blocked/{bad_id}', headers=s.alice_headers)
+    assert resp.status_code == 404
 
 
 @pytest.mark.asyncio
@@ -204,7 +241,83 @@ async def test_unblocking_user_removes_from_blocked_list(alice_blocked_annoying:
 
 
 @pytest.mark.asyncio
+async def test_unblocking_self_errors(following_setup: FollowingSetup):
+    s = following_setup
+    resp = await s.client.delete(f'/users/me/blocked/{s.alice.user_id}', headers=s.alice_headers)
+    assert resp.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_unblocking_nonexisting_user_errors(following_setup: FollowingSetup):
+    s = following_setup
+    bad_id = randint(1, 1_000_000_000)
+    while bad_id in (s.alice.user_id, s.bob.user_id):
+        bad_id = randint(1, 1_000_000_000)
+    resp = await s.client.delete(f'/users/me/blocked/{bad_id}', headers=s.alice_headers)
+    assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_unblocking_non_blocked_user_ignored(following_setup: FollowingSetup):
+    s = following_setup
+    # Alice never blocked Bob
+    resp = await s.client.delete(f'/users/me/blocked/{s.bob.user_id}', headers=s.alice_headers)
+    assert resp.status_code == 204
+    resp = await s.client.delete(f'/users/me/blocked/{s.bob.user_id}', headers=s.alice_headers)
+    assert resp.status_code == 204
+
+
+@pytest.mark.asyncio
 async def test_cannot_follow_yourself(following_setup: FollowingSetup):
     s = following_setup
     resp = await s.client.post(f'/users/me/following/{s.alice.user_id}', headers=s.alice_headers)
     assert resp.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_cannot_unfollow_yourself(following_setup: FollowingSetup):
+    s = following_setup
+    resp = await s.client.delete(f'/users/me/following/{s.alice.user_id}', headers=s.alice_headers)
+    assert resp.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_user_can_remove_their_followers(alice_following_bob: FollowingSetup):
+    s = alice_following_bob
+    old = await s.client.get('/users/me/followers', headers=s.bob_headers)
+    assert old.status_code == 200
+    assert s.alice.user_id in old.json()
+
+    delete = await s.client.delete(f'/users/me/followers/{s.alice.user_id}', headers=s.bob_headers)
+    assert delete.status_code == 204
+
+    new = await s.client.get('/users/me/followers', headers=s.bob_headers)
+    assert new.status_code == 200
+    assert s.alice.user_id not in new.json()
+
+
+@pytest.mark.asyncio
+async def test_remove_follower_rejects_own_user_id(following_setup: FollowingSetup):
+    s = following_setup
+    delete = await s.client.delete(f'/users/me/followers/{s.alice.user_id}', headers=s.alice_headers)
+    assert delete.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_remove_follower_nonexisting_user_errors(following_setup: FollowingSetup):
+    s = following_setup
+    bad_id = randint(1, 1_000_000_000)
+    while bad_id in (s.alice.user_id, s.bob.user_id):
+        bad_id = randint(1, 1_000_000_000)
+    delete = await s.client.delete(f'/users/me/followers/{bad_id}', headers=s.alice_headers)
+    assert delete.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_remove_follower_existing_but_not_following_user_ignored(following_setup: FollowingSetup):
+    s = following_setup
+    # Bob is not following Alice
+    resp = await s.client.delete(f'/users/me/followers/{s.bob.user_id}', headers=s.alice_headers)
+    assert resp.status_code == 204
+    resp = await s.client.delete(f'/users/me/followers/{s.bob.user_id}', headers=s.alice_headers)
+    assert resp.status_code == 204
