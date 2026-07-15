@@ -14,7 +14,8 @@ class CommentSetup(SimpleNamespace):
     post: PostModel
     post_author: UserModel
     comment: CommentModel
-    headers: dict[str, str]
+    post_author_headers: dict[str, str]
+    comment_author_headers: dict[str, str]
 
 
 @pytest_asyncio.fixture
@@ -31,17 +32,20 @@ async def comment_setup(
 
     post_author, comment_author = await asyncio.gather(
         user_factory('alice', 'H@xx0r.2026'),
-        user_factory('bob', 'H@xx0r.2026')
+        user_factory('bob', 'H@xx0r.2026'),
     )
     post = await post_factory(post_author.user_id, gradient_rgb, 'Cool colors')
+    login = await client.post('/session/', json={'username': 'alice', 'password': 'H@xx0r.2026'})
+    post_author_headers = {'Authorization': f'Bearer {login.json()}'}
     login = await client.post('/session/', json={'username': 'bob', 'password': 'H@xx0r.2026'})
-    headers = {'Authorization': f'Bearer {login.json()}'}
+    comment_author_headers = {'Authorization': f'Bearer {login.json()}'}
     return CommentSetup(
         client=client,
         post=post,
         post_author=post_author,
         comment_author=comment_author,
-        headers=headers,
+        post_author_headers=post_author_headers,
+        comment_author_headers=comment_author_headers,
     )
 
 
@@ -65,13 +69,16 @@ async def comment_like_setup(
     post = await post_factory(post_author.user_id, gradient_rgb, 'Cool colors')
     comment = await comment_factory(comment_author.user_id, post.post_id, 'Very cool')
     login = await client.post('/session/', json={'username': 'alice', 'password': 'H@xx0r.2026'})
-    headers = {'Authorization': f'Bearer {login.json()}'}
+    post_author_headers = {'Authorization': f'Bearer {login.json()}'}
+    login = await client.post('/session/', json={'username': 'bob', 'password': 'H@xx0r.2026'})
+    comment_author_headers = {'Authorization': f'Bearer {login.json()}'}
     return CommentSetup(
         client=client,
         post=post,
         post_author=post_author,
         comment=comment,
-        headers=headers,
+        post_author_headers=post_author_headers,
+        comment_author_headers=comment_author_headers,
     )
 
 
@@ -85,7 +92,7 @@ async def existing_comment(comment_setup: CommentSetup) -> Comment:
     s = comment_setup
     resp = await s.client.post(
         f'/users/{s.post_author.user_id}/posts/{s.post.post_id}/comments/',
-        headers=s.headers,
+        headers=s.comment_author_headers,
         json='Very cool'
     )
     assert resp.status_code == 200

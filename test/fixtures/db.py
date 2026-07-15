@@ -130,3 +130,18 @@ async def next_unused_user_id(_sqlite_database: async_sessionmaker[AsyncSession]
         if len(users) == 0:
             return 0
         return 1 + max(users, key=lambda u: u.user_id).user_id
+
+
+
+@pytest_asyncio.fixture
+async def next_unused_comment_id(_sqlite_database: async_sessionmaker[AsyncSession]) -> int:
+    """
+    Returns the next unused comment ID. Useful when a
+    nonexisting user ID is needed
+    """
+    async with _sqlite_database() as session:
+        comment_repo = CommentRepository(session)
+        comments = await comment_repo.find_all()
+        if len(comments) == 0:
+            return 0
+        return 1 + max(comments, key=lambda c: c.comment_id).comment_id
