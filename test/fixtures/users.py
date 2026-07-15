@@ -3,9 +3,11 @@ from types import SimpleNamespace
 from httpx import AsyncClient
 import pytest_asyncio
 import asyncio
+import base64
 
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
+from db.repositories import SessionRepository
 from db.entities import UserModel
 from service import AuthService
 
@@ -25,6 +27,26 @@ class FollowingSetup(SimpleNamespace):
     alice_headers: dict[str, str]
     bob_headers: dict[str, str]
     annoying_headers: dict[str, str]
+
+
+BAD_PASSWORDS = [
+    'longbuttoosimple',         # only lowercase
+    'LongButTooSimple',         # no numbers nor special chars
+    'LongButTooSimple1',        # no special chars
+    'Long_But_Too_Simple',      # no numbers
+    'long_but_too_simple1',     # no uppercase
+    'LONG_BUT_TOO_SIMPLE1',     # no lowercase
+    'Password.1'                # "strong" but pwned
+]
+
+
+BAD_AUTH_HEADERS = [
+    f'Bearer {base64.b64encode(b"I am bad")}',
+    f'Bearer {base64.b64encode(b"\0"*32).decode("utf-8")}',
+    'Bearer whatever',
+    'Bearer',
+    ''
+]
 
 
 @pytest_asyncio.fixture
@@ -82,6 +104,25 @@ async def registered_user(client: AsyncClient) -> None:
 
     resp = await client.post('/users/', json={'username': 'bob', 'password': '$up3rS33kr3t!!!!'})
     assert resp.status_code == 200
+
+
+@pytest_asyncio.fixture
+async def registered_user_with_expired_session(
+        registered_user: None,
+        _sqlite_database: async_sessionmaker[AsyncSession]
+) -> str:
+    """
+    Registers 'bob' with a valid password but the session has expired.
+    Returns the bad session
+    """
+    async with _sqlite_database() as session:
+        session_repo = SessionRepository(session)
+        for user_session in await session_repo.find_all():
+            user_session.valid_until = 0
+            await session_repo.save(user_session)
+            await session.commit()
+            return user_session.session_id
+        return ''
 
 
 @pytest_asyncio.fixture
