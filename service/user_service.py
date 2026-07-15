@@ -63,8 +63,8 @@ class UserService:
         :param user_id: user ID
         :param new_username: picked new username
         """
-        if not (user := await self.user_repo.find_by_id(user_id)):
-            raise UserNotFoundError
+        user = await self.user_repo.find_by_id(user_id)
+        assert user is not None, 'Bad authenticated user ID injected'
         try:
             user.username = new_username
             await self.user_repo.save(user)
@@ -101,8 +101,8 @@ class UserService:
         :param user_id: user ID
         :param uploaded_image: the uploaded image to set
         """
-        if not (user := await self.user_repo.find_by_id(user_id)):
-            raise UserNotFoundError
+        user = await self.user_repo.find_by_id(user_id)
+        assert user is not None, 'Bad authenticated user ID injected'
         await upload2propic(user.user_id, uploaded_image)
 
     async def follow(self, user_id: int, to_follow_id: int) -> None:
@@ -113,8 +113,6 @@ class UserService:
         """
         if user_id == to_follow_id:
             raise SelfFollowError
-        if not await self.user_repo.find_by_id(user_id):
-            raise UserNotFoundError
         if not await self.user_repo.find_by_id(to_follow_id):
             raise UserNotFoundError
         if await self.block_repo.find_by_id((to_follow_id, user_id)):
@@ -132,8 +130,6 @@ class UserService:
         """
         if user_id == to_unfollow_id:
             raise SelfFollowError
-        if not await self.user_repo.find_by_id(user_id):
-            raise UserNotFoundError
         if not await self.user_repo.find_by_id(to_unfollow_id):
             raise UserNotFoundError
 
@@ -148,8 +144,6 @@ class UserService:
         """
         if user_id == to_remove_id:
             raise SelfFollowError
-        if not await self.user_repo.find_by_id(user_id):
-            raise UserNotFoundError
         if not await self.user_repo.find_by_id(to_remove_id):
             raise UserNotFoundError
 
@@ -164,8 +158,6 @@ class UserService:
         """
         if user_id == to_block_id:
             raise SelfFollowError
-        if not await self.user_repo.find_by_id(user_id):
-            raise UserNotFoundError
         if not await self.user_repo.find_by_id(to_block_id):
             raise UserNotFoundError
 
@@ -190,8 +182,6 @@ class UserService:
         """
         if user_id == to_unblock_id:
             raise SelfFollowError
-        if not await self.user_repo.find_by_id(user_id):
-            raise UserNotFoundError
         if not await self.user_repo.find_by_id(to_unblock_id):
             raise UserNotFoundError
 
