@@ -2,6 +2,7 @@ from argon2.exceptions import VerifyMismatchError, VerificationError, InvalidHas
 from argon2 import PasswordHasher
 
 from sqlalchemy.exc import IntegrityError
+from async_lru import alru_cache
 from hashlib import sha1
 import secrets
 import logging
@@ -33,6 +34,7 @@ class AuthService:
         self.session_repo = session_repo
 
     @staticmethod
+    @alru_cache(maxsize=256)
     async def hibp_lookup(password: str) -> bool:
         """
         Checks whether password was involved in a data breach
@@ -56,9 +58,6 @@ class AuthService:
         :param password: password to check
         :return: True if password is strong enough, False otherwise
         """
-        # Also prevent too long passwords
-        if len(password) < 8 or len(password) > 255:
-            return False
         if not re.search(r'[a-z]', password):
             return False
         if not re.search(r'[A-Z]', password):
