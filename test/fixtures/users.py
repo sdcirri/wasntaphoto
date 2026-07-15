@@ -16,7 +16,9 @@ class UserApiSetup(SimpleNamespace):
     client: AsyncClient
     alice: UserModel
     bob: UserModel
-    headers: dict[str, str]
+    alice_headers: dict[str, str]
+    alice_session: str
+    bob_session: str
 
 
 class FollowingSetup(SimpleNamespace):
@@ -63,8 +65,18 @@ async def user_api_setup(
         user_factory('bob', 'T0P.S3cr3t!'),
     )
     login = await client.post('/session/', json={'username': 'alice', 'password': 'H@xx0r.2026'})
-    headers = {'Authorization': f'Bearer {login.json()}'}
-    return UserApiSetup(client=client, alice=alice, bob=bob, headers=headers)
+    alice_session = login.json()
+    headers = {'Authorization': f'Bearer {alice_session}'}
+    login = await client.post('/session/', json={'username': 'bob', 'password': 'T0P.S3cr3t!'})
+    bob_session = login.json()
+    return UserApiSetup(
+        client=client,
+        alice=alice,
+        bob=bob,
+        alice_headers=headers,
+        alice_session=alice_session,
+        bob_session=bob_session
+    )
 
 
 @pytest_asyncio.fixture

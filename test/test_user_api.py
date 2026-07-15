@@ -15,7 +15,7 @@ async def test_text_search_on_usernames(search_setup: UserApiSetup):
     assert len(resp.json()) == 10
     for i in resp.json():
         assert isinstance(i, int)
-        info = await s.client.get(f'/users/{i}', headers=s.headers)
+        info = await s.client.get(f'/users/{i}', headers=s.alice_headers)
         assert info.status_code == 200
         assert UserAccount.model_validate(info.json()).username.lower().startswith('use')
 
@@ -39,7 +39,7 @@ async def test_text_search_default_limit_is_10(search_setup: UserApiSetup):
 @pytest.mark.asyncio
 async def test_get_own_profile_by_id(user_api_setup: UserApiSetup):
     s = user_api_setup
-    resp = await s.client.get(f'/users/{s.alice.user_id}', headers=s.headers)
+    resp = await s.client.get(f'/users/{s.alice.user_id}', headers=s.alice_headers)
 
     assert resp.status_code == 200
     assert resp.json()['username'] == 'alice'
@@ -49,7 +49,7 @@ async def test_get_own_profile_by_id(user_api_setup: UserApiSetup):
 @pytest.mark.asyncio
 async def test_get_me_returns_own_profile(user_api_setup: UserApiSetup):
     s = user_api_setup
-    resp = await s.client.get('/users/me', headers=s.headers)
+    resp = await s.client.get('/users/me', headers=s.alice_headers)
 
     assert resp.status_code == 200
     info = UserAccount.model_validate(resp.json())
@@ -60,7 +60,7 @@ async def test_get_me_returns_own_profile(user_api_setup: UserApiSetup):
 @pytest.mark.asyncio
 async def test_get_other_users_profile_by_id(user_api_setup: UserApiSetup):
     s = user_api_setup
-    resp = await s.client.get(f'/users/{s.bob.user_id}', headers=s.headers)
+    resp = await s.client.get(f'/users/{s.bob.user_id}', headers=s.alice_headers)
 
     assert resp.status_code == 200
     info = UserAccount.model_validate(resp.json())
@@ -75,27 +75,27 @@ async def test_get_nonexistent_user_returns_404(user_api_setup: UserApiSetup):
     while bad_id in (s.alice.user_id, s.bob.user_id):
         bad_id = randint(1, 1_000_000_000)
 
-    resp = await s.client.get(f'/users/{bad_id}', headers=s.headers)
+    resp = await s.client.get(f'/users/{bad_id}', headers=s.alice_headers)
     assert resp.status_code == 404
 
 
 @pytest.mark.asyncio
 async def test_change_username_updates_profile(user_api_setup: UserApiSetup):
     s = user_api_setup
-    change_resp = await s.client.put('/users/me/username', json='@lix', headers=s.headers)
+    change_resp = await s.client.put('/users/me/username', json='@lix', headers=s.alice_headers)
     assert change_resp.status_code == 204
 
-    me_resp = await s.client.get('/users/me', headers=s.headers)
+    me_resp = await s.client.get('/users/me', headers=s.alice_headers)
     assert me_resp.json()['username'] == '@lix'
 
 
 @pytest.mark.asyncio
 async def test_change_username_rejects_username_already_taken(user_api_setup: UserApiSetup):
     s = user_api_setup
-    change_resp = await s.client.put('/users/me/username', json='bob', headers=s.headers)
+    change_resp = await s.client.put('/users/me/username', json='bob', headers=s.alice_headers)
     assert change_resp.status_code == 409
 
-    me_resp = await s.client.get('/users/me', headers=s.headers)
+    me_resp = await s.client.get('/users/me', headers=s.alice_headers)
     assert me_resp.json()['username'] == 'alice'
 
 
@@ -105,11 +105,11 @@ async def test_change_profile_picture_updates_propic(user_api_setup: UserApiSetu
     change_resp = await s.client.put(
         '/users/me/pp',
         content=checkerboard,
-        headers=s.headers | {'Content-Type': 'image/png'}
+        headers=s.alice_headers | {'Content-Type': 'image/png'}
     )
     assert change_resp.status_code == 204
 
-    me_resp = await s.client.get('/users/me', headers=s.headers)
+    me_resp = await s.client.get('/users/me', headers=s.alice_headers)
     assert rmsdiff(UserAccount.model_validate(me_resp.json()).propic, checkerboard) < 10
 
 

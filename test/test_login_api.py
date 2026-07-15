@@ -1,9 +1,10 @@
 from httpx import AsyncClient
+import secrets
 import pytest
 
 from db.entities import UserModel
 
-from .fixtures.users import BAD_PASSWORDS, BAD_AUTH_HEADERS
+from .fixtures.users import BAD_PASSWORDS, BAD_AUTH_HEADERS, UserApiSetup
 
 
 @pytest.mark.asyncio
@@ -100,3 +101,13 @@ async def test_revoke_session_revokes_session(client: AsyncClient, registered_us
     assert resp.status_code == 204
     resp = await client.get('/users/me', headers={'Authorization': f'Bearer {session}'})
     assert resp.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_revoke_session_ignores_nonexisting_session(user_api_setup: UserApiSetup):
+    s = user_api_setup
+    nonexisting = secrets.token_urlsafe(32)
+    while nonexisting == s.alice_session:
+        nonexisting = secrets.token_urlsafe(32)
+    resp = await s.client.delete(f'/session/{nonexisting}', headers=s.alice_headers)
+    assert resp.status_code == 204

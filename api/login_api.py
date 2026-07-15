@@ -22,7 +22,7 @@ async def login(request: UserCredentials, auth_service: AuthService = Depends(ge
 @login_router.delete('/{session_id}', status_code=status.HTTP_204_NO_CONTENT)
 async def logout_session(
         user_id: int = Depends(get_user),
-        session_id: str = Path(..., min_length=43, max_length=43, pattern=r'^[A-Za-z0-9_]+$'),
+        session_id: str = Path(..., min_length=43, max_length=43, pattern=r'^[A-Za-z0-9_-]+$'),
         auth_service: AuthService = Depends(get_auth_service)
 ) -> None:
     """
