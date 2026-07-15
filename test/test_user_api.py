@@ -1,4 +1,3 @@
-from random import randint
 import pytest
 
 from model import UserAccount
@@ -69,13 +68,10 @@ async def test_get_other_users_profile_by_id(user_api_setup: UserApiSetup):
 
 
 @pytest.mark.asyncio
-async def test_get_nonexistent_user_returns_404(user_api_setup: UserApiSetup):
+async def test_get_nonexistent_user_returns_404(user_api_setup: UserApiSetup, next_unused_user_id: int):
     s = user_api_setup
-    bad_id = randint(1, 1_000_000_000)
-    while bad_id in (s.alice.user_id, s.bob.user_id):
-        bad_id = randint(1, 1_000_000_000)
 
-    resp = await s.client.get(f'/users/{bad_id}', headers=s.alice_headers)
+    resp = await s.client.get(f'/users/{next_unused_user_id}', headers=s.alice_headers)
     assert resp.status_code == 404
 
 
@@ -117,7 +113,6 @@ async def test_change_profile_picture_updates_propic(user_api_setup: UserApiSetu
 async def test_new_user_follows_nobody(following_setup: FollowingSetup):
     s = following_setup
     resp = await s.client.get('/users/me/following', headers=s.alice_headers)
-
     assert resp.status_code == 200
     assert not resp.json()
 
@@ -130,12 +125,9 @@ async def test_following_user_adds_to_following_list(alice_following_bob: Follow
 
 
 @pytest.mark.asyncio
-async def test_following_nonexisting_user_errors(alice_following_bob: FollowingSetup):
+async def test_following_nonexisting_user_errors(alice_following_bob: FollowingSetup, next_unused_user_id: int):
     s = alice_following_bob
-    bad_id = randint(1, 1_000_000_000)
-    while bad_id in (s.alice.user_id, s.bob.user_id):
-        bad_id = randint(1, 1_000_000_000)
-    resp = await s.client.post(f'/users/me/following/{bad_id}', headers=s.alice_headers)
+    resp = await s.client.post(f'/users/me/following/{next_unused_user_id}', headers=s.alice_headers)
     assert resp.status_code == 404
 
 
@@ -157,12 +149,9 @@ async def test_unfollowing_user_removes_from_following_list(alice_following_bob:
 
 
 @pytest.mark.asyncio
-async def test_unfollowing_nonexisting_user_errors(alice_following_bob: FollowingSetup):
+async def test_unfollowing_nonexisting_user_errors(alice_following_bob: FollowingSetup, next_unused_user_id: int):
     s = alice_following_bob
-    bad_id = randint(1, 1_000_000_000)
-    while bad_id in (s.alice.user_id, s.bob.user_id):
-        bad_id = randint(1, 1_000_000_000)
-    resp = await s.client.delete(f'/users/me/following/{bad_id}', headers=s.alice_headers)
+    resp = await s.client.delete(f'/users/me/following/{next_unused_user_id}', headers=s.alice_headers)
     assert resp.status_code == 404
 
 
@@ -193,12 +182,9 @@ async def test_blocking_self_errors(following_setup: FollowingSetup):
 
 
 @pytest.mark.asyncio
-async def test_blocking_nonexisting_user_errors(following_setup: FollowingSetup):
+async def test_blocking_nonexisting_user_errors(following_setup: FollowingSetup, next_unused_user_id: int):
     s = following_setup
-    bad_id = randint(1, 1_000_000_000)
-    while bad_id in (s.alice.user_id, s.bob.user_id):
-        bad_id = randint(1, 1_000_000_000)
-    resp = await s.client.post(f'/users/me/blocked/{bad_id}', headers=s.alice_headers)
+    resp = await s.client.post(f'/users/me/blocked/{next_unused_user_id}', headers=s.alice_headers)
     assert resp.status_code == 404
 
 
@@ -248,12 +234,9 @@ async def test_unblocking_self_errors(following_setup: FollowingSetup):
 
 
 @pytest.mark.asyncio
-async def test_unblocking_nonexisting_user_errors(following_setup: FollowingSetup):
+async def test_unblocking_nonexisting_user_errors(following_setup: FollowingSetup, next_unused_user_id: int):
     s = following_setup
-    bad_id = randint(1, 1_000_000_000)
-    while bad_id in (s.alice.user_id, s.bob.user_id):
-        bad_id = randint(1, 1_000_000_000)
-    resp = await s.client.delete(f'/users/me/blocked/{bad_id}', headers=s.alice_headers)
+    resp = await s.client.delete(f'/users/me/blocked/{next_unused_user_id}', headers=s.alice_headers)
     assert resp.status_code == 404
 
 
@@ -304,12 +287,9 @@ async def test_remove_follower_rejects_own_user_id(following_setup: FollowingSet
 
 
 @pytest.mark.asyncio
-async def test_remove_follower_nonexisting_user_errors(following_setup: FollowingSetup):
+async def test_remove_follower_nonexisting_user_errors(following_setup: FollowingSetup, next_unused_user_id: int):
     s = following_setup
-    bad_id = randint(1, 1_000_000_000)
-    while bad_id in (s.alice.user_id, s.bob.user_id):
-        bad_id = randint(1, 1_000_000_000)
-    delete = await s.client.delete(f'/users/me/followers/{bad_id}', headers=s.alice_headers)
+    delete = await s.client.delete(f'/users/me/followers/{next_unused_user_id}', headers=s.alice_headers)
     assert delete.status_code == 404
 
 
