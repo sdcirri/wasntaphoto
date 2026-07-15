@@ -18,6 +18,9 @@ import providers.db as db_provider
 
 
 def _similarity(left: str | None, right: str | None) -> float:
+    """
+    Mock pg_trgm in sqlite
+    """
     return SequenceMatcher(None, left or '', right or '').ratio()
 
 

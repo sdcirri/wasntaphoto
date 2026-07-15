@@ -4,7 +4,10 @@ from httpx import AsyncClient
 import pytest_asyncio
 import asyncio
 
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+
 from db.entities import UserModel
+from service import AuthService
 
 
 class UserApiSetup(SimpleNamespace):
@@ -107,15 +110,25 @@ async def alice_blocked_annoying(following_setup: FollowingSetup) -> FollowingSe
 
 
 @pytest_asyncio.fixture
-async def extra_users_for_search(user_api_setup: UserApiSetup) -> UserApiSetup:
+async def extra_users_for_search(_sqlite_database: async_sessionmaker[AsyncSession]) -> None:
     """
     Creates a bunch of users with similar usernames for testing search mechanics
     """
 
-    s = user_api_setup
-    for i in range(20):
-        resp = await s.client.post('/users/', json={'username': f'bob{i}', 'password': '$up3rS33kr3t!!!!'})
-        assert resp.status_code == 200
-        resp = await s.client.post('/users/', json={'username': f'user{i}', 'password': '$up3rS33kr3t!!!!'})
-        assert resp.status_code == 200
-    return s
+    password_hash = AuthService.ph.hash("$up3rS33kr3t!!!!")
+    users = [
+        UserModel(
+            username=username,
+            password=password_hash,
+        )
+        for i in range(20)
+        for username in (f'bob{i}', f'user{i}')
+    ]
+    async with _sqlite_database() as session:
+        session.add_all(users)
+        await session.commit()
+
+
+@pytest_asyncio.fixture
+async def search_setup(user_api_setup: UserApiSetup, extra_users_for_search: None) -> UserApiSetup:
+    return user_api_setup

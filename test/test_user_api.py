@@ -8,8 +8,8 @@ from .conftest import rmsdiff
 
 
 @pytest.mark.asyncio
-async def test_text_search_on_usernames(extra_users_for_search: UserApiSetup):
-    s = extra_users_for_search
+async def test_text_search_on_usernames(search_setup: UserApiSetup):
+    s = search_setup
     resp = await s.client.get('/users/?q=USE&limit=10')
     assert resp.status_code == 200
     assert len(resp.json()) == 10
@@ -21,8 +21,8 @@ async def test_text_search_on_usernames(extra_users_for_search: UserApiSetup):
 
 
 @pytest.mark.asyncio
-async def test_text_search_is_bounded(extra_users_for_search: UserApiSetup):
-    s = extra_users_for_search
+async def test_text_search_is_bounded(search_setup: UserApiSetup):
+    s = search_setup
     resp = await s.client.get('/users/?q=use&limit=10')
     assert len(resp.json()) == 10
     resp = await s.client.get('/users/?q=use&limit=20')
@@ -30,8 +30,8 @@ async def test_text_search_is_bounded(extra_users_for_search: UserApiSetup):
 
 
 @pytest.mark.asyncio
-async def test_text_search_default_limit_is_10(extra_users_for_search: UserApiSetup):
-    s = extra_users_for_search
+async def test_text_search_default_limit_is_10(search_setup: UserApiSetup):
+    s = search_setup
     resp = await s.client.get('/users/?q=use')
     assert len(resp.json()) == 10
 
@@ -130,6 +130,16 @@ async def test_following_user_adds_to_following_list(alice_following_bob: Follow
 
 
 @pytest.mark.asyncio
+async def test_following_nonexisting_user_errors(alice_following_bob: FollowingSetup):
+    s = alice_following_bob
+    bad_id = randint(1, 1_000_000_000)
+    while bad_id in (s.alice.user_id, s.bob.user_id):
+        bad_id = randint(1, 1_000_000_000)
+    resp = await s.client.post(f'/users/me/following/{bad_id}', headers=s.alice_headers)
+    assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
 async def test_following_user_adds_follower_to_their_list(alice_following_bob: FollowingSetup):
     s = alice_following_bob
     resp = await s.client.get('/users/me/followers', headers=s.bob_headers)
@@ -166,6 +176,13 @@ async def test_blocking_followed_user_removes_them_from_following(alice_blocked_
 async def test_blocked_user_cannot_view_blocker_profile(alice_blocked_annoying: FollowingSetup):
     s = alice_blocked_annoying
     resp = await s.client.get(f'/users/{s.alice.user_id}', headers=s.annoying_headers)
+    assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_blocked_user_cannot_follow_blocker(alice_blocked_annoying: FollowingSetup):
+    s = alice_blocked_annoying
+    resp = await s.client.post(f'/users/me/following/{s.alice.user_id}', headers=s.annoying_headers)
     assert resp.status_code == 403
 
 
