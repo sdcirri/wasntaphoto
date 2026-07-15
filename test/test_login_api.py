@@ -1,6 +1,7 @@
 from httpx import AsyncClient
-import base64
 import pytest
+
+from db.entities import UserModel
 
 from .fixtures.users import BAD_PASSWORDS, BAD_AUTH_HEADERS
 
@@ -43,25 +44,25 @@ async def test_register_with_valid_credentials_returns_token(client: AsyncClient
 
 
 @pytest.mark.asyncio
-async def test_login_with_wrong_username_is_rejected(client: AsyncClient, registered_user: None):
+async def test_login_with_wrong_username_is_rejected(client: AsyncClient, registered_user: str):
     resp = await client.post('/session/', json={'username': 'nobody', 'password': 'wrong!!!'})
     assert resp.status_code == 403
 
 
 @pytest.mark.asyncio
-async def test_login_with_wrong_password_is_rejected(client: AsyncClient, registered_user: None):
+async def test_login_with_wrong_password_is_rejected(client: AsyncClient, registered_user: str):
     resp = await client.post('/session/', json={'username': 'bob', 'password': 'wrong!!!'})
     assert resp.status_code == 403
 
 
 @pytest.mark.asyncio
-async def test_registering_duplicate_username_is_rejected(client: AsyncClient, registered_user: None):
+async def test_registering_duplicate_username_is_rejected(client: AsyncClient, registered_user: str):
     resp = await client.post('/users/', json={'username': 'bob', 'password': '$up3rS33kr3t!!!!'})
     assert resp.status_code == 409
 
 
 @pytest.mark.asyncio
-async def test_login_with_correct_credentials_returns_token(client: AsyncClient, registered_user: None):
+async def test_login_with_correct_credentials_returns_token(client: AsyncClient, registered_user: str):
     resp = await client.post('/session/', json={'username': 'bob', 'password': '$up3rS33kr3t!!!!'})
 
     assert resp.status_code == 200
@@ -74,7 +75,7 @@ async def test_login_with_correct_credentials_returns_token(client: AsyncClient,
     'bad_header',
     BAD_AUTH_HEADERS
 )
-async def test_malformed_tokens_are_rejected(client: AsyncClient, registered_user: None, bad_header: str):
+async def test_malformed_tokens_are_rejected(client: AsyncClient, registered_user: str, bad_header: str):
     resp = await client.get('/users/me', headers={'Authorization': bad_header})
     assert resp.status_code == 401
 
@@ -82,4 +83,20 @@ async def test_malformed_tokens_are_rejected(client: AsyncClient, registered_use
 @pytest.mark.asyncio
 async def test_expired_tokens_are_rejected(client: AsyncClient, registered_user_with_expired_session: str):
     resp = await client.get('/users/me', headers={'Authorization': f'Bearer {registered_user_with_expired_session}'})
+    assert resp.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_malformed_credentials_on_db_block_login(client: AsyncClient, user_with_malformed_password_hash: UserModel):
+    user = user_with_malformed_password_hash
+    resp = await client.post('/session/', json={'username': user.username, 'password': '$up3rS33kr3t!!!!'})
+    assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_revoke_session_revokes_session(client: AsyncClient, registered_user: str):
+    session = registered_user
+    resp = await client.delete(f'/session/{session}', headers={'Authorization': f'Bearer {session}'})
+    assert resp.status_code == 204
+    resp = await client.get('/users/me', headers={'Authorization': f'Bearer {session}'})
     assert resp.status_code == 401

@@ -88,12 +88,13 @@ class AuthService:
             except IntegrityError:
                 pass
 
-    async def revoke_session(self, session: str) -> None:
+    async def revoke_session(self, user_id: int, session: str) -> None:
         """
         Revokes a session token
+        :param user_id: user whose session is to be revoked
         :param session: token to be revoked
         """
-        if db_session := await self.session_repo.find_by_id(session):
+        if db_session := await self.session_repo.find_by_user_id_and_session_id(user_id, session):
             await self.session_repo.delete(db_session)
 
     async def login(self, username: str, password: str) -> str:

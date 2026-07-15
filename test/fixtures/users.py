@@ -7,7 +7,7 @@ import base64
 
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
-from db.repositories import SessionRepository
+from db.repositories import SessionRepository, UserRepository
 from db.entities import UserModel
 from service import AuthService
 
@@ -68,6 +68,20 @@ async def user_api_setup(
 
 
 @pytest_asyncio.fixture
+async def user_with_malformed_password_hash(_sqlite_database: async_sessionmaker[AsyncSession]) -> UserModel:
+    """
+    Test _very_ edge case in which the user's
+    password has is corrupted on DB
+    """
+    async with _sqlite_database() as session:
+        user_repo = UserRepository(session)
+        user = UserModel(username='user', password='broken-hash')
+        await user_repo.save(user)
+        await session.commit()
+        return user
+
+
+@pytest_asyncio.fixture
 async def following_setup(
         client: AsyncClient,
         user_factory: Callable[[str, str], Coroutine[Any, Any, UserModel]],
@@ -96,19 +110,21 @@ async def following_setup(
 
 
 @pytest_asyncio.fixture
-async def registered_user(client: AsyncClient) -> None:
+async def registered_user(client: AsyncClient) -> str:
     """
     Registers 'bob' with a valid password. Used by tests that need
     an existing account already in place.
+    Returns the user's session_id
     """
 
     resp = await client.post('/users/', json={'username': 'bob', 'password': '$up3rS33kr3t!!!!'})
     assert resp.status_code == 200
+    return resp.json()
 
 
 @pytest_asyncio.fixture
 async def registered_user_with_expired_session(
-        registered_user: None,
+        registered_user: str,
         _sqlite_database: async_sessionmaker[AsyncSession]
 ) -> str:
     """
@@ -133,7 +149,7 @@ async def alice_following_bob(following_setup: FollowingSetup) -> FollowingSetup
 
     s = following_setup
     resp = await s.client.post(f'/users/me/following/{s.bob.user_id}', headers=s.alice_headers)
-    assert resp.status_code in (200, 204)
+    assert resp.status_code == 200
     return s
 
 
