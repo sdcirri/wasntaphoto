@@ -23,6 +23,7 @@ def test_image_utils_post_format_quality(any_image: bytes):
     post_format = upload2jpeg(any_image, 90, 720)
     assert rmsdiff(any_image, post_format) < 6
 
+
 def test_image_utils_propic_format_quality(any_image: bytes):
     propic_format = upload2jpeg(any_image, 85, 480)
     assert rmsdiff(any_image, propic_format) < 10
