@@ -110,10 +110,7 @@ class PostService:
         """
         if not await self.post_repo.find_by_id(post_id):
             raise PostNotFoundError
-        try:
-            await self.like_repo.save(PostLikeRelationship(user_id=user_id, post_id=post_id))
-        except IntegrityError:
-            raise UserNotFoundError
+        await self.like_repo.save(PostLikeRelationship(user_id=user_id, post_id=post_id))
 
     async def unlike_post(self, user_id: int, post_id: int) -> None:
         """
