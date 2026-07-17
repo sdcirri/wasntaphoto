@@ -1,8 +1,12 @@
-from model import PostRequest, Post
+from typing import Callable, Any, Coroutine
 import base64
 import pytest
 
+from model import PostRequest, Post
+from db.entities import UserModel, PostModel
+
 from .fixtures.posts import PostInteractionSetup, PostCrudSetup
+from .fixtures.users import FollowingSetup
 
 
 def _like_url(s: PostInteractionSetup) -> str:
@@ -18,6 +22,27 @@ def _post_url(s: PostInteractionSetup) -> str:
 
 
 @pytest.mark.asyncio
+async def test_target_user_resolver_accepts_ints(post_interaction_setup: PostInteractionSetup):
+    s = post_interaction_setup
+    resp = await s.client.get(f'/users/{s.author.user_id}/posts/', headers=s.author_auth)
+    assert resp.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_target_user_resolver_accepts_me(post_interaction_setup: PostInteractionSetup):
+    s = post_interaction_setup
+    resp = await s.client.get(f'/users/me/posts/', headers=s.author_auth)
+    assert resp.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_target_user_rejects_bad_strings(post_interaction_setup: PostInteractionSetup):
+    s = post_interaction_setup
+    resp = await s.client.get(f'/users/gibberish/posts/', headers=s.author_auth)
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
 async def test_create_post_returns_expected_fields(post_crud_setup: PostCrudSetup, solid_black: bytes):
     s = post_crud_setup
     req = PostRequest(image=base64.b64encode(solid_black), caption='A nice pixel')
@@ -28,6 +53,14 @@ async def test_create_post_returns_expected_fields(post_crud_setup: PostCrudSetu
     assert info.author_id == s.user.user_id
     assert info.caption == 'A nice pixel'
     assert info.image
+
+
+@pytest.mark.asyncio
+async def test_create_post_only_accepts_me_in_path(post_interaction_setup: PostInteractionSetup, solid_black: bytes):
+    s = post_interaction_setup
+    req = PostRequest(image=base64.b64encode(solid_black), caption='A nice pixel')
+    resp = await s.client.post(f'/users/{s.user.user_id}/posts/', json=req.model_dump(mode='json'), headers=s.author_auth)
+    assert resp.status_code == 400
 
 
 @pytest.mark.asyncio
@@ -50,6 +83,35 @@ async def test_delete_post_removes_it(post_crud_setup: PostCrudSetup, created_po
 
 
 @pytest.mark.asyncio
+async def test_delete_post_requires_me(
+        post_crud_setup: PostCrudSetup,
+        created_post: Post,
+        user_factory: Callable[[str, str], Coroutine[Any, Any, UserModel]]
+):
+    s = post_crud_setup
+    user = await user_factory('bob', 'R@nd0mP@ss!!!1!')
+    del_resp = await s.client.delete(f'/users/{user.user_id}/posts/{created_post.post_id}', headers=s.headers)
+    assert del_resp.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_is_liked_returns_post_status(post_crud_setup: PostCrudSetup, created_post: Post):
+    s = post_crud_setup
+    like_url = f'/users/me/posts/{created_post.post_id}/like'
+
+    resp = await s.client.get(like_url, headers=s.headers)
+    assert resp.status_code == 200
+    assert resp.json() == False
+
+    resp = await s.client.put(like_url, headers=s.headers)
+    assert resp.status_code == 204
+
+    resp = await s.client.get(like_url, headers=s.headers)
+    assert resp.status_code == 200
+    assert resp.json() == True
+
+
+@pytest.mark.asyncio
 async def test_liking_post_increments_like_count(liked_by_both: PostInteractionSetup):
     s = liked_by_both
     resp = await s.client.get(_post_url(s), headers=s.author_auth)
@@ -59,12 +121,49 @@ async def test_liking_post_increments_like_count(liked_by_both: PostInteractionS
 
 
 @pytest.mark.asyncio
+async def test_is_liked_errors_on_post_not_found(post_crud_setup: PostCrudSetup):
+    s = post_crud_setup
+    resp = await s.client.get('/users/me/posts/1', headers=s.headers)
+    assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_liking_post_errors_on_post_not_found(post_crud_setup: PostCrudSetup):
+    s = post_crud_setup
+    resp = await s.client.put('/users/me/posts/1/like', headers=s.headers)
+    assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_unliking_post_errors_on_post_not_found(post_crud_setup: PostCrudSetup):
+    s = post_crud_setup
+    resp = await s.client.delete('/users/me/posts/1/like', headers=s.headers)
+    assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_likes_endpoint_requires_me(liked_by_both: PostInteractionSetup):
+    s = liked_by_both
+    resp = await s.client.get(f'/users/{s.author.user_id}/posts/{s.post.post_id}/likes', headers=s.author_auth)
+    assert resp.status_code == 200
+    resp = await s.client.get(f'/users/{s.user.user_id}/posts/{s.post.post_id}/likes', headers=s.author_auth)
+    assert resp.status_code == 400
+
+
+@pytest.mark.asyncio
 async def test_author_can_see_who_liked_post(liked_by_both: PostInteractionSetup):
     s = liked_by_both
     resp = await s.client.get(_likes_url(s), headers=s.author_auth)
 
     assert resp.status_code == 200
     assert set(resp.json()) == {s.user.user_id, s.author.user_id}
+
+
+@pytest.mark.asyncio
+async def test_get_likes_errors_on_post_not_found(post_crud_setup: PostCrudSetup):
+    s = post_crud_setup
+    resp = await s.client.get('/users/me/posts/1/likes', headers=s.headers)
+    assert resp.status_code == 404
 
 
 @pytest.mark.asyncio
@@ -84,3 +183,17 @@ async def test_unliking_post_removes_user_from_likes(liked_by_both: PostInteract
     likes_resp = await s.client.get(_likes_url(s), headers=s.author_auth)
     assert likes_resp.status_code == 200
     assert set(likes_resp.json()) == {s.author.user_id}
+
+
+@pytest.mark.asyncio
+async def test_blocked_user_cannot_see_posts(
+        alice_blocked_annoying: FollowingSetup,
+        post_factory: Callable[[int, bytes, str], Coroutine[Any, Any, PostModel]],
+        solid_black: bytes
+):
+    s = alice_blocked_annoying
+    post = await post_factory(s.alice.user_id, solid_black, 'A nice pixel')
+    resp = await s.client.get(f'/users/{s.alice.user_id}/posts/{post.post_id}', headers=s.alice_headers)
+    assert resp.status_code == 200
+    resp = await s.client.get(f'/users/{s.alice.user_id}/posts/{post.post_id}', headers=s.annoying_headers)
+    assert resp.status_code == 403

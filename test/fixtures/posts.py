@@ -57,7 +57,7 @@ async def post_interaction_setup(
         client: AsyncClient,
         user_factory: Callable[[str, str], Coroutine[Any, Any, UserModel]],
         post_factory: Callable[[int, bytes, str], Coroutine[Any, Any, PostModel]],
-        gradient_rgb: bytes,
+        gradient_rgb: bytes
 ) -> PostInteractionSetup:
     """
     Creates a post by one user and logs in both that author and a
