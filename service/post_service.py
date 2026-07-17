@@ -62,11 +62,7 @@ class PostService:
         :param request: post info (image and caption)
         :return: the post object
         """
-        db_post = PostModel(author_id=user_id, caption=request.caption)
-        try:
-            db_post = await self.post_repo.save(db_post)
-        except IntegrityError:
-            raise UserNotFoundError
+        db_post = await self.post_repo.save(PostModel(author_id=user_id, caption=request.caption))
 
         await upload2post(db_post.post_id, request.image),
         return await self.post_to_object(db_post, new_post=True)
@@ -104,8 +100,8 @@ class PostService:
         :param page: page number for pagination
         :return: the user's feed as a list of references
         """
-        if not  await self.user_repo.find_by_id(user_id):
-            raise UserNotFoundError
+        user = await self.user_repo.find_by_id(user_id)
+        assert user is not None, 'Bad authenticated user ID injected'
         return await self.post_repo.find_feed(user_id, limit, limit * page)
 
     async def like_post(self, user_id: int, post_id: int) -> None:
