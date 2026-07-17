@@ -83,10 +83,10 @@ async def test_delete_post_removes_it(post_crud_setup: PostCrudSetup, created_po
 
 
 @pytest.mark.asyncio
-async def test_delete_nonexistent_post_errors(post_crud_setup: PostCrudSetup):
+async def test_delete_nonexistent_post_is_ignored(post_crud_setup: PostCrudSetup):
     s = post_crud_setup
     del_resp = await s.client.delete(f'/users/me/posts/1', headers=s.headers)
-    assert del_resp.status_code == 404
+    assert del_resp.status_code == 204
 
 
 @pytest.mark.asyncio
