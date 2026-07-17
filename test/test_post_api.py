@@ -2,8 +2,8 @@ from typing import Callable, Any, Coroutine
 import base64
 import pytest
 
-from model import PostRequest, Post
 from db.entities import UserModel, PostModel
+from model import PostRequest, Post
 
 from .fixtures.posts import PostInteractionSetup, PostCrudSetup
 from .fixtures.users import FollowingSetup
@@ -80,6 +80,13 @@ async def test_delete_post_removes_it(post_crud_setup: PostCrudSetup, created_po
 
     get_resp = await s.client.get(f'/users/me/posts/{created_post.post_id}', headers=s.headers)
     assert get_resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_delete_nonexistent_post_errors(post_crud_setup: PostCrudSetup):
+    s = post_crud_setup
+    del_resp = await s.client.delete(f'/users/me/posts/1', headers=s.headers)
+    assert del_resp.status_code == 404
 
 
 @pytest.mark.asyncio
