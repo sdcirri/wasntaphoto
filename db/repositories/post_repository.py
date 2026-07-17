@@ -23,6 +23,12 @@ class PostRepository(DBRepository[PostModel]):
             select(PostModel.post_id).where(PostModel.author_id == author_id)
         )).all())
 
+    async def find_by_post_id_and_author_id(self, post_id: int, author_id: int) -> PostModel | None:
+        return await self.session.scalar(select(PostModel).where(
+            PostModel.post_id == post_id,
+            PostModel.author_id == author_id
+        ))
+
     async def find_feed(self, user_id: int, limit: int, offset: int) -> list[int]:
         """
         Builds a user's home page feed (list of posts by followed users)

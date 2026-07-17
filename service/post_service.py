@@ -73,9 +73,7 @@ class PostService:
         :param user_id: author ID
         :param post_id: post ID
         """
-        if db_post := await self.post_repo.find_by_id(post_id):
-            if user_id != db_post.author_id:
-                raise AccessDeniedError
+        if db_post := await self.post_repo.find_by_post_id_and_author_id(post_id, user_id):
             await asyncio.gather(
                 self.post_repo.delete(db_post),
                 delete_old_post(post_id)
