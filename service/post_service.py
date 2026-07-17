@@ -1,11 +1,10 @@
-from sqlalchemy.exc import IntegrityError
 import asyncio
 import base64
 
 from db.repositories import UserRepository, PostRepository, PostLikeRepository, BlockRepository
 from db.entities import PostLikeRelationship, PostModel
 
-from exceptions import UserNotFoundError, PostNotFoundError, AccessDeniedError
+from exceptions import PostNotFoundError, AccessDeniedError
 from model import Post, PostRequest
 
 from .image_utils import get_post_bytes, upload2post, delete_old_post
