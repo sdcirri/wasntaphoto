@@ -1,8 +1,10 @@
 from httpx import AsyncClient
 import secrets
+import string
 import pytest
 
 from db.entities import UserModel
+from service import AuthService
 
 from .fixtures.users import BAD_PASSWORDS, BAD_AUTH_HEADERS, UserApiSetup
 
@@ -111,3 +113,15 @@ async def test_revoke_session_ignores_nonexisting_session(user_api_setup: UserAp
         nonexisting = secrets.token_urlsafe(32)
     resp = await s.client.delete(f'/session/{nonexisting}', headers=s.alice_headers)
     assert resp.status_code == 204
+
+
+@pytest.mark.asyncio
+@pytest.mark.real_hibp
+async def test_hibp_lookup():
+    weak = 'password'
+    strong = ''.join(secrets.choice(string.printable[:-6]) for _ in range(24))
+
+    res = await AuthService.hibp_lookup(weak)
+    assert res is True
+    res = await AuthService.hibp_lookup(strong)
+    assert res is False
