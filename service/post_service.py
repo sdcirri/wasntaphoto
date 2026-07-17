@@ -150,7 +150,4 @@ class PostService:
         :param post_id: post ID
         :return: whether the post was liked by the user or not
         """
-        return user_id in [
-            like.user_id
-            for like in await self.like_repo.find_by_post_id(post_id)
-        ]
+        return await self.like_repo.exists_by_post_id_and_user_id(post_id, user_id)
