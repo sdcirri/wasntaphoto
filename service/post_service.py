@@ -45,12 +45,14 @@ class PostService:
         Gets a post by its post ID
         :param post_id: post ID
         :param user_id: authenticated user ID
-        :param author_id: author's user ID
+        :param author_id: post author ID
         :return: the post, if it exists and the user is not blocked
         """
         if not (post := await self.post_repo.find_by_id(post_id, load_comments=True)):
             raise PostNotFoundError
-        if await self.block_repo.find_by_id((author_id, user_id)):
+        if post.author_id != author_id:
+            raise PostNotFoundError
+        if await self.block_repo.find_by_id((post.author_id, user_id)):
             raise AccessDeniedError
         return await self.post_to_object(post)
 

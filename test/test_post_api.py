@@ -73,6 +73,13 @@ async def test_get_post_returns_created_post(post_crud_setup: PostCrudSetup, cre
 
 
 @pytest.mark.asyncio
+async def test_get_post_rejects_incoherent_user_id_in_path(post_interaction_setup: PostInteractionSetup):
+    s = post_interaction_setup
+    resp = await s.client.get(f'/users/{s.user.user_id}/posts/{s.post.post_id}', headers=s.user_auth)
+    assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
 async def test_delete_post_removes_it(post_crud_setup: PostCrudSetup, created_post: Post):
     s = post_crud_setup
     del_resp = await s.client.delete(f'/users/me/posts/{created_post.post_id}', headers=s.headers)
