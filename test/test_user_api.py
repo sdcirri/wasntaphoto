@@ -36,6 +36,27 @@ async def test_text_search_default_limit_is_10(search_setup: UserApiSetup):
 
 
 @pytest.mark.asyncio
+async def test_target_user_resolver_accepts_ints(user_api_setup: UserApiSetup):
+    s = user_api_setup
+    resp = await s.client.get(f'/users/{s.alice.user_id}', headers=s.alice_headers)
+    assert resp.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_target_user_resolver_accepts_me(user_api_setup: UserApiSetup):
+    s = user_api_setup
+    resp = await s.client.get(f'/users/me', headers=s.alice_headers)
+    assert resp.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_target_user_rejects_bad_strings(user_api_setup: UserApiSetup):
+    s = user_api_setup
+    resp = await s.client.get(f'/users/gibberish', headers=s.alice_headers)
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
 async def test_get_own_profile_by_id(user_api_setup: UserApiSetup):
     s = user_api_setup
     resp = await s.client.get(f'/users/{s.alice.user_id}', headers=s.alice_headers)
