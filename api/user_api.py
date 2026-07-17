@@ -49,22 +49,6 @@ async def register_user(request: RegistrationRequest, auth_service: AuthService 
     return await auth_service.register(request.username, request.password)
 
 
-@user_router.get('/')
-async def search_users(
-        user_service: UserService = Depends(get_user_service),
-        q: str = Query(None, alias='q', min_length=3, max_length=40),
-        limit: int = Query(10, alias='limit', ge=1, le=100)
-) -> list[int]:
-    """
-    Run a text search on users
-    :param user_service: user service
-    :param q: search query
-    :param limit: number of results to return (max 100, default 10)
-    :return: the list of the first matching user IDs
-    """
-    return await user_service.search_users(q, limit)
-
-
 @user_router.get('/{user_id}')
 async def get_user_account(
         target_uid: int = Depends(target_user_id),
