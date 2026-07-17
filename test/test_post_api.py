@@ -90,7 +90,7 @@ async def test_delete_nonexistent_post_is_ignored(post_crud_setup: PostCrudSetup
 
 
 @pytest.mark.asyncio
-async def test_delete_post_requires_me(
+async def test_delete_post_only_accepts_me_in_path(
         post_crud_setup: PostCrudSetup,
         created_post: Post,
         user_factory: Callable[[str, str], Coroutine[Any, Any, UserModel]]
