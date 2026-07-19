@@ -5,6 +5,7 @@ import os
 
 os.environ['DATABASE_URL'] = 'postgresql+psycopg://'
 os.environ['WASA_STORAGE_ROOT'] = '/tmp/wasa'
+os.environ['REDIS_URL'] = 'redis://fake:6379/0'
 os.makedirs(os.environ['WASA_STORAGE_ROOT'], exist_ok=True)
 
 pytest_plugins = (
@@ -32,5 +33,3 @@ def rmsdiff(img1: bytes, img2: bytes) -> float:
     diff = ImageChops.difference(img1, img2)
     h = np.array(diff)
     return np.sqrt(np.mean(h**2))
-
-
