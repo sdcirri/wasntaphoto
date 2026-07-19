@@ -1,8 +1,8 @@
 
 CREATE SCHEMA IF NOT EXISTS wasntaphoto;
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
 
-CREATE ROLE wasntaphoto_app;
+CREATE USER wasntaphoto_app PASSWORD 'wasntaphoto';
 
 GRANT CONNECT ON DATABASE wasntaphoto TO wasntaphoto_app;
 GRANT USAGE ON SCHEMA wasntaphoto TO wasntaphoto_app;
