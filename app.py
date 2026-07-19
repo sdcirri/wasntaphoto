@@ -1,7 +1,6 @@
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
-from fastapi import FastAPI, Request
-from starlette import status
 
 from api.login_api import login_router
 from api.feed_api import feed_router
@@ -12,7 +11,7 @@ from exceptions import AppError
 app = FastAPI(title='WASNTAPhoto Backend', openapi_url=None, docs_url=None, redoc_url=None)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['*'],
+    allow_origins=['*'],    # nosemgrep: python.fastapi.security.wildcard-cors.wildcard-cors -- VERY bad in prod, but this is a demo, see comment below
     #allow_origins=['https://wasntaphoto.com/'],
     allow_credentials=True,
     allow_methods=['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'],

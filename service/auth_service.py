@@ -43,7 +43,7 @@ class AuthService:
         :return: whether password was found or not
         """
         sha1sum = sha1(password.encode()).hexdigest().upper()
-        prefix = sha1sum[:5]
+        prefix = sha1sum[:5]    # nosemgrep: python.lang.security.insecure-hash-algorithms.insecure-hash-algorithm-sha1 -- that's how HIBP API works ...
         async with httpx.AsyncClient() as client:
             res = await client.get(f'https://api.pwnedpasswords.com/range/{prefix}')
             for l in res.text.splitlines():

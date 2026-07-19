@@ -2,6 +2,7 @@
 [![codecov](https://codecov.io/gh/sdcirri/wasntaphoto/branch/main/graph/badge.svg)](https://codecov.io/gh/sdcirri/wasntaphoto)
 [![CI Backend build](https://github.com/sdcirri/wasntaphoto/actions/workflows/ci_backend.yml/badge.svg)](https://github.com/sdcirri/wasntaphoto/actions/workflows/ci_backend.yml)
 [![CI Frontend build](https://github.com/sdcirri/wasntaphoto/actions/workflows/ci_frontend.yml/badge.svg)](https://github.com/sdcirri/wasntaphoto/actions/workflows/ci_frontend.yml)
+[![Semgrep](https://github.com/sdcirri/wasntaphoto/actions/workflows/semgrep.yml/badge.svg)](https://github.com/sdcirri/wasntaphoto/actions/workflows/semgrep.yml)
 
 ![Swagger](https://img.shields.io/badge/-Swagger-%23Clojure?style=for-the-badge&logo=swagger&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)
