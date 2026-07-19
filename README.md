@@ -2,21 +2,7 @@
 [![codecov](https://img.shields.io/codecov/c/github/sdcirri/wasntaphoto?style=for-the-badge&logo=codecov&label=Coverage)](https://codecov.io/gh/sdcirri/wasntaphoto)
 [![CI Backend build](https://img.shields.io/github/actions/workflow/status/sdcirri/wasntaphoto/ci_backend.yml?style=for-the-badge&logo=docker&logoColor=white&label=Backend%20Build)](https://github.com/sdcirri/wasntaphoto/actions/workflows/ci_backend.yml)
 [![CI Frontend build](https://img.shields.io/github/actions/workflow/status/sdcirri/wasntaphoto/ci_frontend.yml?style=for-the-badge&logo=docker&logoColor=white&label=Frontend%20Build)](https://github.com/sdcirri/wasntaphoto/actions/workflows/ci_frontend.yml)
-[![Semgrep](https://img.shields.io/github/actions/workflow/status/sdcirri/wasntaphoto/semgrep.yml?style=for-the-badge&logo=semgrep&logoColor=white&label=Semgrep)](https://github.com/sdcirri/wasntaphoto/actions/workflows/semgrep.yml)
-
-![Swagger](https://img.shields.io/badge/-Swagger-%23Clojure?style=for-the-badge&logo=swagger&logoColor=white)
-![Python](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)
-![Pytest](https://img.shields.io/badge/pytest-%23ffffff.svg?style=for-the-badge&logo=pytest&logoColor=2f9fe3)
-![CodeCov](https://img.shields.io/badge/codecov-%23ff0077.svg?style=for-the-badge&logo=codecov&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
-![Gunicorn](https://img.shields.io/badge/gunicorn-%298729.svg?style=for-the-badge&logo=gunicorn&logoColor=white)
-![Pydantic](https://img.shields.io/badge/pydantic-%23E92063.svg?style=for-the-badge&logo=pydantic&logoColor=white)
-![SQLAlchemy](https://img.shields.io/badge/sqlalchemy-%23D71F00.svg?style=for-the-badge&logo=sqlalchemy&logoColor=white)
-![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
-![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
-![Vue.js](https://img.shields.io/badge/vuejs-%2335495e.svg?style=for-the-badge&logo=vuedotjs&logoColor=%234FC08D)
-![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
-![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+[![Semgrep](https://img.shields.io/github/actions/workflow/status/sdcirri/wasntaphoto/semgrep.yml?style=for-the-badge&logo=https://raw.githubusercontent.com/semgrep/semgrep/develop/semgrep.svg&logoColor=white&label=Semgrep)](https://github.com/sdcirri/wasntaphoto/actions/workflows/semgrep.yml)
 
 # WASNTAPhoto - A production-ready implementation of WASAPhoto in FastAPI
 
@@ -28,6 +14,32 @@ The original project (available [here](https://github.com/sdcirri/wasaphoto)) wa
 for the [Web And Software Architecture course](https://gamificationlab.uniroma1.it/en/wasa/)
 at Sapienza. The assignment was to build a full-stack social network app in Go+Vue.js, with
 little focus on security and robustness, but instead fully focused on the software architecture.
+
+## Stack
+### Docs
+![Swagger](https://img.shields.io/badge/-Swagger-%23Clojure?style=for-the-badge&logo=swagger&logoColor=white)
+
+### Backend
+![Python](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
+![Gunicorn](https://img.shields.io/badge/gunicorn-%298729.svg?style=for-the-badge&logo=gunicorn&logoColor=white)
+![Pydantic](https://img.shields.io/badge/pydantic-%23E92063.svg?style=for-the-badge&logo=pydantic&logoColor=white)
+![SQLAlchemy](https://img.shields.io/badge/sqlalchemy-%23D71F00.svg?style=for-the-badge&logo=sqlalchemy&logoColor=white)
+
+### Frontend
+![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
+![Vue.js](https://img.shields.io/badge/vuejs-%2335495e.svg?style=for-the-badge&logo=vuedotjs&logoColor=%234FC08D)
+![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
+
+### Data and infrastructure
+![PostgreSQL](https://img.shields.io/badge/postgresql-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+![Nginx](https://img.shields.io/badge/nginx-%23009639.svg?style=for-the-badge&logo=nginx&logoColor=white)
+
+### Security and testing
+![Pytest](https://img.shields.io/badge/pytest-%23ffffff.svg?style=for-the-badge&logo=pytest&logoColor=2f9fe3)
+![Codecov](https://img.shields.io/badge/codecov-%23ff0077.svg?style=for-the-badge&logo=codecov&logoColor=white)
+![Semgrep](https://img.shields.io/badge/semgrep-%2300C7B7.svg?style=for-the-badge&logoColor=white)
 
 ## Why FastAPI?
 The original assignment mandated to implement API endpoints over a basic REST API template written in Go.
