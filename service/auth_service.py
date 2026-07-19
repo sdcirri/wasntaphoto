@@ -2,7 +2,7 @@ from argon2.exceptions import VerifyMismatchError, VerificationError, InvalidHas
 from argon2 import PasswordHasher
 
 from sqlalchemy.exc import IntegrityError
-from async_lru import alru_cache
+from redis.asyncio import Redis
 from hashlib import sha1
 import secrets
 import logging
@@ -14,6 +14,7 @@ from exceptions import UsernameAlreadyTakenError, WeakPasswordError, BadAuthErro
 
 from db.repositories import SessionRepository, UserRepository
 from db.entities import UserModel, UserSessionModel
+
 from exceptions.pwned_password_error import PwnedPasswordError
 
 
@@ -28,14 +29,19 @@ class AuthService:
     logger = logging.getLogger('AuthService')
     user_repo: UserRepository
     session_repo: SessionRepository
+    redis: Redis
 
-    def __init__(self, user_repo: UserRepository, session_repo: SessionRepository) -> None:
+    REDIS_HIBP_PREFIX = 'wasntaphoto:auth:hibp'
+    REDIS_HIBP_TTL = 86400 * 7  # 7d
+    REDIS_TOKEN_PREFIX = 'wasntaphoto:auth:tokens'
+    REDIS_TOKEN_TTL = 60
+
+    def __init__(self, user_repo: UserRepository, session_repo: SessionRepository, redis: Redis) -> None:
         self.user_repo = user_repo
         self.session_repo = session_repo
+        self.redis = redis
 
-    @staticmethod
-    @alru_cache(maxsize=256)
-    async def hibp_lookup(password: str) -> bool:
+    async def hibp_lookup(self, password: str) -> bool:
         """
         Checks whether password was involved in a data breach
         calling the HIBP API
@@ -44,12 +50,12 @@ class AuthService:
         """
         sha1sum = sha1(password.encode()).hexdigest().upper()   # nosemgrep: python.lang.security.insecure-hash-algorithms.insecure-hash-algorithm-sha1 -- that's how HIBP API works ...
         prefix = sha1sum[:5]
-        async with httpx.AsyncClient() as client:
-            res = await client.get(f'https://api.pwnedpasswords.com/range/{prefix}')
-            for l in res.text.splitlines():
-                if prefix + l.split(':')[0].upper() == sha1sum:
-                    return True
-        return False
+        if (pwned := await self.redis.get(f'{self.REDIS_HIBP_PREFIX}:{prefix}')) is None:
+            async with httpx.AsyncClient() as client:
+                res = await client.get(f'https://api.pwnedpasswords.com/range/{prefix}')
+                pwned = res.text
+                await self.redis.set(f'{self.REDIS_HIBP_PREFIX}:{prefix}', pwned, ex=self.REDIS_HIBP_TTL)
+        return any(prefix + l.split(':')[0].upper() == sha1sum for l in pwned.splitlines())
 
     @staticmethod
     def strong_password(password: str) -> bool:
@@ -96,6 +102,7 @@ class AuthService:
         """
         if db_session := await self.session_repo.find_by_user_id_and_session_id(user_id, session):
             await self.session_repo.delete(db_session)
+            await self.redis.delete(f'{self.REDIS_TOKEN_PREFIX}:{session}')
 
     async def login(self, username: str, password: str) -> str:
         """
@@ -149,13 +156,18 @@ class AuthService:
         :param token: bearer token
         :return: the corresponding user ID, if the token is valid
         """
+        if cached := await self.redis.get(f'{self.REDIS_TOKEN_PREFIX}:{token}'):
+            return int(cached)
+
         if not (session := await self.session_repo.find_by_id(token)):
             raise BadAuthError
+
         if session.valid_until < time.time():
             await self.session_repo.delete(session)
             raise SessionExpiredError
 
         session.valid_until = int(time.time()) + 604800
         await self.session_repo.save(session)
+        await self.redis.set(f'{self.REDIS_TOKEN_PREFIX}:{token}', session.user_id, ex=self.REDIS_TOKEN_TTL)
 
         return session.user_id

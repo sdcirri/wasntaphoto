@@ -3,6 +3,7 @@ import pytest_asyncio
 import pytest
 import httpx
 
+from service import AuthService
 from app import app
 
 
@@ -13,10 +14,19 @@ async def client() -> AsyncGenerator[httpx.AsyncClient, None]:
         yield test_client
 
 
-@pytest_asyncio.fixture(autouse=True)
+@pytest.fixture(autouse=True)
 def mock_hibp(request, monkeypatch: pytest.MonkeyPatch) -> None:
-    if request.node.get_closest_marker('real_hibp'):
+    if request.node.get_closest_marker("real_hibp"):
         return
-    async def fake_hibp_lookup(password: str) -> bool:
+
+    async def fake_hibp_lookup(
+        self: AuthService,
+        password: str,
+    ) -> bool:
         return password == 'Password.1'
-    monkeypatch.setattr('service.auth_service.AuthService.hibp_lookup', staticmethod(fake_hibp_lookup))
+
+    monkeypatch.setattr(
+        AuthService,
+        'hibp_lookup',
+        fake_hibp_lookup,
+    )

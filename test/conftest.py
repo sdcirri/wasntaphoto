@@ -14,6 +14,8 @@ pytest_plugins = (
     'test.fixtures.comments',
     'test.fixtures.users',
     'test.fixtures.posts',
+    'test.fixtures.redis',
+    'test.fixtures.services',
 )
 
 from service.image_utils import DEFAULT_PROPIC
@@ -30,3 +32,5 @@ def rmsdiff(img1: bytes, img2: bytes) -> float:
     diff = ImageChops.difference(img1, img2)
     h = np.array(diff)
     return np.sqrt(np.mean(h**2))
+
+

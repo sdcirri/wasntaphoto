@@ -1,4 +1,6 @@
+from fakeredis.aioredis import FakeRedis
 from httpx import AsyncClient
+from hashlib import sha1
 import secrets
 import string
 import pytest
@@ -117,11 +119,26 @@ async def test_revoke_session_ignores_nonexisting_session(user_api_setup: UserAp
 
 @pytest.mark.asyncio
 @pytest.mark.real_hibp
-async def test_hibp_lookup():
+async def test_hibp_lookup(fake_auth_service: AuthService):
     weak = 'password'
     strong = ''.join(secrets.choice(string.printable[:-6]) for _ in range(24))
 
-    res = await AuthService.hibp_lookup(weak)
+    res = await fake_auth_service.hibp_lookup(weak)
     assert res is True
-    res = await AuthService.hibp_lookup(strong)
+    res = await fake_auth_service.hibp_lookup(strong)
     assert res is False
+
+
+@pytest.mark.asyncio
+@pytest.mark.real_hibp
+async def test_hibp_lookup_is_cached(override_redis: FakeRedis, fake_auth_service: AuthService):
+    weak = 'password'
+    digest = sha1(weak.encode()).hexdigest().upper()
+    prefix = digest[:5]
+    expected_key = f'{AuthService.REDIS_HIBP_PREFIX}:{prefix}'
+
+    res = await fake_auth_service.hibp_lookup(weak)
+    assert res is True
+    override_redis.get.assert_awaited_once_with(expected_key)
+    res = await fake_auth_service.hibp_lookup(weak)
+    assert res is True

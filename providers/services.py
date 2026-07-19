@@ -1,3 +1,4 @@
+from redis.asyncio import Redis
 from fastapi import Depends
 
 from db.repositories import UserRepository, SessionRepository, FollowRepository, BlockRepository, PostRepository, \
@@ -6,13 +7,15 @@ from service import AuthService, UserService, PostService, CommentService
 
 from .repositories import get_user_repository, get_session_repository, get_follow_repository, get_block_repository, \
     get_post_repository, get_post_like_repository, get_comment_repository, get_comment_like_repository
+from .redis import get_redis
 
 
 def get_auth_service(
         user_repo: UserRepository = Depends(get_user_repository),
-        session_repo: SessionRepository = Depends(get_session_repository)
+        session_repo: SessionRepository = Depends(get_session_repository),
+        redis: Redis = Depends(get_redis)
 ) -> AuthService:
-    return AuthService(user_repo, session_repo)
+    return AuthService(user_repo, session_repo, redis)
 
 
 def get_user_service(
