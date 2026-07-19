@@ -1,8 +1,8 @@
-[![Tests](https://img.shields.io/github/actions/workflow/status/sdcirri/wasntaphoto/backend_tests.yml?style=for-the-badge&logo=pytest&logoColor=white&label=Tests)](https://github.com/sdcirri/wasntaphoto/actions/workflows/backend_tests.yml)
-[![codecov](https://img.shields.io/codecov/c/github/sdcirri/wasntaphoto?style=for-the-badge&logo=codecov&label=Coverage)](https://codecov.io/gh/sdcirri/wasntaphoto)
-[![CI Backend build](https://img.shields.io/github/actions/workflow/status/sdcirri/wasntaphoto/ci_backend.yml?style=for-the-badge&logo=docker&logoColor=white&label=Backend%20Build)](https://github.com/sdcirri/wasntaphoto/actions/workflows/ci_backend.yml)
-[![CI Frontend build](https://img.shields.io/github/actions/workflow/status/sdcirri/wasntaphoto/ci_frontend.yml?style=for-the-badge&logo=docker&logoColor=white&label=Frontend%20Build)](https://github.com/sdcirri/wasntaphoto/actions/workflows/ci_frontend.yml)
-[![Semgrep](https://img.shields.io/github/actions/workflow/status/sdcirri/wasntaphoto/semgrep.yml?style=for-the-badge&logoColor=white&label=Semgrep)](https://github.com/sdcirri/wasntaphoto/actions/workflows/semgrep.yml)
+[![Tests](https://github.com/sdcirri/wasntaphoto/actions/workflows/backend_tests.yml/badge.svg)](https://github.com/sdcirri/wasntaphoto/actions/workflows/backend_tests.yml)
+[![Coverage](https://codecov.io/gh/sdcirri/wasntaphoto/graph/badge.svg)](https://codecov.io/gh/sdcirri/wasntaphoto)
+[![Backend Build](https://github.com/sdcirri/wasntaphoto/actions/workflows/ci_backend.yml/badge.svg)](https://github.com/sdcirri/wasntaphoto/actions/workflows/ci_backend.yml)
+[![Frontend Build](https://github.com/sdcirri/wasntaphoto/actions/workflows/ci_frontend.yml/badge.svg)](https://github.com/sdcirri/wasntaphoto/actions/workflows/ci_frontend.yml)
+[![Semgrep](https://github.com/sdcirri/wasntaphoto/actions/workflows/semgrep.yml/badge.svg)](https://github.com/sdcirri/wasntaphoto/actions/workflows/semgrep.yml)
 
 # WASNTAPhoto - A production-ready implementation of WASAPhoto in FastAPI
 
