@@ -69,7 +69,7 @@ $ cd wasntaphoto/
 ```
 Install [Docker Compose](https://docs.docker.com/compose/install), then, on the project root, simply run:
 ```shell
-$ docker compose up -d
+$ docker compose -f docker-compose.sample.yml up -d
 ```
 Everything will build and start automatically. When it's done, visit http://localhost:8080/.
 
