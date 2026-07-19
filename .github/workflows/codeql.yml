@@ -32,6 +32,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
 
       - name: Install Python deps
         if: matrix.language == 'python'
@@ -43,7 +44,7 @@ jobs:
         if: matrix.language == 'javascript-typescript'
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: Install JS deps
         if: matrix.language == 'javascript-typescript'
@@ -59,9 +60,7 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           queries: security-extended,security-and-quality
-
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v4
+          config-file: ./.github/codeql/codeql-config.yml
 
       - name: Analyze
         uses: github/codeql-action/analyze@v4
