@@ -15,7 +15,6 @@ jobs:
   build:
     name: Build Docker image
     runs-on: ubuntu-latest
-    needs: test
     steps:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
