@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, Path, status
 
+from providers.rate_limiting import auth_limiter
 from providers.services import get_auth_service
 from security.bearer_auth import get_user
 from model import UserCredentials
 from service import AuthService
 
-login_router = APIRouter(prefix='/session', tags=['Login'])
+login_router = APIRouter(prefix='/session', tags=['Login'], dependencies=[Depends(auth_limiter)])
 
 
 @login_router.post('/')

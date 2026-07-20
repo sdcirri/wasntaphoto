@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query, Request, Path, Body, status, HTTPException
 
+from providers.rate_limiting import read_limiter, auth_limiter, user_edit_limiter
 from providers.services import get_auth_service, get_user_service
 from model import RegistrationRequest, UserAccount
 from service import AuthService, UserService
@@ -22,7 +23,7 @@ def target_user_id(request: Request, me_id: int = Depends(get_user)) -> int:
         raise HTTPException(status_code=422)
 
 
-@user_router.get('/')
+@user_router.get('/', dependencies=[Depends(read_limiter)])
 async def search_users(
         user_service: UserService = Depends(get_user_service),
         q: str = Query(..., min_length=3, max_length=40),
@@ -38,7 +39,7 @@ async def search_users(
     return await user_service.search_users(q, l)
 
 
-@user_router.post('/')
+@user_router.post('/', dependencies=[Depends(auth_limiter)])
 async def register_user(request: RegistrationRequest, auth_service: AuthService = Depends(get_auth_service)) -> str:
     """
     Registers in the user
@@ -49,7 +50,7 @@ async def register_user(request: RegistrationRequest, auth_service: AuthService 
     return await auth_service.register(request.username, request.password)
 
 
-@user_router.get('/{user_id}')
+@user_router.get('/{user_id}', dependencies=[Depends(read_limiter)])
 async def get_user_account(
         target_uid: int = Depends(target_user_id),
         user_service: UserService = Depends(get_user_service),
@@ -65,7 +66,11 @@ async def get_user_account(
     return await user_service.get_user(target_uid, user_id)
 
 
-@user_router.put('/me/username', status_code=status.HTTP_204_NO_CONTENT)
+@user_router.put(
+    '/me/username',
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(user_edit_limiter)]
+)
 async def update_username(
         username: str = Body(..., min_length=3, max_length=40),
         user_service: UserService = Depends(get_user_service),
@@ -80,7 +85,11 @@ async def update_username(
     await user_service.set_username(user_id, username)
 
 
-@user_router.put('/me/pp', status_code=status.HTTP_204_NO_CONTENT)
+@user_router.put(
+    '/me/pp',
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(user_edit_limiter)]
+)
 async def update_propic(
         request: Request,
         user_service: UserService = Depends(get_user_service),
@@ -96,7 +105,7 @@ async def update_propic(
     await user_service.set_propic(user_id, image)
 
 
-@user_router.get('/me/followers')
+@user_router.get('/me/followers', dependencies=[Depends(read_limiter)])
 async def get_followers(
         user_service: UserService = Depends(get_user_service),
         user_id: int = Depends(get_user)
@@ -110,7 +119,11 @@ async def get_followers(
     return await user_service.get_followers(user_id)
 
 
-@user_router.delete('/me/followers/{to_remove_id}', status_code=status.HTTP_204_NO_CONTENT)
+@user_router.delete(
+    '/me/followers/{to_remove_id}',
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(user_edit_limiter)]
+)
 async def remove_follower(
         to_remove_id: int = Path(..., ge=0),
         user_service: UserService = Depends(get_user_service),
@@ -125,7 +138,7 @@ async def remove_follower(
     await user_service.remove_follower(user_id, to_remove_id)
 
 
-@user_router.get('/me/following')
+@user_router.get('/me/following', dependencies=[Depends(read_limiter)])
 async def get_following(
         user_service: UserService = Depends(get_user_service),
         user_id: int = Depends(get_user)
@@ -139,7 +152,7 @@ async def get_following(
     return await user_service.get_following(user_id)
 
 
-@user_router.post('/me/following/{to_follow_id}')
+@user_router.post('/me/following/{to_follow_id}', dependencies=[Depends(user_edit_limiter)])
 async def follow_user(
         to_follow_id: int = Path(..., ge=0),
         user_service: UserService = Depends(get_user_service),
@@ -154,7 +167,11 @@ async def follow_user(
     await user_service.follow(user_id, to_follow_id)
 
 
-@user_router.delete('/me/following/{to_unfollow_id}', status_code=status.HTTP_204_NO_CONTENT)
+@user_router.delete(
+    '/me/following/{to_unfollow_id}',
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(user_edit_limiter)]
+)
 async def unfollow_user(
         to_unfollow_id: int = Path(..., ge=0),
         user_service: UserService = Depends(get_user_service),
@@ -169,7 +186,7 @@ async def unfollow_user(
     await user_service.unfollow(user_id, to_unfollow_id)
 
 
-@user_router.get('/me/blocked')
+@user_router.get('/me/blocked', dependencies=[Depends(read_limiter)])
 async def get_blocked(
         user_service: UserService = Depends(get_user_service),
         user_id: int = Depends(get_user)
@@ -183,7 +200,11 @@ async def get_blocked(
     return await user_service.get_blocked(user_id)
 
 
-@user_router.post('/me/blocked/{to_block_id}')
+@user_router.post(
+    '/me/blocked/{to_block_id}',
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(user_edit_limiter)]
+)
 async def block_user(
         to_block_id: int = Path(..., ge=0),
         user_service: UserService = Depends(get_user_service),
@@ -198,7 +219,11 @@ async def block_user(
     await user_service.block_user(user_id, to_block_id)
 
 
-@user_router.delete('/me/blocked/{to_unblock_id}', status_code=status.HTTP_204_NO_CONTENT)
+@user_router.delete(
+    '/me/blocked/{to_unblock_id}',
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(user_edit_limiter)]
+)
 async def unblock_user(
         to_unblock_id: int = Path(..., ge=0),
         user_service: UserService = Depends(get_user_service),

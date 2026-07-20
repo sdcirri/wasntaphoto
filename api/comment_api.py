@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Path, Body, Depends, status
 
+from providers.rate_limiting import comment_limiter, read_limiter
 from providers.services import get_comment_service
 from security.bearer_auth import get_user
 from service import CommentService
@@ -9,7 +10,7 @@ from model import Comment
 comment_router = APIRouter(prefix='/{post_id}/comments', tags=['Comments'])
 
 
-@comment_router.post('/')
+@comment_router.post('/', dependencies=[Depends(comment_limiter)])
 async def comment_post(
         content: str = Body(..., min_length=1, max_length=2048),
         post_id: int = Path(..., ge=0),
@@ -27,7 +28,7 @@ async def comment_post(
     return await comment_service.create_comment(user_id, post_id, content)
 
 
-@comment_router.get('/{comment_id}')
+@comment_router.get('/{comment_id}', dependencies=[Depends(read_limiter)])
 async def get_comment(
         comment_id: int = Path(..., ge=0),
         comment_service: CommentService = Depends(get_comment_service),
@@ -43,7 +44,11 @@ async def get_comment(
     return await comment_service.get_comment(comment_id)
 
 
-@comment_router.delete('/{comment_id}', status_code=status.HTTP_204_NO_CONTENT)
+@comment_router.delete(
+    '/{comment_id}',
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(comment_limiter)]
+)
 async def delete_comment(
         comment_id: int = Path(..., ge=0),
         comment_service: CommentService = Depends(get_comment_service),
@@ -58,7 +63,7 @@ async def delete_comment(
     await comment_service.delete_comment(user_id, comment_id)
 
 
-@comment_router.get('/{comment_id}/like')
+@comment_router.get('/{comment_id}/like', dependencies=[Depends(read_limiter)])
 async def is_liked(
         comment_id: int = Path(..., ge=0),
         comment_service: CommentService = Depends(get_comment_service),
@@ -74,7 +79,11 @@ async def is_liked(
     return await comment_service.is_comment_liked(user_id, comment_id)
 
 
-@comment_router.put('/{comment_id}/like', status_code=status.HTTP_204_NO_CONTENT)
+@comment_router.put(
+    '/{comment_id}/like',
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(comment_limiter)]
+)
 async def like_comment(
         comment_id: int = Path(..., ge=0),
         comment_service: CommentService = Depends(get_comment_service),
@@ -89,7 +98,11 @@ async def like_comment(
     await comment_service.like_comment(user_id, comment_id)
 
 
-@comment_router.delete('/{comment_id}/like', status_code=status.HTTP_204_NO_CONTENT)
+@comment_router.delete(
+    '/{comment_id}/like',
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(comment_limiter)]
+)
 async def unlike_comment(
         comment_id: int = Path(..., ge=0),
         comment_service: CommentService = Depends(get_comment_service),

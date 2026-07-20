@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, Query
 
+from providers.rate_limiting import read_limiter
 from providers.services import get_post_service
 from security.bearer_auth import get_user
 from service import PostService
 
-feed_router = APIRouter(prefix='/feed', tags=['Feed'])
+feed_router = APIRouter(prefix='/feed', tags=['Feed'], dependencies=[Depends(read_limiter)])
 
 
 @feed_router.get('/')

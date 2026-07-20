@@ -1,9 +1,10 @@
+from fastapi import FastAPI, Request, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 
 from providers.redis import connect_redis, disconnect_redis
+from providers.rate_limiting import liveness_limiter
 from api.login_api import login_router
 from api.feed_api import feed_router
 from api.user_api import user_router
@@ -32,7 +33,7 @@ app.include_router(user_router)
 app.include_router(feed_router)
 
 
-@app.get('/liveness')
+@app.get('/liveness', dependencies=[Depends(liveness_limiter)])
 async def liveness() -> JSONResponse:
     return JSONResponse({'status': 'healthy'}, status_code=status.HTTP_200_OK)
 

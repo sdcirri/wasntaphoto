@@ -1,5 +1,6 @@
 from fastapi import Request, Depends, APIRouter, Path, HTTPException, status
 
+from providers.rate_limiting import read_limiter, post_limiter
 from providers.services import get_post_service
 from security.bearer_auth import get_user
 from model import Post, PostRequest
@@ -22,7 +23,7 @@ def target_user_id(request: Request, me_id: int = Depends(get_user)) -> int:
         raise HTTPException(status_code=422)
 
 
-@post_router.get('/')
+@post_router.get('/', dependencies=[Depends(read_limiter)])
 async def get_user_posts(
         author_id: int = Depends(target_user_id),
         post_service: PostService = Depends(get_post_service),
@@ -38,7 +39,7 @@ async def get_user_posts(
     return await post_service.get_user_posts(user_id, author_id)
 
 
-@post_router.get('/{post_id}')
+@post_router.get('/{post_id}', dependencies=[Depends(read_limiter)])
 async def get_post(
         author_id: int = Depends(target_user_id),
         post_id: int = Path(..., ge=0),
@@ -56,7 +57,7 @@ async def get_post(
     return await post_service.get_post(post_id, user_id, author_id)
 
 
-@post_router.get('/{post_id}/like')
+@post_router.get('/{post_id}/like', dependencies=[Depends(read_limiter)])
 async def is_liked(
         post_id: int = Path(..., ge=0),
         post_service: PostService = Depends(get_post_service),
@@ -72,7 +73,11 @@ async def is_liked(
     return await post_service.is_liked(user_id, post_id)
 
 
-@post_router.put('/{post_id}/like', status_code=status.HTTP_204_NO_CONTENT)
+@post_router.put(
+    '/{post_id}/like',
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(post_limiter)]
+)
 async def like_post(
         post_id: int = Path(..., ge=0),
         post_service: PostService = Depends(get_post_service),
@@ -87,7 +92,11 @@ async def like_post(
     await post_service.like_post(user_id, post_id)
 
 
-@post_router.delete('/{post_id}/like', status_code=status.HTTP_204_NO_CONTENT)
+@post_router.delete(
+    '/{post_id}/like',
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(post_limiter)]
+)
 async def unlike_post(
         post_id: int = Path(..., ge=0),
         post_service: PostService = Depends(get_post_service),
@@ -102,7 +111,7 @@ async def unlike_post(
     await post_service.unlike_post(user_id, post_id)
 
 
-@post_router.post('/')
+@post_router.post('/', dependencies=[Depends(post_limiter)])
 async def new_post(
         request: PostRequest,
         target_id: int = Depends(target_user_id),
@@ -122,7 +131,7 @@ async def new_post(
     return await post_service.new_post(user_id, request)
 
 
-@post_router.get('/{post_id}/likes')
+@post_router.get('/{post_id}/likes', dependencies=[Depends(read_limiter)])
 async def get_likes(
         target_id: int = Depends(target_user_id),
         post_id: int = Path(..., ge=0),
@@ -142,7 +151,11 @@ async def get_likes(
     return await post_service.get_post_likes(user_id, post_id)
 
 
-@post_router.delete('/{post_id}', status_code=status.HTTP_204_NO_CONTENT)
+@post_router.delete(
+    '/{post_id}',
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(post_limiter)]
+)
 async def delete_post(
         target_id: int = Depends(target_user_id),
         post_id: int = Path(..., ge=0),
