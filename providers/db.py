@@ -9,7 +9,7 @@ database_url = getenv('DATABASE_URL')
 if not database_url:
     raise RuntimeError('DATABASE_URL is not set, exiting ...')
 
-engine = get_engine(getenv('DATABASE_URL'))
+engine = get_engine(database_url)
 SessionLocal = get_sessionmaker(engine)
 
 
