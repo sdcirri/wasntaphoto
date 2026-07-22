@@ -33,9 +33,10 @@ little focus on security and robustness, but instead fully focused on the softwa
 
 ### Data and infrastructure
 ![PostgreSQL](https://img.shields.io/badge/postgresql-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white)
 ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
 ![Nginx](https://img.shields.io/badge/nginx-%23009639.svg?style=for-the-badge&logo=nginx&logoColor=white)
-![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white)
+![Minio](https://img.shields.io/badge/minio-%23cf163d.svg?style=for-the-badge&logo=minio&logoColor=white)
 
 ### Security and testing
 ![Pytest](https://img.shields.io/badge/pytest-%23ffffff.svg?style=for-the-badge&logo=pytest&logoColor=2f9fe3)
@@ -54,6 +55,7 @@ I chose FastAPI over Go because it provides:
 ## Features
 - A real database (PostgreSQL), the original project relied on SQLite
   - Dedicated DB role to restrict attack surface in case of compromise (no DDL nor DCL)
+- Real media storage using S3-compatible bucket storage Minio
 - **Real** authentication, opaque token-based bearer auth, session management and secure credential 
   storage (argon2 hashing for passwords)
   - Hence login and registration are now distinct
