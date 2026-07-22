@@ -16,7 +16,7 @@ from app import app
 @pytest.fixture(scope='session')
 def minio_container() -> Generator[MinioContainer, Any, None]:
     with MinioContainer(
-        'minio/minio:latest',
+        'minio/minio:RELEASE.2025-09-07T16-13-09Z',
         access_key='minioadmin',
         secret_key='minioadmin',
     ) as container:
