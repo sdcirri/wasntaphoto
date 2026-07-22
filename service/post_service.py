@@ -7,7 +7,8 @@ from db.entities import PostLikeRelationship, PostModel
 from exceptions import PostNotFoundError, AccessDeniedError
 from model import Post, PostRequest
 
-from .image_utils import get_post_bytes, upload2post, delete_old_post
+from .storage_service import StorageService
+from .image_utils import upload2post
 
 
 class PostService:
@@ -15,26 +16,38 @@ class PostService:
     post_repo: PostRepository
     like_repo: PostLikeRepository
     block_repo: BlockRepository
+    storage_service: StorageService
 
     def __init__(
             self,
             post_repo: PostRepository,
             user_repo: UserRepository,
             like_repo: PostLikeRepository,
-            block_repo: BlockRepository
+            block_repo: BlockRepository,
+            storage_service: StorageService
     ) -> None:
         self.post_repo = post_repo
         self.user_repo = user_repo
         self.like_repo = like_repo
         self.block_repo = block_repo
+        self.storage_service = storage_service
 
-    @staticmethod
-    async def post_to_object(post: PostModel, new_post: bool=False) -> Post:
+    async def post_to_object(self, post: PostModel, cached_img: bytes | None=None, new_post: bool=False) -> Post:
+        """
+        Builds a Post object for the API
+        :param post: post DB object
+        :param cached_img: the post image bytes if available (to avoid calling the storage bucket)
+        :param new_post: whether the post is new or not (not to bother the DB with likes and comments aggregates)
+        :return: the Post object
+        """
+        img = cached_img if cached_img is not None else await self.storage_service.get_post(post.post_id)
+        assert img is not None, 'Post has no attached image!'
+
         return Post(
             post_id=post.post_id,
             author_id=post.author_id,
             pub_time=post.pub_time,
-            image=base64.b64encode(await get_post_bytes(post.post_id)),
+            image=base64.b64encode(img),
             caption=post.caption,
             like_cnt=0 if new_post else post.like_cnt,
             comments=[] if new_post else [c.comment_id for c in post.comments]
@@ -56,9 +69,6 @@ class PostService:
             raise AccessDeniedError
         return await self.post_to_object(post)
 
-    async def get_post_media(self, post_id: int, user_id: int, author_id: int) -> bytes:
-        pass
-
     async def new_post(self, user_id: int, request: PostRequest) -> Post:
         """
         Creates a new post
@@ -68,8 +78,12 @@ class PostService:
         """
         db_post = await self.post_repo.save(PostModel(author_id=user_id, caption=request.caption))
 
-        await upload2post(db_post.post_id, request.image),
-        return await self.post_to_object(db_post, new_post=True)
+        img = upload2post(request.image)
+        post, _ = await asyncio.gather(
+            self.post_to_object(db_post, cached_img=img, new_post=True),
+            self.storage_service.store_post(db_post.post_id, img)
+        )
+        return post
 
     async def delete_post(self, user_id: int, post_id: int) -> None:
         """
@@ -80,7 +94,7 @@ class PostService:
         if db_post := await self.post_repo.find_by_post_id_and_author_id(post_id, user_id):
             await asyncio.gather(
                 self.post_repo.delete(db_post),
-                delete_old_post(post_id)
+                self.storage_service.delete_post(post_id)
             )
 
     async def get_user_posts(self, user_id: int, author_id: int) -> list[int]:

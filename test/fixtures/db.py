@@ -4,6 +4,8 @@ from sqlalchemy import text
 from typing import Coroutine, Any, Callable, AsyncIterator, Generator
 from testcontainers.postgres import PostgresContainer
 from pathlib import Path
+from minio import Minio
+from io import BytesIO
 import pytest_asyncio
 import pytest
 import os
@@ -14,7 +16,7 @@ from db.entities import UserModel, PostModel, CommentModel
 from service.auth_service import AuthService
 from service.image_utils import upload2post
 import providers.db as db_provider
-
+from service.storage_service import StorageService
 
 INITDB_DIR = Path(__file__).resolve().parents[2] / 'initdb'
 
@@ -104,7 +106,10 @@ async def user_factory(test_db_session_factory: async_sessionmaker[AsyncSession]
 
 
 @pytest_asyncio.fixture
-async def post_factory(test_db_session_factory: async_sessionmaker[AsyncSession]) -> Callable[[int, bytes, str], Coroutine[Any, Any, PostModel]]:
+async def post_factory(
+        test_db_session_factory: async_sessionmaker[AsyncSession],
+        minio_client: Minio
+) -> Callable[[int, bytes, str], Coroutine[Any, Any, PostModel]]:
     async def _create_post(author_id: int, raw_image: bytes, caption: str | None) -> PostModel:
         async with test_db_session_factory() as session:
             post_repo = PostRepository(session)
@@ -115,7 +120,15 @@ async def post_factory(test_db_session_factory: async_sessionmaker[AsyncSession]
             db_post = await post_repo.save(db_post)
             await session.commit()
 
-            await upload2post(db_post.post_id, raw_image)
+            with BytesIO(upload2post(raw_image)) as img:
+                minio_client.put_object(
+                    StorageService.POST_BUCKET,
+                    f'{db_post.post_id}.jpg',
+                    img,
+                    length=-1,
+                    part_size=10 * 1024 * 1024,
+                    content_type='image/jpeg'
+                )
             return db_post
 
     return _create_post

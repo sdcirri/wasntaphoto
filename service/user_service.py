@@ -107,7 +107,7 @@ class UserService:
         """
         user = await self.user_repo.find_by_id(user_id)
         assert user is not None, 'Bad authenticated user ID injected'
-        propic = await upload2propic(uploaded_image)
+        propic = upload2propic(uploaded_image)
         await self.storage_service.store_propic(user.user_id, propic)
 
     async def follow(self, user_id: int, to_follow_id: int) -> None:

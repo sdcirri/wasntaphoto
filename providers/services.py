@@ -38,9 +38,10 @@ def get_post_service(
         user_repo: UserRepository = Depends(get_user_repository),
         post_repo: PostRepository = Depends(get_post_repository),
         like_repo: PostLikeRepository = Depends(get_post_like_repository),
-        block_repo: BlockRepository = Depends(get_block_repository)
+        block_repo: BlockRepository = Depends(get_block_repository),
+        storage_service: StorageService = Depends(get_storage_service)
 ) -> PostService:
-    return PostService(post_repo, user_repo, like_repo, block_repo)
+    return PostService(post_repo, user_repo, like_repo, block_repo, storage_service)
 
 
 def get_comment_service(

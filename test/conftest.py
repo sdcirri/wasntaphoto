@@ -4,12 +4,10 @@ import numpy as np
 import os
 
 os.environ['DATABASE_URL'] = 'postgresql+psycopg://'
-os.environ['WASA_STORAGE_ROOT'] = '/tmp/wasa'
 os.environ['REDIS_URL'] = 'redis://fake:6379/0'
 os.environ['MINIO_URL'] = 'localhost:9000'
 os.environ['MINIO_ACCESS_KEY'] = 'minioadmin'
 os.environ['MINIO_SECRET_KEY'] = 'minioadmin'
-os.makedirs(os.environ['WASA_STORAGE_ROOT'], exist_ok=True)
 
 pytest_plugins = (
     'test.fixtures.images',
@@ -22,13 +20,6 @@ pytest_plugins = (
     'test.fixtures.services',
     'test.fixtures.minio',
 )
-
-from service.image_utils import DEFAULT_PROPIC
-
-
-with open(DEFAULT_PROPIC, 'wb') as f:
-    # One pixel JPEG
-    Image.new('RGB', (1, 1), (255, 0, 0)).save(f, format="JPEG")
 
 
 def rmsdiff(img1: bytes, img2: bytes) -> float:
