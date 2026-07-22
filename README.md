@@ -83,8 +83,7 @@ To run the backend in debug mode:
 ```shell
 $ python backend_demo.py
 ```
-It will also initialize a demo DB and file storage under `/tmp/wasntaphoto`.
-
+It will also initialize a demo DB, Redis and Minio using `testcontainers`.
 ### Frontend
 In the `webui` folder:
 ```shell
