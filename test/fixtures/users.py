@@ -80,12 +80,12 @@ async def user_api_setup(
 
 
 @pytest_asyncio.fixture
-async def user_with_malformed_password_hash(_sqlite_database: async_sessionmaker[AsyncSession]) -> UserModel:
+async def user_with_malformed_password_hash(test_db_session_factory: async_sessionmaker[AsyncSession]) -> UserModel:
     """
     Test _very_ edge case in which the user's
     password has is corrupted on DB
     """
-    async with _sqlite_database() as session:
+    async with test_db_session_factory() as session:
         user_repo = UserRepository(session)
         user = UserModel(username='user', password='broken-hash')
         await user_repo.save(user)
@@ -137,13 +137,13 @@ async def registered_user(client: AsyncClient) -> str:
 @pytest_asyncio.fixture
 async def registered_user_with_expired_session(
         registered_user: str,
-        _sqlite_database: async_sessionmaker[AsyncSession]
+        test_db_session_factory: async_sessionmaker[AsyncSession]
 ) -> str:
     """
     Registers 'bob' with a valid password but the session has expired.
     Returns the bad session
     """
-    async with _sqlite_database() as session:
+    async with test_db_session_factory() as session:
         session_repo = SessionRepository(session)
         for user_session in await session_repo.find_all():
             user_session.valid_until = 0
@@ -179,7 +179,7 @@ async def alice_blocked_annoying(following_setup: FollowingSetup) -> FollowingSe
 
 
 @pytest_asyncio.fixture
-async def extra_users_for_search(_sqlite_database: async_sessionmaker[AsyncSession]) -> None:
+async def extra_users_for_search(test_db_session_factory: async_sessionmaker[AsyncSession]) -> None:
     """
     Creates a bunch of users with similar usernames for testing search mechanics
     """
@@ -193,7 +193,7 @@ async def extra_users_for_search(_sqlite_database: async_sessionmaker[AsyncSessi
         for i in range(20)
         for username in (f'bob{i}', f'user{i}')
     ]
-    async with _sqlite_database() as session:
+    async with test_db_session_factory() as session:
         session.add_all(users)
         await session.commit()
 

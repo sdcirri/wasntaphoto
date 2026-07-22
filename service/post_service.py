@@ -56,6 +56,9 @@ class PostService:
             raise AccessDeniedError
         return await self.post_to_object(post)
 
+    async def get_post_media(self, post_id: int, user_id: int, author_id: int) -> bytes:
+        pass
+
     async def new_post(self, user_id: int, request: PostRequest) -> Post:
         """
         Creates a new post

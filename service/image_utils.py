@@ -74,18 +74,14 @@ def upload2jpeg(uploaded_image: bytes, quality: int, target_height: int | None =
             raise BadImageError
 
 
-async def upload2propic(user_id: int, uploaded_image: bytes) -> bytes:
+async def upload2propic(uploaded_image: bytes) -> bytes:
     """
     Converts the uploaded image to propic format (JPEG at 85% quality)
-    and saves it to disk
     :param user_id: user ID of the user who wants to set the propic
     :param uploaded_image: uploaded image
     :return: the JPEG bytes
     """
-    propic = upload2jpeg(uploaded_image, 85, 480)
-    async with aiofiles.open(os.path.join(PROPIC_STORAGE_ROOT, f'{user_id}.jpg'), 'wb') as f:
-        await f.write(propic)
-    return propic
+    return upload2jpeg(uploaded_image, 85, 480)
 
 
 async def upload2post(post_id: int, uploaded_image: bytes) -> bytes:

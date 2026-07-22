@@ -1,5 +1,4 @@
-from typing import AsyncIterator
-import fakeredis
+from redis.asyncio import Redis
 import pytest
 import httpx
 
@@ -7,7 +6,7 @@ from app import app, lifespan
 
 
 @pytest.mark.asyncio
-async def test_app_lifespan(override_redis: AsyncIterator[fakeredis.aioredis.FakeRedis]):
+async def test_app_lifespan(override_redis: Redis):
     async with lifespan(app):
         async with httpx.AsyncClient(
                 transport=httpx.ASGITransport(app=app),

@@ -1,81 +1,69 @@
-from typing import AsyncIterator, Any
-from unittest.mock import AsyncMock
+from typing import Any, Generator, AsyncGenerator
+from testcontainers.redis import RedisContainer
+from redis.asyncio import Redis
 import pytest_asyncio
-import fakeredis
 import pytest
-import inspect
 
+import providers.redis as redis_provider
 from providers.redis import get_redis
 from app import app
 
 
-@pytest_asyncio.fixture
-async def redis_client(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[fakeredis.aioredis.FakeRedis]:
-    redis = fakeredis.aioredis.FakeRedis(
-        decode_responses=True,
-    )
+@pytest.fixture(scope='session')
+def redis_container() -> Generator[RedisContainer, Any, None]:
+    with RedisContainer('redis:8-alpine') as container:
+        yield container
 
-    await redis.flushall()
 
-    real_get = redis.get
-    real_set = redis.set
-    real_delete = redis.delete
+def _redis_url(container: RedisContainer) -> str:
+    host = container.get_container_host_ip()
+    port = container.get_exposed_port(6379)
+    return f'redis://{host}:{port}/0'
 
-    async def wrapped_get(*args: Any, **kwargs: Any):
-        result = real_get(*args, **kwargs)
 
-        if inspect.isawaitable(result):
-            return await result
-
-        return result
-
-    async def wrapped_set(*args: Any, **kwargs: Any):
-        result = real_set(*args, **kwargs)
-
-        if inspect.isawaitable(result):
-            return await result
-
-        return result
-
-    async def wrapped_delete(*args: Any, **kwargs: Any):
-        result = real_delete(*args, **kwargs)
-
-        if inspect.isawaitable(result):
-            return await result
-
-        return result
-
-    async def fake_connect():
-        return None
-
-    async def fake_disconnect():
-        return None
-
-    monkeypatch.setattr('app.connect_redis', fake_connect)
-    monkeypatch.setattr('app.disconnect_redis', fake_disconnect)
-
-    get_spy = AsyncMock(side_effect=wrapped_get)
-    set_spy = AsyncMock(side_effect=wrapped_set)
-    delete_spy = AsyncMock(side_effect=wrapped_delete)
-
-    redis.get = get_spy
-    redis.set = set_spy
-    redis.delete = delete_spy
-
-    try:
-        yield redis
-    finally:
-        await redis.aclose()
+@pytest_asyncio.fixture(scope='session')
+async def redis_client(redis_container: RedisContainer) -> AsyncGenerator[Redis, None]:
+    client = Redis.from_url(_redis_url(redis_container), decode_responses=True)
+    await client.ping()
+    yield client
+    await client.aclose()
 
 
 @pytest_asyncio.fixture(autouse=True)
-async def override_redis(redis_client: AsyncIterator[fakeredis.aioredis.FakeRedis]) -> AsyncIterator[fakeredis.aioredis.FakeRedis]:
-    def get_fake_redis():
+async def override_redis(
+        monkeypatch: pytest.MonkeyPatch,
+        redis_client: Redis,
+        redis_container: RedisContainer,
+) -> AsyncGenerator[Redis, None]:
+    monkeypatch.setattr(redis_provider, 'redis_url', _redis_url(redis_container))
+
+    async def connect_redis() -> None:
+        redis_provider._REDIS = redis_client
+        await redis_client.ping()
+
+    async def disconnect_redis() -> None:
+        redis_provider._REDIS = None
+
+    monkeypatch.setattr(redis_provider, 'connect_redis', connect_redis)
+    monkeypatch.setattr(redis_provider, 'disconnect_redis', disconnect_redis)
+    monkeypatch.setattr('app.connect_redis', connect_redis)
+    monkeypatch.setattr('app.disconnect_redis', disconnect_redis)
+
+    redis_provider._REDIS = redis_client
+
+    def _get_redis() -> Redis:
         return redis_client
 
-    app.dependency_overrides[get_redis] = get_fake_redis
+    app.dependency_overrides[get_redis] = _get_redis
 
     try:
         yield redis_client
     finally:
         app.dependency_overrides.pop(get_redis, None)
+        redis_provider._REDIS = None
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def _clean_redis(redis_client: Redis) -> AsyncGenerator[None, None]:
+    yield
+    await redis_client.flushdb()

@@ -8,29 +8,33 @@ from db.entities import UserModel, FollowingRelationship, BlockRelationship
 from exceptions import UserNotFoundError, UsernameAlreadyTakenError, SelfFollowError, AccessDeniedError
 from model import UserAccount
 
-from .image_utils import get_propic_bytes, upload2propic
+from .storage_service import StorageService
+from .image_utils import upload2propic
 
 
 class UserService:
     user_repo: UserRepository
     follow_repo: FollowRepository
     block_repo: BlockRepository
+    storage_service: StorageService
 
     def __init__(
             self, user_repo: UserRepository,
             follow_repo: FollowRepository,
-            block_repo: BlockRepository
+            block_repo: BlockRepository,
+            storage_service: StorageService
     ) -> None:
         self.user_repo = user_repo
         self.follow_repo = follow_repo
         self.block_repo = block_repo
+        self.storage_service = storage_service
 
-    @staticmethod
-    async def user_to_object(db_user: UserModel) -> UserAccount:
+    async def user_to_object(self, db_user: UserModel) -> UserAccount:
+        propic = await self.storage_service.get_propic(db_user.user_id)
         return UserAccount(
             user_id=db_user.user_id,
             username=db_user.username,
-            propic=base64.b64encode(await get_propic_bytes(db_user.user_id)),
+            propic=None if propic is None else base64.b64encode(propic),
             followers_cnt=db_user.followers_cnt,
             following_cnt=db_user.following_cnt
         )
@@ -103,7 +107,8 @@ class UserService:
         """
         user = await self.user_repo.find_by_id(user_id)
         assert user is not None, 'Bad authenticated user ID injected'
-        await upload2propic(user.user_id, uploaded_image)
+        propic = await upload2propic(uploaded_image)
+        await self.storage_service.store_propic(user.user_id, propic)
 
     async def follow(self, user_id: int, to_follow_id: int) -> None:
         """
@@ -166,13 +171,13 @@ class UserService:
             self.follow_repo.find_by_id((to_block_id, user_id))
         )
 
-        await asyncio.gather(
-            self.block_repo.save(
-                BlockRelationship(blocker_id=user_id, blocked_id=to_block_id)
-            ),
-            self.follow_repo.delete(frel1) if frel1 else asyncio.sleep(0),
-            self.follow_repo.delete(frel2) if frel2 else asyncio.sleep(0)
+        await self.block_repo.save(
+            BlockRelationship(blocker_id=user_id, blocked_id=to_block_id)
         )
+        if frel1:
+            await self.follow_repo.delete(frel1)
+        if frel2:
+            await self.follow_repo.delete(frel2)
 
     async def unblock_user(self, user_id: int, to_unblock_id: int) -> None:
         """
