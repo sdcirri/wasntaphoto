@@ -1,8 +1,15 @@
 <script>
-import { authStatus } from '../services/login'
+import { authStatus } from '@/services/login'
 import getProfile from '../services/getProfile'
 
 export default {
+    computed: {
+        propicSrc() {
+			return this.profile?.proPicB64
+					? `data:image/jpeg;base64,${this.profile.proPicB64}`
+					: '/propic_default.jpg';
+		}
+    },
     props: {
         userID: {
             type: Number,
@@ -47,14 +54,14 @@ export default {
     async mounted() {
         await this.refresh();
         if (this.profile != null)
-            this.ownProfile = (this.profile.userID == authStatus.userId);
+            this.ownProfile = (this.profile.userID === authStatus.userId);
     }
 }
 </script>
 
 <template>
     <div class="proBox" id="container" v-if="!loading">
-        <img class="propic" :src="`data:image/jpg;base64,${this.profile.proPicB64}`"
+        <img class="propic" :src="propicSrc"
             :alt="`${this.profile.username}'s profile picture`" />
         <RouterLink :to="`/profile/${this.profile.userID}`" class="spaced">
             <h3>{{ this.profile.username }}</h3>

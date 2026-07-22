@@ -1,13 +1,17 @@
 <script>
 import b64AsBlob from '../utils/b64AsBlob'
-import { authStatus } from '../services/login'
+import { authStatus } from '@/services/login'
 import getProfile from '../services/getProfile'
-import { reactive } from 'vue';
 
 export default {
 	computed: {
 		userID() {
 			return this.$route.params.id;
+		},
+		propicSrc() {
+			return this.profile?.proPicB64
+					? `data:image/jpeg;base64,${this.profile.proPicB64}`
+					: '/propic_default.jpg';
 		}
 	},
 	data: function () {
@@ -27,9 +31,11 @@ export default {
 			this.errormsg = "";
 			try {
 				this.profile = await getProfile(this.userID);
-				this.ownProfile = (authStatus.userId == this.profile.userID);
-				const blob = b64AsBlob(this.profile.proPicB64);
-				this.blobUrl = URL.createObjectURL(blob);
+				this.ownProfile = (authStatus.userId === this.profile.userID);
+				if (this.profile.proPicB64) {
+					const blob = b64AsBlob(this.profile.proPicB64);
+					this.blobUrl = URL.createObjectURL(blob);
+				}
 				this.loading = false;
 			} catch (e) {
 				this.errormsg = e;
@@ -43,7 +49,7 @@ export default {
 		this.refresh();
 	},
 	beforeUnmount() {
-		URL.revokeObjectURL(this.blobUrl);
+		if (this.blobUrl) URL.revokeObjectURL(this.blobUrl);
 	},
 	watch: {
 		"$route.params.id": function (newUID) {
@@ -58,7 +64,7 @@ export default {
 		<LoadingSpinner v-if="loading" />
 		<div v-if="!loading" class="columnFlex pt-3 pb-2 mb-3 border-bottom">
 			<div class="proHeading">
-				<img class="propicTop" :src="'data:image/jpg;base64,' + this.profile.proPicB64" />
+				<img class="propicTop" :src="propicSrc" />
 				<h1>{{ this.profile.username }}</h1>
 				<h4 class="counters">
 					<div v-if="!ownProfile">

@@ -1,13 +1,20 @@
 <script>
 import { ref } from 'vue'
 
-import { UsernameAlreadyTakenException } from '../services/apiErrors'
-import { authStatus } from '../services/login'
+import { UsernameAlreadyTakenException } from '@/services/apiErrors'
+import { authStatus } from '@/services/login'
 import setUsername from '../services/setUsername'
 import getProfile from '../services/getProfile'
 import setPP from '../services/setPP'
 
 export default {
+    computed: {
+        propicSrc() {
+			return this.profile?.proPicB64
+					? `data:image/jpeg;base64,${this.profile.proPicB64}`
+					: '/propic_default.jpg';
+		}
+    },
     data: function () {
         return {
             loading: true,
@@ -30,7 +37,9 @@ export default {
             try {
                 this.profile = await getProfile("me");
                 this.usernamebuf = ref(this.profile.username);
-                this.uploadB64 = "data:image/jpg;base64," + this.profile.proPicB64;
+                this.uploadB64 = this.profile.proPicB64
+                    ? `data:image/jpeg;base64,${this.profile.proPicB64}`
+                    : '/propic_default.jpg';
                 this.uploadNotOG = false;
                 this.loading = false;
             } catch (e) {
@@ -98,7 +107,9 @@ export default {
             }
         },
         deleteImg() {
-            this.uploadB64 = this.profile.proPicB64;
+            this.uploadB64 = this.profile.proPicB64
+                ? `data:image/jpeg;base64,${this.profile.proPicB64}`
+                : '/propic_default.jpg';
             this.errormsg = null;
         },
         async submitAll() {
