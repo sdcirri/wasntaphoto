@@ -1,8 +1,8 @@
-[![Tests](https://github.com/sdcirri/wasntaphoto/actions/workflows/backend_tests.yml/badge.svg)](https://github.com/sdcirri/wasntaphoto/actions/workflows/backend_tests.yml)
-[![Coverage](https://codecov.io/gh/sdcirri/wasntaphoto/graph/badge.svg)](https://codecov.io/gh/sdcirri/wasntaphoto)
-[![Backend Build](https://github.com/sdcirri/wasntaphoto/actions/workflows/ci_backend.yml/badge.svg)](https://github.com/sdcirri/wasntaphoto/actions/workflows/ci_backend.yml)
-[![Frontend Build](https://github.com/sdcirri/wasntaphoto/actions/workflows/ci_frontend.yml/badge.svg)](https://github.com/sdcirri/wasntaphoto/actions/workflows/ci_frontend.yml)
-[![Semgrep](https://github.com/sdcirri/wasntaphoto/actions/workflows/semgrep.yml/badge.svg)](https://github.com/sdcirri/wasntaphoto/actions/workflows/semgrep.yml)
+[![Tests](https://img.shields.io/github/actions/workflow/status/sdcirri/wasntaphoto/backend_tests.yml?label=Tests&style=for-the-badge)](https://github.com/sdcirri/wasntaphoto/actions/workflows/backend_tests.yml)
+[![Coverage](https://img.shields.io/codecov/c/github/sdcirri/wasntaphoto?style=for-the-badge&logo=codecov)](https://codecov.io/gh/sdcirri/wasntaphoto)
+[![Backend Build](https://img.shields.io/github/actions/workflow/status/sdcirri/wasntaphoto/ci_backend.yml?label=Backend%20Build&style=for-the-badge)](https://github.com/sdcirri/wasntaphoto/actions/workflows/ci_backend.yml)
+[![Frontend Build](https://img.shields.io/github/actions/workflow/status/sdcirri/wasntaphoto/ci_frontend.yml?label=Frontend%20Build&style=for-the-badge)](https://github.com/sdcirri/wasntaphoto/actions/workflows/ci_frontend.yml)
+[![Semgrep](https://img.shields.io/github/actions/workflow/status/sdcirri/wasntaphoto/semgrep.yml?label=Semgrep&style=for-the-badge)](https://github.com/sdcirri/wasntaphoto/actions/workflows/semgrep.yml)
 
 # WASNTAPhoto - A production-ready implementation of WASAPhoto in FastAPI
 
