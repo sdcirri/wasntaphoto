@@ -21,6 +21,7 @@ class PostRepository(DBRepository[PostModel]):
     async def find_by_author_id(self, author_id: int) -> list[int]:
         return list((await self.session.scalars(
             select(PostModel.post_id).where(PostModel.author_id == author_id)
+                    .order_by(PostModel.pub_time.desc())
         )).all())
 
     async def find_by_post_id_and_author_id(self, post_id: int, author_id: int) -> PostModel | None:
