@@ -166,13 +166,37 @@ async def alice_following_bob(following_setup: FollowingSetup) -> FollowingSetup
 
 
 @pytest_asyncio.fixture
-async def alice_blocked_annoying(following_setup: FollowingSetup) -> FollowingSetup:
+async def alice_and_annoying_following_each_other(following_setup: FollowingSetup) -> FollowingSetup:
     """
-    Builds on following_setup with alice following, then blocking, annoying.
+    Builds on following_setup with alice and annoying following each other.
     """
 
     s = following_setup
     await s.client.post(f'/users/me/following/{s.annoying.user_id}', headers=s.alice_headers)
+    await s.client.post(f'/users/me/following/{s.alice.user_id}', headers=s.annoying_headers)
+    return s
+
+
+@pytest_asyncio.fixture
+async def alice_blocked_annoying(following_setup: FollowingSetup) -> FollowingSetup:
+    """
+    Builds on following_setup with alice blocking annoying.
+    """
+
+    s = following_setup
+    resp = await s.client.post(f'/users/me/blocked/{s.annoying.user_id}', headers=s.alice_headers)
+    assert resp.status_code in (200, 204)
+    return s
+
+
+@pytest_asyncio.fixture
+async def alice_followed_and_blocked_annoying(alice_and_annoying_following_each_other: FollowingSetup) -> FollowingSetup:
+    """
+    Builds on following_setup with alice and blocked annoying following each other,
+    then alice blocks annoying
+    """
+
+    s = alice_and_annoying_following_each_other
     resp = await s.client.post(f'/users/me/blocked/{s.annoying.user_id}', headers=s.alice_headers)
     assert resp.status_code in (200, 204)
     return s

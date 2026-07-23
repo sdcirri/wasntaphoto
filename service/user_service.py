@@ -58,7 +58,7 @@ class UserService:
         :return: the user profile picture, if it exists and the requester isn't blocked by them
         """
         if await self.block_repo.find_by_id((target_user_id, user_id)):
-            raise AccessDeniedError
+            return None
         return await self.storage_service.get_propic(target_user_id)
 
     async def search_users(self, q: str, limit: int) -> list[int]:

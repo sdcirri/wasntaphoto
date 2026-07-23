@@ -97,6 +97,15 @@ async def test_get_nonexistent_user_returns_404(user_api_setup: UserApiSetup, ne
 
 
 @pytest.mark.asyncio
+async def test_user_with_no_propic_returns_empty(user_api_setup: UserApiSetup):
+    s = user_api_setup
+
+    resp = await s.client.get('/users/me/propic', headers=s.alice_headers)
+    assert resp.status_code == 200
+    assert resp.content == b''
+
+
+@pytest.mark.asyncio
 async def test_change_username_updates_profile(user_api_setup: UserApiSetup):
     s = user_api_setup
     change_resp = await s.client.put('/users/me/username', json='@lix', headers=s.alice_headers)
@@ -126,8 +135,8 @@ async def test_change_profile_picture_updates_propic(user_api_setup: UserApiSetu
     )
     assert change_resp.status_code == 204
 
-    me_resp = await s.client.get('/users/me', headers=s.alice_headers)
-    assert rmsdiff(UserAccount.model_validate(me_resp.json()).propic, checkerboard) < 10
+    me_resp = await s.client.get('/users/me/propic', headers=s.alice_headers)
+    assert rmsdiff(me_resp.content, checkerboard) < 10
 
 
 @pytest.mark.asyncio
@@ -196,6 +205,24 @@ async def test_blocking_user_adds_to_blocked_list(alice_blocked_annoying: Follow
 
 
 @pytest.mark.asyncio
+async def test_blocking_user_removes_follows(alice_followed_and_blocked_annoying: FollowingSetup):
+    s = alice_followed_and_blocked_annoying
+    resp = await s.client.get('/users/me/following', headers=s.alice_headers)
+    assert s.annoying.user_id not in resp.json()
+    resp = await s.client.get('/users/me/following', headers=s.annoying_headers)
+    assert s.alice.user_id not in resp.json()
+
+
+@pytest.mark.asyncio
+async def test_blocking_user_hides_propic(alice_blocked_annoying: FollowingSetup):
+    s = alice_blocked_annoying
+    resp = await s.client.get(f'/users/{s.alice.user_id}/propic', headers=s.annoying_headers)
+
+    assert resp.status_code == 200
+    assert resp.content == b''
+
+
+@pytest.mark.asyncio
 async def test_blocking_self_errors(following_setup: FollowingSetup):
     s = following_setup
     resp = await s.client.post(f'/users/me/blocked/{s.alice.user_id}', headers=s.alice_headers)
@@ -207,13 +234,6 @@ async def test_blocking_nonexisting_user_errors(following_setup: FollowingSetup,
     s = following_setup
     resp = await s.client.post(f'/users/me/blocked/{next_unused_user_id}', headers=s.alice_headers)
     assert resp.status_code == 404
-
-
-@pytest.mark.asyncio
-async def test_blocking_followed_user_removes_them_from_following(alice_blocked_annoying: FollowingSetup):
-    s = alice_blocked_annoying
-    resp = await s.client.get('/users/me/following', headers=s.alice_headers)
-    assert s.annoying.user_id not in resp.json()
 
 
 @pytest.mark.asyncio

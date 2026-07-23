@@ -7,6 +7,7 @@ from model import PostRequest, Post
 
 from .fixtures.posts import PostInteractionSetup, PostCrudSetup
 from .fixtures.users import FollowingSetup
+from .conftest import rmsdiff
 
 
 def _like_url(s: PostInteractionSetup) -> str:
@@ -52,7 +53,19 @@ async def test_create_post_returns_expected_fields(post_crud_setup: PostCrudSetu
     info = Post.model_validate(resp.json())
     assert info.author_id == s.user.user_id
     assert info.caption == 'A nice pixel'
-    assert info.image
+
+
+@pytest.mark.asyncio
+async def test_create_post_stores_media(post_crud_setup: PostCrudSetup, solid_black: bytes):
+    s = post_crud_setup
+    req = PostRequest(image=base64.b64encode(solid_black), caption='A nice pixel')
+    resp = await s.client.post('/users/me/posts/', json=req.model_dump(mode='json'), headers=s.headers)
+    assert resp.status_code == 200
+    post = Post.model_validate(resp.json())
+
+    resp = await s.client.get(f'/users/me/posts/{post.post_id}/media', headers=s.headers)
+    assert resp.status_code == 200
+    assert rmsdiff(solid_black, resp.content) < 6
 
 
 @pytest.mark.asyncio

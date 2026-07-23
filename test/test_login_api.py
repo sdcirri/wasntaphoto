@@ -142,3 +142,6 @@ async def test_hibp_lookup_is_cached(override_redis: Redis, fake_auth_service: A
     res = await fake_auth_service.hibp_lookup(weak)
     assert res is True
     assert await override_redis.get(expected_key) is not None
+
+    res = await fake_auth_service.hibp_lookup(weak)
+    assert res is True
