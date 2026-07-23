@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Query, Request, Path, Body, status, HTTPException
+from fastapi.responses import Response
 
 from providers.rate_limiting import read_limiter, auth_limiter, user_edit_limiter
 from providers.services import get_auth_service, get_user_service
@@ -61,9 +62,31 @@ async def get_user_account(
     :param user_service: user service
     :param target_uid: target user ID (can also be 'me')
     :param user_id: authenticated user ID
-    :return: the current user account info, if it exists
+    :return: the user account info, if it exists
     """
     return await user_service.get_user(target_uid, user_id)
+
+
+@user_router.get('/{user_id}/propic', dependencies=[Depends(read_limiter)])
+async def get_user_propic(
+        target_uid: int = Depends(target_user_id),
+        user_service: UserService = Depends(get_user_service),
+        user_id: int = Depends(get_user)
+) -> Response:
+    """
+    Gets the specified user profile picture
+    :param user_service: user service
+    :param target_uid: target user ID (can also be 'me')
+    :param user_id: authenticated user ID
+    :return: the user profile picture, if set
+    """
+    return Response(
+        content=await user_service.get_propic(target_uid, user_id),
+        media_type='image/jpg',
+        headers={
+            'Content-Disposition': f'attachment; filename={user_id}.jpg'
+        }
+    )
 
 
 @user_router.put(

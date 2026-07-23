@@ -1,21 +1,18 @@
 <script>
-import b64AsBlob from '../utils/b64AsBlob'
+import b64AsBlob from '@/utils/b64AsBlob'
 import { authStatus } from '@/services/login'
-import getProfile from '../services/getProfile'
+import getProfile from '@/services/getProfile'
+import getProfilePicture from '@/services/getProfilePicture'
 
 export default {
 	computed: {
 		userID() {
 			return this.$route.params.id;
-		},
-		propicSrc() {
-			return this.profile?.proPicB64
-					? `data:image/jpeg;base64,${this.profile.proPicB64}`
-					: '/propic_default.jpg';
 		}
 	},
 	data: function () {
 		return {
+			propicSrc: '/propic_default.jpg',
 			authStatus: authStatus,
 			errormsg: null,
 			loading: true,
@@ -31,6 +28,9 @@ export default {
 			this.errormsg = "";
 			try {
 				this.profile = await getProfile(this.userID);
+				if (this.propicSrc?.startsWith('blob:'))
+                    URL.revokeObjectURL(this.propicSrc);
+                this.propicSrc = (await getProfilePicture(this.userID)) ?? '/propic_default.jpg';
 				this.ownProfile = (authStatus.userId === this.profile.userID);
 				if (this.profile.proPicB64) {
 					const blob = b64AsBlob(this.profile.proPicB64);
@@ -50,6 +50,8 @@ export default {
 	},
 	beforeUnmount() {
 		if (this.blobUrl) URL.revokeObjectURL(this.blobUrl);
+        if (this.propicSrc?.startsWith('blob:'))
+            URL.revokeObjectURL(this.propicSrc);
 	},
 	watch: {
 		"$route.params.id": function (newUID) {

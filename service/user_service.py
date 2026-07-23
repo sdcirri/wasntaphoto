@@ -1,6 +1,5 @@
 from sqlalchemy.exc import IntegrityError
 import asyncio
-import base64
 
 from db.repositories import UserRepository, FollowRepository, BlockRepository
 from db.entities import UserModel, FollowingRelationship, BlockRelationship
@@ -29,12 +28,11 @@ class UserService:
         self.block_repo = block_repo
         self.storage_service = storage_service
 
-    async def user_to_object(self, db_user: UserModel) -> UserAccount:
-        propic = await self.storage_service.get_propic(db_user.user_id)
+    @staticmethod
+    async def user_to_object(db_user: UserModel) -> UserAccount:
         return UserAccount(
             user_id=db_user.user_id,
             username=db_user.username,
-            propic=None if propic is None else base64.b64encode(propic),
             followers_cnt=db_user.followers_cnt,
             following_cnt=db_user.following_cnt
         )
@@ -51,6 +49,17 @@ class UserService:
         if await self.block_repo.find_by_id((target_user_id, user_id)):
             raise AccessDeniedError
         return await self.user_to_object(db_user)
+
+    async def get_propic(self, target_user_id: int, user_id: int) -> bytes | None:
+        """
+        Get a user's profile picture
+        :param target_user_id: target user ID
+        :param user_id: authenticated user ID
+        :return: the user profile picture, if it exists and the requester isn't blocked by them
+        """
+        if await self.block_repo.find_by_id((target_user_id, user_id)):
+            raise AccessDeniedError
+        return await self.storage_service.get_propic(target_user_id)
 
     async def search_users(self, q: str, limit: int) -> list[int]:
         """

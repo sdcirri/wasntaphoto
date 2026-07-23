@@ -24,7 +24,6 @@ function normalizeProfile(profile, posts) {
 	return {
 		userID: profile.user_id,
 		username: profile.username,
-		proPicB64: profile.propic,
 		followers: profile.followers_cnt,
 		following: profile.following_cnt,
 		posts
@@ -35,8 +34,6 @@ export default async function getProfile(uid) {
 	await ensureAuthenticated();
 	const path = profilePath(uid);
 
-	// The backend no longer embeds a user's posts in the profile payload, so
-	// this endpoint wrapper performs the second request and preserves the UI shape.
 	const [profileResp, postsResp] = await Promise.all([
 		api.get(`/users/${path}`, { headers: authHeaders() }),
 		api.get(`/users/${path}/posts/`, { headers: authHeaders() })

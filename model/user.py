@@ -1,5 +1,4 @@
-from pydantic import BaseModel, Field, Base64Bytes
-from typing import Optional
+from pydantic import BaseModel, Field
 
 
 class UserCredentials(BaseModel):
@@ -24,6 +23,5 @@ class UserAccount(BaseModel):
     """
     user_id: int = Field(..., ge=0)
     username: str = Field(..., min_length=3, max_length=30)
-    propic: Optional[Base64Bytes]
     followers_cnt: int = Field(..., ge=0)
     following_cnt: int = Field(..., ge=0)

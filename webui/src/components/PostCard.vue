@@ -1,11 +1,12 @@
 <script>
-import { authStatus } from '../services/login'
-import getPost from '../services/getPost'
-import isLiked from '../services/isLiked'
-import likePost from '../services/likePost'
-import unlikePost from '../services/unlikePost'
-import rmPost from '../services/rmPost'
-import timeAgo from '../utils/timeAgo'
+import { authStatus } from '@/services/login'
+import getPost from '@/services/getPost'
+import getPostMedia from "@/services/getPostMedia";
+import isLiked from '@/services/isLiked'
+import likePost from '@/services/likePost'
+import unlikePost from '@/services/unlikePost'
+import rmPost from '@/services/rmPost'
+import timeAgo from '@/utils/timeAgo'
 
 export default {
     props: {
@@ -17,6 +18,7 @@ export default {
     data: function () {
         return {
             post: null,
+            mediaPath: null,
             ownPost: null,
             likeCount: 0,
             loading: true
@@ -48,8 +50,13 @@ export default {
             this.loading = true;
             try {
                 this.post = await getPost(this.ppostID);
+                if (this.post != null) {
+                    if (this.mediaPath) URL.revokeObjectURL(this.mediaPath);
+                    this.mediaPath = await getPostMedia(this.post.postID);
+                }
+
                 this.likeCount = this.post.likeCount;
-                this.ownPost = (this.post.author == authStatus.userId);
+                this.ownPost = (this.post.author === authStatus.userId);
                 this.post.pubTime = new Date(this.post.pubTime);
                 this.loading = false;
                 this.indicatorsRefresh();
@@ -86,6 +93,9 @@ export default {
     },
     mounted() {
         this.refresh();
+    },
+    beforeUnmount() {
+	    if (this.mediaPath) URL.revokeObjectURL(this.mediaPath);
     }
 }
 </script>
@@ -104,7 +114,7 @@ export default {
             </span>
             <p class="date">{{ timeAgo() }}</p>
             <div class="imgContainer">
-                <img class="postImg" :src="'data:image/jpg;base64,' + post.imageB64" />
+                <img class="postImg" :src="mediaPath" />
             </div>
             <br />
             <p class="caption">{{ post.caption }}</p> <br />

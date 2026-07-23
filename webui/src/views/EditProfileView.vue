@@ -3,20 +3,14 @@ import { ref } from 'vue'
 
 import { UsernameAlreadyTakenException } from '@/services/apiErrors'
 import { authStatus } from '@/services/login'
-import setUsername from '../services/setUsername'
-import getProfile from '../services/getProfile'
-import setPP from '../services/setPP'
+import setUsername from '@/services/setUsername'
+import getProfile from '@/services/getProfile'
+import setPP from '@/services/setPP'
 
 export default {
-    computed: {
-        propicSrc() {
-			return this.profile?.proPicB64
-					? `data:image/jpeg;base64,${this.profile.proPicB64}`
-					: '/propic_default.jpg';
-		}
-    },
     data: function () {
         return {
+            propicSrc: '/propic_default.jpg',
             loading: true,
             errormsg: null,
             nameerrormsg: null,
@@ -36,6 +30,9 @@ export default {
             this.errormsg = "";
             try {
                 this.profile = await getProfile("me");
+                if (this.propicSrc?.startsWith('blob:'))
+                    URL.revokeObjectURL(this.propicSrc);
+                this.propicSrc = (await getProfilePicture(this.userID)) ?? '/propic_default.jpg';
                 this.usernamebuf = ref(this.profile.username);
                 this.uploadB64 = this.profile.proPicB64
                     ? `data:image/jpeg;base64,${this.profile.proPicB64}`
@@ -119,6 +116,10 @@ export default {
     },
     mounted() {
         this.refresh();
+    },
+    beforeUnmount() {
+        if (this.propicSrc?.startsWith('blob:'))
+            URL.revokeObjectURL(this.propicSrc);
     }
 }
 </script>

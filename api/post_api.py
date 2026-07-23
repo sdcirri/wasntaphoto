@@ -1,4 +1,5 @@
 from fastapi import Request, Depends, APIRouter, Path, HTTPException, status
+from fastapi.responses import Response
 
 from providers.rate_limiting import read_limiter, post_limiter
 from providers.services import get_post_service
@@ -55,6 +56,22 @@ async def get_post(
     :return: the requested post
     """
     return await post_service.get_post(post_id, user_id, author_id)
+
+
+@post_router.get('/{post_id}/media', dependencies=[Depends(read_limiter)])
+async def get_post_media(
+        author_id: int = Depends(target_user_id),
+        post_id: int = Path(..., ge=0),
+        post_service: PostService = Depends(get_post_service),
+        user_id: int = Depends(get_user)
+) -> Response:
+    return Response(
+        await post_service.get_post_media(post_id, user_id, author_id),
+        media_type='image/jpg',
+        headers={
+            'Content-Disposition': f'attachment; filename={post_id}.jpg'
+        }
+    )
 
 
 @post_router.get('/{post_id}/like', dependencies=[Depends(read_limiter)])

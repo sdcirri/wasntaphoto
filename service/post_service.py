@@ -1,5 +1,4 @@
 import asyncio
-import base64
 
 from db.repositories import UserRepository, PostRepository, PostLikeRepository, BlockRepository
 from db.entities import PostLikeRelationship, PostModel
@@ -32,22 +31,18 @@ class PostService:
         self.block_repo = block_repo
         self.storage_service = storage_service
 
-    async def post_to_object(self, post: PostModel, cached_img: bytes | None=None, new_post: bool=False) -> Post:
+    @staticmethod
+    async def post_to_object(post: PostModel, new_post: bool=False) -> Post:
         """
         Builds a Post object for the API
         :param post: post DB object
-        :param cached_img: the post image bytes if available (to avoid calling the storage bucket)
         :param new_post: whether the post is new or not (not to bother the DB with likes and comments aggregates)
         :return: the Post object
         """
-        img = cached_img if cached_img is not None else await self.storage_service.get_post(post.post_id)
-        assert img is not None, 'Post has no attached image!'
-
         return Post(
             post_id=post.post_id,
             author_id=post.author_id,
             pub_time=post.pub_time,
-            image=base64.b64encode(img),
             caption=post.caption,
             like_cnt=0 if new_post else post.like_cnt,
             comments=[] if new_post else [c.comment_id for c in post.comments]
@@ -69,6 +64,24 @@ class PostService:
             raise AccessDeniedError
         return await self.post_to_object(post)
 
+    async def get_post_media(self, post_id: int, user_id: int, author_id: int) -> bytes:
+        """
+        Gets a post media by its post ID
+        :param post_id: post ID
+        :param user_id: authenticated user ID
+        :param author_id: post author ID
+        :return: the post media, if it exists and the user is not blocked
+        """
+        if not (post := await self.post_repo.find_by_id(post_id, load_comments=False)):
+            raise PostNotFoundError
+        if post.author_id != author_id:
+            raise PostNotFoundError
+        if await self.block_repo.find_by_id((post.author_id, user_id)):
+            raise AccessDeniedError
+        if not (img := await self.storage_service.get_post(post_id)):
+            raise PostNotFoundError
+        return img
+
     async def new_post(self, user_id: int, request: PostRequest) -> Post:
         """
         Creates a new post
@@ -80,7 +93,7 @@ class PostService:
 
         img = upload2post(request.image)
         post, _ = await asyncio.gather(
-            self.post_to_object(db_post, cached_img=img, new_post=True),
+            self.post_to_object(db_post, new_post=True),
             self.storage_service.store_post(db_post.post_id, img)
         )
         return post

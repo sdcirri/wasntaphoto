@@ -23,7 +23,6 @@ class Post(BaseModel):
     post_id: int = Field(..., ge=0)
     author_id: int = Field(..., ge=0)
     pub_time: datetime
-    image: Base64Bytes
     caption: Optional[str] = Field(None, max_length=2048)
     like_cnt: int = Field(..., ge=0)
     comments: list[int]

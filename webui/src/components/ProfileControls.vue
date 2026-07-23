@@ -1,14 +1,15 @@
 <script>
-import { authStatus } from '../services/login'
-import getFollowing from '../services/getFollowing'
-import getFollowers from '../services/getFollowers'
-import getBlocked from '../services/getBlocked'
-import getProfile from '../services/getProfile'
-import follow from '../services/follow'
-import unfollow from '../services/unfollow'
-import rmFollower from '../services/rmFollower'
-import block from '../services/block'
-import unblock from '../services/unblock'
+import { authStatus } from '@/services/login'
+import getFollowing from '@/services/getFollowing'
+import getFollowers from '@/services/getFollowers'
+import getBlocked from '@/services/getBlocked'
+import getProfile from '@/services/getProfile'
+import getProfilePicture from '@/services/getProfilePicture'
+import follow from '@/services/follow'
+import unfollow from '@/services/unfollow'
+import rmFollower from '@/services/rmFollower'
+import block from '@/services/block'
+import unblock from '@/services/unblock'
 
 export default {
 	props: {
@@ -19,6 +20,7 @@ export default {
 	},
 	data: function () {
 		return {
+			propicSrc: '/propic_default.jpg',
 			loading: true,
 			authStatus: authStatus,
 			following: null,
@@ -30,15 +32,15 @@ export default {
 	methods: {
 		async checkFollowing() {
 			const followingList = await getFollowing();
-			this.following = followingList.some(id => id == this.profile.userID);
+			this.following = followingList.some(id => id === this.profile.userID);
 		},
 		async checkFollower() {
 			const followerList = await getFollowers();
-			this.follower = followerList.some(id => id == this.profile.userID);
+			this.follower = followerList.some(id => id === this.profile.userID);
 		},
 		async checkBlocked() {
 			const blockedList = await getBlocked();
-			this.blocked = blockedList.some(id => id == this.profile.userID);
+			this.blocked = blockedList.some(id => id === this.profile.userID);
 		},
 		async follow() {
 			try {
@@ -88,6 +90,9 @@ export default {
 		this.loading = true;
 		try {
 			this.profile = await getProfile(this.userID);
+			if (this.propicSrc?.startsWith('blob:'))
+				URL.revokeObjectURL(this.propicSrc);
+			this.propicSrc = (await getProfilePicture(this.userID)) ?? '/propic_default.jpg';
 			await this.checkFollowing();
 			await this.checkFollower();
 			await this.checkBlocked();
@@ -95,7 +100,11 @@ export default {
 			this.$emit("profileError", e);
 		}
 		this.loading = false;
-	}
+	},
+	beforeUnmount() {
+        if (this.propicSrc?.startsWith('blob:'))
+            URL.revokeObjectURL(this.propicSrc);
+    }
 }
 </script>
 

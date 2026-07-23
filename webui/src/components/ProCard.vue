@@ -1,15 +1,9 @@
 <script>
 import { authStatus } from '@/services/login'
-import getProfile from '../services/getProfile'
+import getProfile from '@/services/getProfile'
+import getProfilePicture from '@/services/getProfilePicture'
 
 export default {
-    computed: {
-        propicSrc() {
-			return this.profile?.proPicB64
-					? `data:image/jpeg;base64,${this.profile.proPicB64}`
-					: '/propic_default.jpg';
-		}
-    },
     props: {
         userID: {
             type: Number,
@@ -22,6 +16,7 @@ export default {
     },
     data: function () {
         return {
+            propicSrc: '/propic_default.jpg',
             loading: true,
             profile: null,
             following: null,
@@ -45,6 +40,9 @@ export default {
             try {
                 this.loading = true;
                 this.profile = await getProfile(this.userID);
+                if (this.propicSrc?.startsWith('blob:'))
+                    URL.revokeObjectURL(this.propicSrc);
+                this.propicSrc = (await getProfilePicture(this.userID)) ?? '/propic_default.jpg';
                 this.loading = false;
             } catch (e) {
                 this.emitError(e);
@@ -55,6 +53,10 @@ export default {
         await this.refresh();
         if (this.profile != null)
             this.ownProfile = (this.profile.userID === authStatus.userId);
+    },
+    beforeUnmount() {
+        if (this.propicSrc?.startsWith('blob:'))
+            URL.revokeObjectURL(this.propicSrc);
     }
 }
 </script>
