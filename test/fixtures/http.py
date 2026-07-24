@@ -4,14 +4,15 @@ import pytest
 import httpx
 
 from service import AuthService
-from app import app
+from app import app, lifespan
 
 
 @pytest_asyncio.fixture
 async def client() -> AsyncGenerator[httpx.AsyncClient, None]:
-    transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url='http://test') as test_client:
-        yield test_client
+    async with lifespan(app):
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url='http://test') as test_client:
+            yield test_client
 
 
 @pytest.fixture(autouse=True)
