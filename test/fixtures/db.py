@@ -68,7 +68,7 @@ async def test_db_session_factory(
 
 
 @pytest_asyncio.fixture(autouse=True, scope='function')
-async def _clean_db(test_engine) -> AsyncIterator[None]:
+async def _clean_db(test_engine: AsyncEngine) -> AsyncIterator[None]:
     """
     Wipe all data after each test
     """
