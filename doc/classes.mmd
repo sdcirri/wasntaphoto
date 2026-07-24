@@ -1,0 +1,541 @@
+---
+title: wasntaphoto
+---
+classDiagram
+    direction TB
+    class AppError {
+        + int status_code
+        + str detail
+        - \_\_init__(self, detail, status_code) None
+    }
+
+    class AccessDeniedError {
+        + int status_code
+        + str detail
+    }
+
+    class DBRepository ~T~ {
+        <<abstract>>
+        + AsyncSession session
+        + type[T] model
+        - \_\_init__(self, session, model) None
+        + async find_by_id(self, _id) T | None*
+        + async find_all(self) list[T]
+        + async save(self, obj) T
+        + async delete(self, obj) None
+    }
+
+    class SessionRepository {
+        - \_\_init__(self, session) None
+        + async find_by_id(self, session_id) UserSessionModel | None
+        + async find_by_user_id(self, user_id) list[UserSessionModel]
+        + async find_by_user_id_and_session_id(self, user_id, session_id) UserSessionModel | None
+        + async save(self, session) None
+    }
+
+    class UserRepository {
+        - \_\_init__(self, session) None
+        + async find_by_id(self, user_id) UserModel | None
+        + async find_by_username(self, username) UserModel | None
+        + async find_by_follower(self, follower_id) list[UserModel]
+        + async find_by_following(self, following_id) list[UserModel]
+        + async find_by_blocker(self, blocker_id) list[UserModel]
+        + async find_by_text_query(self, query, limit) list[int]
+    }
+
+    class AuthService {
+        + Any ph
+        + Any logger
+        + UserRepository user_repo
+        + SessionRepository session_repo
+        + Redis redis
+        + str REDIS_HIBP_PREFIX
+        + int REDIS_HIBP_TTL
+        + str REDIS_TOKEN_PREFIX
+        + int REDIS_TOKEN_TTL
+        - \_\_init__(self, user_repo, session_repo, redis) None
+        + async hibp_lookup(self, password) bool
+        + @staticmethod strong_password(password) bool$
+        + async yield_session(self, user_id) str
+        + async revoke_session(self, user_id, session) None
+        + async login(self, username, password) str
+        + async register(self, username, password) str
+        + async resolve_token(self, token) int
+    }
+
+    class BadAuthError {
+        + int status_code
+        + str detail
+    }
+
+    class BadImageError {
+        + int status_code
+        + str detail
+    }
+
+    class Base {
+        + Any metadata
+    }
+
+    class BlockRelationship {
+        + str \_\_tablename__
+        + tuple \_\_table_args__
+        + Mapped[int] blocked_id
+        + Mapped[int] blocker_id
+        + Any blocked
+        + Any blocker
+    }
+
+    class BlockRepository {
+        - \_\_init__(self, session) None
+        + async find_by_id(self, blocker_blocked_id) BlockRelationship | None
+    }
+
+    class Comment {
+        + Any model_config
+        + int comment_id
+        + int author_id
+        + datetime pub_time
+        + str content
+        + int like_cnt
+    }
+
+    class CommentLikeRelationship {
+        + str \_\_tablename__
+        + Mapped[int] comment_id
+        + Mapped[int] user_id
+    }
+
+    class CommentLikeRepository {
+        - \_\_init__(self, session) None
+        + async find_by_id(self, user_comment_ids) CommentLikeRelationship | None
+        + async find_by_comment_id(self, comment_id) list[CommentLikeRelationship]
+        + async delete(self, like) None
+    }
+
+    class CommentModel {
+        + str \_\_tablename__
+        + Mapped[int] comment_id
+        + Mapped[int] post_id
+        + Mapped[int] author_id
+        + Mapped[str] content
+        + Mapped[datetime] pub_time
+        + Any post
+        + Any author
+        + Any like_cnt
+    }
+
+    class CommentNotFoundError {
+        + int status_code
+        + str detail
+    }
+
+    class CommentRepository {
+        - \_\_init__(self, session) None
+        + async find_by_id(self, comment_id) CommentModel | None
+    }
+
+    class CommentService {
+        + CommentRepository comment_repo
+        + CommentLikeRepository like_repo
+        - \_\_init__(self, comment_repo, like_repo) None
+        + async get_comment(self, comment_id) Comment
+        + async create_comment(self, user_id, post_id, content) Comment
+        + async delete_comment(self, user_id, comment_id) None
+        + async is_comment_liked(self, user_id, comment_id) bool
+        + async like_comment(self, user_id, comment_id) None
+        + async unlike_comment(self, user_id, comment_id) None
+    }
+
+    class PostModel {
+        + str \_\_tablename__
+        + Mapped[int] post_id
+        + Mapped[int] author_id
+        + Mapped[str] caption
+        + Mapped[datetime] pub_time
+        + Any author
+        + Any comments
+        + Any like_cnt
+    }
+
+    class UserModel {
+        + str \_\_tablename__
+        + tuple \_\_table_args__
+        + Mapped[int] user_id
+        + Mapped[str] username
+        + Mapped[str] password
+        + Any sessions
+        + Any followers
+        + Any following
+        + Any blocked
+        + Any posts
+        + Any followers_cnt
+        + Any following_cnt
+    }
+
+    class CommentSetup {
+        + AsyncClient client
+        + PostModel post
+        + UserModel post_author
+        + CommentModel comment
+        + dict[str, str] post_author_headers
+        + dict[str, str] comment_author_headers
+    }
+
+    class FailedLoginError {
+        + int status_code
+        + str detail
+    }
+
+    class FollowRepository {
+        - \_\_init__(self, session) None
+        + async find_by_id(self, follower_following_id) FollowingRelationship | None
+    }
+
+    class FollowingRelationship {
+        + str \_\_tablename__
+        + tuple \_\_table_args__
+        + Mapped[int] follower_id
+        + Mapped[int] following_id
+        + Any follower
+        + Any following
+    }
+
+    class FollowingSetup {
+        + AsyncClient client
+        + UserModel alice
+        + UserModel bob
+        + UserModel annoying
+        + dict[str, str] alice_headers
+        + dict[str, str] bob_headers
+        + dict[str, str] annoying_headers
+    }
+
+    class Post {
+        + int post_id
+        + int author_id
+        + datetime pub_time
+        + Optional[str] caption
+        + int like_cnt
+        + list[int] comments
+    }
+
+    class PostCrudSetup {
+        + AsyncClient client
+        + UserModel user
+        + dict[str, str] headers
+    }
+
+    class PostInteractionSetup {
+        + AsyncClient client
+        + PostModel post
+        + UserModel author
+        + UserModel user
+        + dict[str, str] author_auth
+        + dict[str, str] user_auth
+    }
+
+    class PostLikeRelationship {
+        + str \_\_tablename__
+        + Mapped[int] post_id
+        + Mapped[int] user_id
+    }
+
+    class PostLikeRepository {
+        - \_\_init__(self, session) None
+        + async find_by_id(self, user_post_ids) PostLikeRelationship | None
+        + async find_by_post_id(self, post_id) list[PostLikeRelationship]
+        + async exists_by_post_id_and_user_id(self, post_id, user_id) bool
+        + async delete(self, like) None
+    }
+
+    class PostNotFoundError {
+        + int status_code
+        + str detail
+    }
+
+    class PostRepository {
+        - \_\_init__(self, session) None
+        + async find_by_id(self, post_id, load_comments) PostModel | None
+        + async find_by_author_id(self, author_id) list[int]
+        + async find_by_post_id_and_author_id(self, post_id, author_id) PostModel | None
+        + async find_feed(self, user_id, limit, offset) list[int]
+    }
+
+    class PostRequest {
+        + Optional[str] caption
+        + Base64Bytes image
+    }
+
+    class StorageService {
+        + str PROPIC_BUCKET
+        + str POST_BUCKET
+        + Minio minio_client
+        - \_\_init__(self, minio_client) None
+        - async \_get_blob(self, bucket, storage_path) bytes | None
+        - async \_store_blob(self, bucket, storage_path, blob, mimetype) None
+        - async \_delete_blob(self, bucket, storage_path) None
+        + async get_propic(self, user_id) bytes | None
+        + async store_propic(self, user_id, image) None
+        + async get_post(self, post_id) bytes | None
+        + async store_post(self, post_id, image) None
+        + async delete_post(self, post_id) None
+    }
+
+    class PostService {
+        + UserRepository user_repo
+        + PostRepository post_repo
+        + PostLikeRepository like_repo
+        + BlockRepository block_repo
+        + StorageService storage_service
+        - \_\_init__(self, post_repo, user_repo, like_repo, block_repo, storage_service) None
+        + @staticmethod async post_to_object(post, new_post) Post$
+        + async get_post(self, post_id, user_id, author_id) Post
+        + async get_post_media(self, post_id, user_id, author_id) bytes
+        + async new_post(self, user_id, request) Post
+        + async delete_post(self, user_id, post_id) None
+        + async get_user_posts(self, user_id, author_id) list[int]
+        + async get_user_feed(self, user_id, limit, page) list[int]
+        + async like_post(self, user_id, post_id) None
+        + async unlike_post(self, user_id, post_id) None
+        + async get_post_likes(self, user_id, post_id) list[int]
+        + async is_liked(self, user_id, post_id) bool
+    }
+
+    class PwnedPasswordError {
+        + int status_code
+        + str detail
+    }
+
+    class RegistrationRequest {
+        + str username
+        + str password
+    }
+
+    class SelfFollowError {
+        + int status_code
+        + str detail
+    }
+
+    class SessionExpiredError {
+        + int status_code
+        + str detail
+    }
+
+    class UserAccount {
+        + int user_id
+        + str username
+        + int followers_cnt
+        + int following_cnt
+    }
+
+    class UserApiSetup {
+        + AsyncClient client
+        + UserModel alice
+        + UserModel bob
+        + dict[str, str] alice_headers
+        + str alice_session
+        + str bob_session
+    }
+
+    class UserCredentials {
+        + str username
+        + str password
+    }
+
+    class UserNotFoundError {
+        + int status_code
+        + str detail
+    }
+
+    class UserService {
+        + UserRepository user_repo
+        + FollowRepository follow_repo
+        + BlockRepository block_repo
+        + StorageService storage_service
+        - \_\_init__(self, user_repo, follow_repo, block_repo, storage_service) None
+        + @staticmethod async user_to_object(db_user) UserAccount$
+        + async get_user(self, target_user_id, user_id) UserAccount
+        + async get_propic(self, target_user_id, user_id) bytes | None
+        + async search_users(self, q, limit) list[int]
+        + async set_username(self, user_id, new_username) None
+        + async get_followers(self, user_id) list[int]
+        + async get_following(self, user_id) list[int]
+        + async get_blocked(self, user_id) list[int]
+        + async set_propic(self, user_id, uploaded_image) None
+        + async follow(self, user_id, to_follow_id) None
+        + async unfollow(self, user_id, to_unfollow_id) None
+        + async remove_follower(self, user_id, to_remove_id) None
+        + async block_user(self, user_id, to_block_id) None
+        + async unblock_user(self, user_id, to_unblock_id) None
+    }
+
+    class UserSessionModel {
+        + str \_\_tablename__
+        + Mapped[str] session_id
+        + Mapped[int] user_id
+        + Mapped[int] valid_until
+        + Any user
+    }
+
+    class UsernameAlreadyTakenError {
+        + int status_code
+        + str detail
+    }
+
+    class WeakPasswordError {
+        + int status_code
+        + str detail
+    }
+
+    Base --|> sqlalchemy.orm.DeclarativeBase
+
+    BlockRelationship --|> db.engine.Base
+
+    CommentModel --|> Base
+
+    CommentLikeRelationship --|> Base
+
+    FollowingRelationship --|> db.engine.Base
+
+    PostModel --|> Base
+
+    PostLikeRelationship --|> Base
+
+    UserModel --|> Base
+
+    UserSessionModel --|> db.engine.Base
+
+    BlockRepository --|> DBRepository
+
+    CommentLikeRepository --|> DBRepository
+
+    CommentRepository --|> DBRepository
+
+    FollowRepository ..|> DBRepository
+
+    PostLikeRepository ..|> DBRepository
+
+    PostRepository ..|> DBRepository
+
+    SessionRepository ..|> DBRepository
+
+    UserRepository ..|> DBRepository
+
+    AccessDeniedError --|> AppError
+
+    AppError --|> Exception
+
+    BadAuthError --|> AppError
+
+    BadImageError --|> AppError
+
+    CommentNotFoundError --|> AppError
+
+    FailedLoginError --|> AppError
+
+    PostNotFoundError --|> AppError
+
+    PwnedPasswordError --|> AppError
+
+    SelfFollowError --|> AppError
+
+    SessionExpiredError --|> AppError
+
+    UserNotFoundError --|> AppError
+
+    UsernameAlreadyTakenError --|> AppError
+
+    WeakPasswordError --|> AppError
+
+    Comment --|> pydantic.BaseModel
+
+    Post --|> pydantic.BaseModel
+
+    PostRequest --|> pydantic.BaseModel
+
+    UserCredentials --|> pydantic.BaseModel
+
+    RegistrationRequest --|> pydantic.BaseModel
+
+    UserAccount --|> pydantic.BaseModel
+
+    CommentSetup --|> types.SimpleNamespace
+
+    PostCrudSetup --|> types.SimpleNamespace
+
+    PostInteractionSetup --|> types.SimpleNamespace
+
+    UserApiSetup --|> types.SimpleNamespace
+
+    FollowingSetup --|> types.SimpleNamespace
+
+    CommentModel *-- datetime
+
+    PostModel *-- datetime
+
+    DBRepository *-- AsyncSession
+
+    DBRepository *-- T
+
+    Comment *-- datetime
+
+    Post *-- datetime
+
+    PostRequest *-- Base64Bytes
+
+    AuthService *-- UserRepository
+
+    AuthService *-- SessionRepository
+
+    AuthService *-- Redis
+
+    CommentService *-- CommentRepository
+
+    CommentService *-- CommentLikeRepository
+
+    PostService *-- UserRepository
+
+    PostService *-- PostRepository
+
+    PostService *-- PostLikeRepository
+
+    PostService *-- BlockRepository
+
+    PostService *-- StorageService
+
+    StorageService *-- Minio
+
+    UserService *-- UserRepository
+
+    UserService *-- FollowRepository
+
+    UserService *-- BlockRepository
+
+    UserService *-- StorageService
+
+    CommentSetup *-- AsyncClient
+
+    CommentSetup *-- PostModel
+
+    CommentSetup *-- UserModel
+
+    CommentSetup *-- CommentModel
+
+    PostCrudSetup *-- AsyncClient
+
+    PostCrudSetup *-- UserModel
+
+    PostInteractionSetup *-- AsyncClient
+
+    PostInteractionSetup *-- PostModel
+
+    PostInteractionSetup *-- UserModel
+
+    UserApiSetup *-- AsyncClient
+
+    UserApiSetup *-- UserModel
+
+    FollowingSetup *-- AsyncClient
+
+    FollowingSetup *-- UserModel
