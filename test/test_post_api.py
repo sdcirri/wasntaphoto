@@ -194,6 +194,19 @@ async def test_liking_post_increments_like_count(liked_by_both: PostInteractionS
 
 
 @pytest.mark.asyncio
+async def test_liking_post_is_idempotent(liked_by_both: PostInteractionSetup):
+    s = liked_by_both
+    resp = await s.client.put(_like_url(s), headers=s.user_auth)
+    assert resp.status_code == 204
+    resp = await s.client.put(_like_url(s), headers=s.user_auth)
+    assert resp.status_code == 204
+    resp = await s.client.get(_post_url(s), headers=s.author_auth)
+
+    assert resp.status_code == 200
+    assert Post.model_validate(resp.json()).like_cnt == 2
+
+
+@pytest.mark.asyncio
 async def test_is_liked_errors_on_post_not_found(post_crud_setup: PostCrudSetup):
     s = post_crud_setup
     resp = await s.client.get('/users/me/posts/1', headers=s.headers)
@@ -256,6 +269,19 @@ async def test_unliking_post_removes_user_from_likes(liked_by_both: PostInteract
     likes_resp = await s.client.get(_likes_url(s), headers=s.author_auth)
     assert likes_resp.status_code == 200
     assert set(likes_resp.json()) == {s.author.user_id}
+
+
+@pytest.mark.asyncio
+async def test_unliking_post_is_idempotent(liked_by_both: PostInteractionSetup):
+    s = liked_by_both
+    resp = await s.client.delete(_like_url(s), headers=s.user_auth)
+    assert resp.status_code == 204
+    resp = await s.client.delete(_like_url(s), headers=s.user_auth)
+    assert resp.status_code == 204
+    resp = await s.client.get(_post_url(s), headers=s.author_auth)
+
+    assert resp.status_code == 200
+    assert Post.model_validate(resp.json()).like_cnt == 1
 
 
 @pytest.mark.asyncio
