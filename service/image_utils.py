@@ -17,19 +17,18 @@ def scale(img: Image.Image, target_height: int) -> Image.Image:
     return img.resize((int(w * ratio), target_height), Image.Resampling.LANCZOS)
 
 
-def upload2jpeg(uploaded_image: bytes, quality: int, target_height: int | None = None) -> bytes:
+def upload2jpeg(uploaded_image: bytes, quality: int, target_height: int) -> bytes:
     """
     Converts the uploaded image to a JPEG for storage
     :param uploaded_image: uploaded image
     :param quality: JPEG quality
-    :param target_height: target height for scaling (None for no scaling)
+    :param target_height: target height for scaling
     :return: the JPEG bytes
     """
     with BytesIO() as buf:
         try:
             img = Image.open(BytesIO(uploaded_image)).convert('RGB')
-            if target_height:
-                img = scale(img, target_height)
+            img = scale(img, target_height)
             img.save(buf, format='JPEG', quality=quality)
             return buf.getvalue()
         except (UnidentifiedImageError, OSError):

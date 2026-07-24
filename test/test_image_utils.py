@@ -1,7 +1,7 @@
 import pytest
 
-from exceptions import BadImageError
 from service.image_utils import upload2jpeg
+from exceptions import BadImageError
 
 from .conftest import rmsdiff
 
@@ -33,4 +33,4 @@ def test_image_utils_propic_format_quality(any_image: bytes):
 def test_image_utils_raises_on_bad_image():
     img = b'\01\02\03'
     with pytest.raises(BadImageError):
-        upload2jpeg(img, 90)
+        upload2jpeg(img, 90, 720)
