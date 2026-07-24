@@ -29,7 +29,5 @@ class SessionRepository(DBRepository[UserSessionModel]):
         )
 
     async def save(self, session: UserSessionModel) -> None:
-        await self.session.merge(session)
-
-    async def delete(self, session: UserSessionModel) -> None:
-       await self.session.delete(session)
+        self.session.add(session)
+        await self.session.flush()
