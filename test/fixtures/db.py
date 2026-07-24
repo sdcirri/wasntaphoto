@@ -13,10 +13,9 @@ import os
 from db.repositories import UserRepository, PostRepository, CommentRepository
 from db.entities import UserModel, PostModel, CommentModel
 
+from service.storage_service import StorageService
 from service.auth_service import AuthService
 from service.image_utils import upload2post
-import providers.db as db_provider
-from service.storage_service import StorageService
 
 INITDB_DIR = Path(__file__).resolve().parents[2] / 'initdb'
 
@@ -31,6 +30,9 @@ def postgres_container() -> Generator[PostgresContainer, Any, None]:
     ) as postgres:
         postgres.with_volume_mapping(str(INITDB_DIR), '/docker-entrypoint-initdb.d')
         postgres.start()
+        os.environ['DATABASE_URL'] = postgres.get_connection_url().replace(
+            "postgresql+psycopg2://", "postgresql+psycopg://"
+        )
         yield postgres
 
 
@@ -56,16 +58,13 @@ async def test_engine(postgres_container: PostgresContainer) -> AsyncIterator[As
 
 @pytest_asyncio.fixture(autouse=True, scope='function')
 async def test_db_session_factory(
-        monkeypatch: pytest.MonkeyPatch,
         test_engine: AsyncEngine
 ) -> AsyncIterator[async_sessionmaker[AsyncSession]]:
-    test_session_factory = async_sessionmaker(
+    yield async_sessionmaker(
         test_engine,
         expire_on_commit=False,
         class_=AsyncSession,
     )
-    monkeypatch.setattr(db_provider, 'SessionLocal', test_session_factory)
-    yield test_session_factory
 
 
 @pytest_asyncio.fixture(autouse=True, scope='function')

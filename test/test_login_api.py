@@ -131,17 +131,17 @@ async def test_hibp_lookup(fake_auth_service: AuthService):
 
 @pytest.mark.asyncio
 @pytest.mark.real_hibp
-async def test_hibp_lookup_is_cached(override_redis: Redis, fake_auth_service: AuthService):
+async def test_hibp_lookup_is_cached(redis_client: Redis, fake_auth_service: AuthService):
     weak = 'password'
     digest = sha1(weak.encode()).hexdigest().upper()
     prefix = digest[:5]
     expected_key = f'{AuthService.REDIS_HIBP_PREFIX}:{prefix}'
 
-    assert await override_redis.get(expected_key) is None
+    assert await redis_client.get(expected_key) is None
 
     res = await fake_auth_service.hibp_lookup(weak)
     assert res is True
-    assert await override_redis.get(expected_key) is not None
+    assert await redis_client.get(expected_key) is not None
 
     res = await fake_auth_service.hibp_lookup(weak)
     assert res is True

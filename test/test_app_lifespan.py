@@ -1,4 +1,3 @@
-from redis.asyncio import Redis
 import pytest
 import httpx
 
@@ -6,7 +5,7 @@ from app import app, lifespan
 
 
 @pytest.mark.asyncio
-async def test_app_lifespan(override_redis: Redis):
+async def test_app_lifespan():
     async with lifespan(app):
         async with httpx.AsyncClient(
                 transport=httpx.ASGITransport(app=app),

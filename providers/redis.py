@@ -1,29 +1,16 @@
 from redis.asyncio import Redis
+from fastapi import Request
 from os import getenv
 
 
-redis_url = getenv('REDIS_URL')
-if not redis_url:
-    raise RuntimeError('REDIS_URL is not set, exiting ...')
+async def connect_redis_from_env() -> Redis:
+    redis_url = getenv('REDIS_URL')
+    if not redis_url:
+        raise RuntimeError('REDIS_URL is not set, exiting ...')
+    redis = Redis.from_url(redis_url, decode_responses=True)
+    await redis.ping()
+    return redis
 
 
-_REDIS: Redis | None = None
-
-
-def get_redis() -> Redis:
-    assert _REDIS is not None
-    return _REDIS
-
-
-async def connect_redis() -> None:
-    global _REDIS
-    _REDIS = Redis.from_url(redis_url, decode_responses=True)
-    assert _REDIS is not None
-    await _REDIS.ping()
-
-
-async def disconnect_redis() -> None:
-    global _REDIS
-    if _REDIS is not None:
-        await _REDIS.aclose()
-        _REDIS = None
+def get_redis(request: Request) -> Redis:
+    return request.app.state.redis

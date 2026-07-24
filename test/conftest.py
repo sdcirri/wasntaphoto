@@ -4,10 +4,6 @@ import numpy as np
 import os
 
 os.environ['DATABASE_URL'] = 'postgresql+psycopg://'
-os.environ['REDIS_URL'] = 'redis://fake:6379/0'
-os.environ['MINIO_URL'] = 'localhost:9000'
-os.environ['MINIO_ACCESS_KEY'] = 'minioadmin'
-os.environ['MINIO_SECRET_KEY'] = 'minioadmin'
 
 pytest_plugins = (
     'test.fixtures.images',
