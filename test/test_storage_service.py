@@ -5,6 +5,14 @@ import pytest
 from service.storage_service import StorageService
 
 
+def test_storage_service_initializes_buckets_if_not_present():
+    minio = Mock()
+    minio.bucket_exists.return_value = False
+    StorageService(minio)
+    # Posts bucket and propics bucket
+    assert minio.make_bucket.call_count == 2
+
+
 @pytest.mark.asyncio
 async def test_s3_errors_are_propagated_if_not_no_such_key():
     minio = Mock()
