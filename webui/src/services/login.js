@@ -52,6 +52,11 @@ export function authHeaders(extraHeaders = {}) {
 }
 
 export function clearAuth() {
+	if (authStatus.status != null) {
+		api.delete(`/session/${authStatus.status}`, {
+			headers: authHeaders()
+		});
+	}
 	clearCookie(SESSION_COOKIE);
 	clearCookie(USER_COOKIE);
 	authStatus.status = null;
