@@ -29,6 +29,7 @@ class StorageService:
         except S3Error as e:
             if e.code == 'NoSuchKey':
                 return None
+            raise e
         return None
 
     async def _store_blob(self, bucket: str, storage_path: str, blob: bytes, mimetype: str) -> None:
