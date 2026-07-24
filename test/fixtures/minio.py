@@ -22,7 +22,7 @@ def minio_container() -> Generator[MinioContainer, Any, None]:
 
 
 @pytest.fixture(scope='session')
-def minio_client() -> Generator[Minio, None]:
+def minio_client() -> Generator[Minio, None, None]:
     minio = connect_minio_from_env()
     for bucket in StorageService.PROPIC_BUCKET, StorageService.POST_BUCKET:
         if not minio.bucket_exists(bucket):
