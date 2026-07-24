@@ -24,13 +24,11 @@ class StorageService:
         """
         try:
             req = await to_thread(self.minio_client.get_object, bucket, storage_path)
-            if req.status == 200:
-                return req.data
+            return req.data
         except S3Error as e:
             if e.code == 'NoSuchKey':
                 return None
             raise e
-        return None
 
     async def _store_blob(self, bucket: str, storage_path: str, blob: bytes, mimetype: str) -> None:
         """
