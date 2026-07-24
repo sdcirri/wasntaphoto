@@ -1,9 +1,7 @@
 openapi: 3.1.0
 info:
-  title: WASNTPhoto Backend
-  description: |-
-    Keep in touch with your friends by sharing photos of special moments, thanks to WASAPhoto! You can
-    upload your photos directly from your PC, and they will be visible to everyone following you.
+  title: WASNTAPhoto Backend
+  version: 0.1.0
 paths:
   /session/:
     post:
@@ -32,6 +30,40 @@ paths:
               schema:
                 type: string
                 title: Response Login Session  Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /session/{session_id}:
+    delete:
+      tags:
+      - Login
+      summary: Logout Session
+      description: 'Revokes the session token
+
+        :param user_id: authenticated user ID
+
+        :param session_id: session token to be revoked
+
+        :param auth_service: auth service'
+      operationId: logout_session_session__session_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: session_id
+        in: path
+        required: true
+        schema:
+          type: string
+          minLength: 43
+          maxLength: 43
+          pattern: ^[A-Za-z0-9_-]+$
+          title: Session Id
+      responses:
+        '204':
+          description: Successful Response
         '422':
           description: Validation Error
           content:
@@ -411,6 +443,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /users/{author_id}/posts/{post_id}/media:
+    get:
+      tags:
+      - Users
+      - Posts
+      summary: Get Post Media
+      operationId: get_post_media_users__author_id__posts__post_id__media_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 0
+          title: Post Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /users/{author_id}/posts/{post_id}/like:
     get:
       tags:
@@ -565,20 +626,20 @@ paths:
       tags:
       - Users
       summary: Search Users
-      description: 'Run a text search on users
+      description: 'Search for users
 
         :param user_service: user service
 
-        :param q: search query
+        :param q: query string
 
-        :param limit: number of results to return (max 100, default 10)
+        :param l: number of results to return (max 100, default 10)
 
-        :return: the list of the first matching user IDs'
+        :return: the list of the first *l* matching user IDs'
       operationId: search_users_users__get
       parameters:
       - name: q
         in: query
-        required: false
+        required: true
         schema:
           type: string
           minLength: 3
@@ -654,7 +715,7 @@ paths:
 
         :param user_id: authenticated user ID
 
-        :return: the current user account info, if it exists'
+        :return: the user account info, if it exists'
       operationId: get_user_account_users__user_id__get
       responses:
         '200':
@@ -663,6 +724,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserAccount'
+      security:
+      - HTTPBearer: []
+  /users/{user_id}/propic:
+    get:
+      tags:
+      - Users
+      summary: Get User Propic
+      description: 'Gets the specified user profile picture
+
+        :param user_service: user service
+
+        :param target_uid: target user ID (can also be ''me'')
+
+        :param user_id: authenticated user ID
+
+        :return: the user profile picture, if set'
+      operationId: get_user_propic_users__user_id__propic_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
       security:
       - HTTPBearer: []
   /users/me/username:
@@ -914,11 +998,8 @@ paths:
           minimum: 0
           title: To Block Id
       responses:
-        '200':
+        '204':
           description: Successful Response
-          content:
-            application/json:
-              schema: {}
         '422':
           description: Validation Error
           content:
@@ -1073,11 +1154,6 @@ components:
           type: string
           format: date-time
           title: Pub Time
-        image:
-          type: string
-          format: base64
-          contentMediaType: application/octet-stream
-          title: Image
         caption:
           anyOf:
           - type: string
@@ -1098,7 +1174,6 @@ components:
       - post_id
       - author_id
       - pub_time
-      - image
       - like_cnt
       - comments
       title: Post
@@ -1150,11 +1225,6 @@ components:
           maxLength: 30
           minLength: 3
           title: Username
-        propic:
-          type: string
-          format: base64
-          contentMediaType: application/octet-stream
-          title: Propic
         followers_cnt:
           type: integer
           minimum: 0.0
@@ -1167,7 +1237,6 @@ components:
       required:
       - user_id
       - username
-      - propic
       - followers_cnt
       - following_cnt
       title: UserAccount
