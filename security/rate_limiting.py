@@ -3,7 +3,6 @@ from fastapi_limiter.depends import RateLimiter
 from fastapi import Request, Response
 from redis.asyncio import Redis
 
-from exceptions import BadAuthError, SessionExpiredError
 from service import AuthService
 
 
@@ -23,10 +22,7 @@ async def do_rl(rate: Rate, key: str, request: Request, response: Response, redi
         ip = request_.headers.get('X-Forwarded-For', request_.client.host).split(',')[0].strip()
         token = request_.headers.get('Authorization', '').lower().removeprefix('bearer')
         if token:
-            try:
-                user_id = await redis.get(f'{AuthService.REDIS_TOKEN_PREFIX}:{token}')
-            except (BadAuthError, SessionExpiredError):
-                user_id = 'anon'
+            user_id = str(await redis.get(f'{AuthService.REDIS_TOKEN_PREFIX}:{token}')) or 'anon'
         else:
             user_id = 'anon'
 
