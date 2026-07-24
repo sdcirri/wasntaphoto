@@ -1,9 +1,11 @@
 from typing import Callable, Any, Coroutine
+from minio import Minio
 import base64
 import pytest
 
 from db.entities import UserModel, PostModel
 from model import PostRequest, Post
+from service.storage_service import StorageService
 
 from .fixtures.posts import PostInteractionSetup, PostCrudSetup
 from .fixtures.users import FollowingSetup
@@ -89,6 +91,50 @@ async def test_get_post_returns_created_post(post_crud_setup: PostCrudSetup, cre
 async def test_get_post_rejects_incoherent_user_id_in_path(post_interaction_setup: PostInteractionSetup):
     s = post_interaction_setup
     resp = await s.client.get(f'/users/{s.user.user_id}/posts/{s.post.post_id}', headers=s.user_auth)
+    assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_get_post_media_rejects_nonexisting_post(post_crud_setup: PostCrudSetup):
+    s = post_crud_setup
+    resp = await s.client.get(f'/users/me/posts/1/media', headers=s.headers)
+    assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_get_post_media_rejects_incoherent_user_id_in_path(post_interaction_setup: PostInteractionSetup):
+    s = post_interaction_setup
+    resp = await s.client.get(f'/users/{s.user.user_id}/posts/{s.post.post_id}/media', headers=s.user_auth)
+    assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_get_post_media_rejects_blocked_user(
+        alice_blocked_annoying: FollowingSetup,
+        post_factory: Callable[[int, bytes, str], Coroutine[Any, Any, PostModel]],
+        solid_black: bytes
+):
+    s = alice_blocked_annoying
+    post = await post_factory(s.alice.user_id, solid_black, 'A nice pixel')
+    resp = await s.client.get(f'/users/{s.alice.user_id}/posts/{post.post_id}/media', headers=s.alice_headers)
+    assert resp.status_code == 200
+    resp = await s.client.get(f'/users/{s.alice.user_id}/posts/{post.post_id}/media', headers=s.annoying_headers)
+    assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_get_post_media_handles_missing_media(
+        post_crud_setup: PostCrudSetup,
+        post_factory: Callable[[int, bytes, str], Coroutine[Any, Any, PostModel]],
+        minio_client: Minio,
+        solid_black: bytes
+):
+    s = post_crud_setup
+    post = await post_factory(s.user.user_id, solid_black, 'A nice pixel')
+    minio_client.remove_object(StorageService.POST_BUCKET, f'{post.post_id}.jpg')
+    resp = await s.client.get(f'/users/{s.user.user_id}/posts/{post.post_id}', headers=s.headers)
+    assert resp.status_code == 200
+    resp = await s.client.get(f'/users/{s.user.user_id}/posts/{post.post_id}/media', headers=s.headers)
     assert resp.status_code == 404
 
 
