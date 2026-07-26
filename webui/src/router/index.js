@@ -11,7 +11,7 @@ import BlockedView from '@/views/BlockedView.vue'
 import EditProfileView from '@/views/EditProfileView.vue'
 import PostLikesView from '@/views/PostLikesView.vue'
 import CommentsView from '@/views/CommentsView.vue'
-import ensureAuthenticated from '@/services/login'
+import { ensureAuthenticated } from '@/services/login'
 
 const router = createRouter({
 	history: createWebHashHistory(import.meta.env.BASE_URL),
@@ -36,7 +36,8 @@ router.beforeEach(async (to) => {
 	try {
 		await ensureAuthenticated();
 		return true;
-	} catch {
+	} catch (error) {
+		console.error(error);
 		return { path: '/login', query: { redirect: to.fullPath } };
 	}
 })

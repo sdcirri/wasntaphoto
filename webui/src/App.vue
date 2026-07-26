@@ -1,7 +1,6 @@
 <script>
-import { RouterLink, RouterView } from 'vue-router'
-import { loggedInUserId } from './services/login'
-import logout from './services/logout'
+import { loggedInUserId } from '@/services/login'
+import logout from '@/services/logout'
 
 export default {
 	data: function () {
