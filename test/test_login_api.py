@@ -83,6 +83,7 @@ async def test_login_with_correct_credentials_returns_token(client: AsyncClient,
     BAD_AUTH_HEADERS
 )
 async def test_malformed_tokens_are_rejected(client: AsyncClient, registered_user: str, bad_header: str):
+    client.cookies.clear()      # block cookie fallback mechanics
     resp = await client.get('/users/me', headers={'Authorization': bad_header})
     assert resp.status_code == 401
 

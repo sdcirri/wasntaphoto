@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Path, Response, status
 
-from security.bearer_auth import get_user, set_session_cookie
+from security.bearer_auth import get_user, set_session_cookie, get_session_id, SESSION_COOKIE_NAME
 from providers.rate_limiting import auth_limiter
 from providers.services import get_auth_service
 from model import UserCredentials
@@ -25,6 +25,24 @@ async def login(
     token = await auth_service.login(request.username, request.password)
     set_session_cookie(response, token)
     return token
+
+
+@login_router.delete('/current', status_code=status.HTTP_204_NO_CONTENT)
+async def logout_current_session(
+        response: Response,
+        session_id: str = Depends(get_session_id),
+        user_id: int = Depends(get_user),
+        auth_service: AuthService = Depends(get_auth_service)
+) -> None:
+    """
+    Revokes the current session token
+    :param response: response object, used to revoke the session cookie
+    :param session_id: current session ID
+    :param user_id: authenticated user ID
+    :param auth_service: auth service
+    """
+    await auth_service.revoke_session(user_id, session_id)
+    response.delete_cookie(key=SESSION_COOKIE_NAME)
 
 
 @login_router.delete('/{session_id}', status_code=status.HTTP_204_NO_CONTENT)
