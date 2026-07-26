@@ -15,8 +15,8 @@ user_router.include_router(post_router)
 
 
 def target_user_id(request: Request, me_id: int = Depends(get_user)) -> int:
-    raw = request.path_params.get('user_id')
-    if raw in (None, 'me'):
+    raw = request.path_params.get('user_id') or 'me'
+    if raw == 'me':
         return me_id
     try:
         return int(raw)
