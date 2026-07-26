@@ -31,6 +31,8 @@ class AuthService:
     session_repo: SessionRepository
     redis: Redis
 
+    SESSION_MAX_AGE = 86400 * 7 # 7d
+
     REDIS_HIBP_PREFIX = 'wasntaphoto:auth:hibp'
     REDIS_HIBP_TTL = 86400 * 7  # 7d
     REDIS_TOKEN_PREFIX = 'wasntaphoto:auth:tokens'
@@ -86,7 +88,7 @@ class AuthService:
                 session = UserSessionModel(
                     user_id=user_id,
                     session_id=token,
-                    valid_until=int(time.time()) + 604800   # 1 week
+                    valid_until=int(time.time()) + self.SESSION_MAX_AGE
                 )
 
                 await self.session_repo.save(session)
@@ -166,7 +168,7 @@ class AuthService:
             await self.session_repo.delete(session)
             raise SessionExpiredError
 
-        session.valid_until = int(time.time()) + 604800
+        session.valid_until = int(time.time()) + self.SESSION_MAX_AGE
         await self.session_repo.save(session)
         await self.redis.set(f'{self.REDIS_TOKEN_PREFIX}:{token}', session.user_id, ex=self.REDIS_TOKEN_TTL)
 
