@@ -1,7 +1,7 @@
 <script>
 import { ref } from 'vue'
 
-import login from '../services/login'
+import login from '@/services/login'
 
 export default {
 	data: function () {

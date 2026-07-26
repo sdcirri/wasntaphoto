@@ -1,7 +1,7 @@
 <script>
 import { ref } from 'vue'
 
-import newPost from '../services/newPost'
+import newPost from '@/services/newPost'
 
 export default {
 	data: function () {

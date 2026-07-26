@@ -33,9 +33,7 @@ export default {
                     URL.revokeObjectURL(this.propicSrc);
                 this.propicSrc = (await getProfilePicture(this.userID)) ?? '/propic_default.jpg';
                 this.usernamebuf = ref(this.profile.username);
-                this.uploadB64 = this.profile.proPicB64
-                    ? `data:image/jpeg;base64,${this.profile.proPicB64}`
-                    : '/propic_default.jpg';
+                this.uploadB64 = this.propicSrc ?? '/propic_default.jpg';
                 this.uploadNotOG = false;
                 this.loading = false;
             } catch (e) {
@@ -103,10 +101,9 @@ export default {
             }
         },
         deleteImg() {
-            this.uploadB64 = this.profile.proPicB64
-                ? `data:image/jpeg;base64,${this.profile.proPicB64}`
-                : '/propic_default.jpg';
+            this.uploadB64 = this.propicSrc ?? '/propic_default.jpg';
             this.errormsg = null;
+            this.uploadNotOG = false;
         },
         async submitAll() {
             await this.setUsername();

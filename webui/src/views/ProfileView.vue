@@ -1,5 +1,4 @@
 <script>
-import b64AsBlob from '@/utils/b64AsBlob'
 import { getCachedUserId } from '@/services/login'
 import getProfile from '@/services/getProfile'
 import getProfilePicture from '@/services/getProfilePicture'
@@ -31,10 +30,6 @@ export default {
                     URL.revokeObjectURL(this.propicSrc);
                 this.propicSrc = (await getProfilePicture(this.userID)) ?? '/propic_default.jpg';
 				this.ownProfile = (getCachedUserId() === this.profile.userID);
-				if (this.profile.proPicB64) {
-					const blob = b64AsBlob(this.profile.proPicB64);
-					this.blobUrl = URL.createObjectURL(blob);
-				}
 				this.loading = false;
 			} catch (e) {
 				this.errormsg = e;
@@ -48,7 +43,6 @@ export default {
 		this.refresh();
 	},
 	beforeUnmount() {
-		if (this.blobUrl) URL.revokeObjectURL(this.blobUrl);
         if (this.propicSrc?.startsWith('blob:'))
             URL.revokeObjectURL(this.propicSrc);
 	},

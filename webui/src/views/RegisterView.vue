@@ -1,7 +1,7 @@
 <script>
 import { ref } from 'vue'
 
-import registerAndLogin from '../services/register'
+import registerAndLogin from '@/services/register'
 
 export default {
 	data: function () {

@@ -1,9 +1,8 @@
 <script>
 import { ref } from 'vue'
 
-import { currentUserId } from '../services/login'
-import getPost from '../services/getPost'
-import commentPost from '../services/commentPost'
+import getPost from '@/services/getPost'
+import commentPost from '@/services/commentPost'
 
 export default {
 	computed: {
@@ -23,22 +22,17 @@ export default {
 		async refresh() {
 			this.errormsg = "";
 			this.commentList = [];
-			const userId = await currentUserId();
-			if (userId == null)
-				this.$router.push("/login");
-			else {
-				this.loading = true;
-				try {
-					let post = await getPost(this.postID);
-					this.commentList = post.comments;
-				} catch (e) {
-					this.errormsg = e.toString();
-				}
-				this.loading = false;
+			this.loading = true;
+			try {
+				let post = await getPost(this.postID);
+				this.commentList = post.comments;
+			} catch (e) {
+				this.errormsg = e.toString();
 			}
+			this.loading = false;
 		},
 		validateComment() {
-			if (this.commentDraft.length == 0) {
+			if (this.commentDraft.length === 0) {
 				this.errormsg = "Error: empty comment";
 				return false;
 			} else if (this.commentDraft.length > 2048) {

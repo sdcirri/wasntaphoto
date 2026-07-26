@@ -1,6 +1,5 @@
 <script>
-import { currentUserId } from '../services/login'
-import getBlocked from '../services/getBlocked'
+import getBlocked from '@/services/getBlocked'
 
 export default {
 	data: function () {
@@ -13,15 +12,10 @@ export default {
 	methods: {
 		async refresh() {
 			this.userList = [];
-			const userId = await currentUserId();
-			if (userId == null)
-				this.$router.push("/login");
-			else {
-				this.loading = true;
-				this.errormsg = null;
-				this.userList = await getBlocked();
-				this.loading = false;
-			}
+			this.loading = true;
+			this.errormsg = null;
+			this.userList = await getBlocked();
+			this.loading = false;
 		},
 		onProfileError(e) {
 			this.errormsg = e.toString();

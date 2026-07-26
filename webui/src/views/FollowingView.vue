@@ -1,7 +1,6 @@
 <script>
-import { currentUserId } from '../services/login'
-import getFollowing from '../services/getFollowing'
-import { BlockedException } from '../services/apiErrors';
+import getFollowing from '@/services/getFollowing'
+import { BlockedException } from '@/services/apiErrors';
 
 export default {
 	data: function () {
@@ -14,15 +13,10 @@ export default {
 	methods: {
 		async refresh() {
 			this.userList = [];
-			const userId = await currentUserId();
-			if (userId == null)
-				this.$router.push("/login");
-			else {
-				this.loading = true;
-				this.errormsg = null;
-				this.userList = await getFollowing();
-				this.loading = false;
-			}
+			this.loading = true;
+			this.errormsg = null;
+			this.userList = await getFollowing();
+			this.loading = false;
 		},
 		onProfileError(e) {
 			if (e.error === BlockedException.toString())

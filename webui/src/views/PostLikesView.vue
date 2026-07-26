@@ -1,7 +1,6 @@
 <script>
-import { currentUserId } from '../services/login'
-import getLikes from '../services/getLikes'
-import { BlockedException } from '../services/apiErrors'
+import getLikes from '@/services/getLikes'
+import { BlockedException } from '@/services/apiErrors'
 
 export default {
 	computed: {
@@ -19,15 +18,10 @@ export default {
 	methods: {
 		async refresh() {
 			this.userList = [];
-			const userId = await currentUserId();
-			if (userId == null)
-				this.$router.push("/login");
-			else {
-				this.loading = true;
-				this.errormsg = null;
-				this.userList = await getLikes(this.postID);
-				this.loading = false;
-			}
+			this.loading = true;
+			this.errormsg = null;
+			this.userList = await getLikes(this.postID);
+			this.loading = false;
 		},
 		onProfileError(e) {
 			if (e.error === BlockedException.toString()) {

@@ -1,8 +1,8 @@
 <script>
 import { ref } from 'vue'
 
-import searchUser from '../services/searchUser'
-import { BlockedException } from '../services/apiErrors'
+import searchUser from '@/services/searchUser'
+import { BlockedException } from '@/services/apiErrors'
 
 export default {
 	data: function () {

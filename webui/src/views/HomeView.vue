@@ -1,6 +1,5 @@
 <script>
-import { currentUserId } from '../services/login'
-import getFeed from '../services/getFeed'
+import getFeed from '@/services/getFeed'
 
 export default {
 	data: function () {
@@ -14,18 +13,13 @@ export default {
 		async refresh() {
 			this.errormsg = "";
 			this.postList = [];
-			const userId = await currentUserId();
-			if (userId == null)
-				this.$router.push("/login");
-			else {
-				this.loading = true;
-				try {
-					this.postList = await getFeed();
-				} catch (e) {
-					this.errormsg = e.toString();
-				}
-				this.loading = false;
+			this.loading = true;
+			try {
+				this.postList = await getFeed();
+			} catch (e) {
+				this.errormsg = e.toString();
 			}
+			this.loading = false;
 		},
 		componentError(e) {
 			this.errormsg = e.toString();
