@@ -111,6 +111,15 @@ async def test_revoke_session_revokes_session(client: AsyncClient, registered_us
 
 
 @pytest.mark.asyncio
+async def test_revoke_session_revokes_current_session(client: AsyncClient, registered_user: str):
+    session = registered_user
+    resp = await client.delete('/session/current', headers={'Authorization': f'Bearer {session}'})
+    assert resp.status_code == 204
+    resp = await client.get('/users/me', headers={'Authorization': f'Bearer {session}'})
+    assert resp.status_code == 401
+
+
+@pytest.mark.asyncio
 async def test_revoke_session_ignores_nonexisting_session(user_api_setup: UserApiSetup):
     s = user_api_setup
     nonexisting = secrets.token_urlsafe(32)
