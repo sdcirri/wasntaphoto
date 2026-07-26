@@ -11,8 +11,16 @@ class CommentModel(Base):
     __tablename__ = 'comments'
 
     comment_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    post_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('posts.post_id'), nullable=False)
-    author_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('users.user_id'), nullable=False)
+    post_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey('posts.post_id', ondelete='CASCADE'),
+        nullable=False,
+    )
+    author_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey('users.user_id', ondelete='CASCADE'),
+        nullable=False,
+    )
     content: Mapped[str] = mapped_column(String(2048), nullable=False)
     pub_time: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),

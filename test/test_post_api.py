@@ -1,13 +1,16 @@
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 from typing import Callable, Any, Coroutine
 from minio import Minio
 import base64
 import pytest
 
+from service.storage_service import StorageService
+from db.repositories import PostLikeRepository
 from db.entities import UserModel, PostModel
 from model import PostRequest, Post
-from service.storage_service import StorageService
 
 from .fixtures.posts import PostInteractionSetup, PostCrudSetup
+from .fixtures.db import test_db_session_factory
 from .fixtures.users import FollowingSetup
 from .conftest import rmsdiff
 
@@ -234,6 +237,24 @@ async def test_likes_endpoint_requires_me(liked_by_both: PostInteractionSetup):
     assert resp.status_code == 200
     resp = await s.client.get(f'/users/{s.user.user_id}/posts/{s.post.post_id}/likes', headers=s.author_auth)
     assert resp.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_delete_post_cascades_likes(
+        liked_by_both: PostInteractionSetup,
+        test_db_session_factory: async_sessionmaker[AsyncSession]
+):
+    s = liked_by_both
+    async with test_db_session_factory() as session:
+        likes_repo = PostLikeRepository(session)
+        assert len(await likes_repo.find_by_post_id(s.post.post_id)) == 2
+
+    resp = await s.client.delete(f'/users/me/posts/{s.post.post_id}', headers=s.author_auth)
+    assert resp.status_code == 204
+
+    async with test_db_session_factory() as session:
+        likes_repo = PostLikeRepository(session)
+        assert len(await likes_repo.find_by_post_id(s.post.post_id)) == 0
 
 
 @pytest.mark.asyncio

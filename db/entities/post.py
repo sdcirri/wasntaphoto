@@ -11,7 +11,11 @@ class PostModel(Base):
     __tablename__ = 'posts'
 
     post_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    author_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('users.user_id'), nullable=False)
+    author_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey('users.user_id', ondelete='CASCADE'),
+        nullable=False,
+    )
     caption: Mapped[str] = mapped_column(String(2048), nullable=True)
     pub_time: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
@@ -21,7 +25,11 @@ class PostModel(Base):
     )
 
     author = relationship('UserModel', uselist=False, back_populates='posts')
-    comments = relationship('CommentModel', back_populates='post')
+    comments = relationship(
+        'CommentModel',
+        back_populates='post',
+        passive_deletes=True,
+    )
 
     like_cnt = column_property(
         select(func.count())

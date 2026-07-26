@@ -13,8 +13,16 @@ class FollowingRelationship(Base):
         CheckConstraint('follower_id != following_id', name='ck_no_self_follow'),
     )
 
-    follower_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('users.user_id'), primary_key=True)
-    following_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('users.user_id'), primary_key=True)
+    follower_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey('users.user_id', ondelete='CASCADE'),
+        primary_key=True,
+    )
+    following_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey('users.user_id', ondelete='CASCADE'),
+        primary_key=True,
+    )
 
     follower = relationship(
         'UserModel',

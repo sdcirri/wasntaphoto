@@ -1,5 +1,7 @@
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 import pytest
 
+from db.repositories import CommentLikeRepository, CommentRepository
 from model import Comment
 
 from .fixtures.comments import CommentSetup
@@ -174,3 +176,52 @@ async def test_unliking_comment_decrements_like_count(comment_like_setup: Commen
 
     resp = await s.client.get(_comment_url(s), headers=s.comment_author_headers)
     assert Comment.model_validate(resp.json()).like_cnt == 0
+
+
+@pytest.mark.asyncio
+async def test_delete_comment_cascades_likes(
+        comment_like_setup: CommentSetup,
+        test_db_session_factory: async_sessionmaker[AsyncSession]
+):
+    s = comment_like_setup
+    await s.client.put(_like_url(s), headers=s.comment_author_headers)
+
+    async with test_db_session_factory() as session:
+        like_repo = CommentLikeRepository(session)
+        assert len(await like_repo.find_by_comment_id(s.comment.comment_id)) == 1
+
+    resp = await s.client.delete(
+        f'/users/{s.post_author.user_id}/posts/{s.post.post_id}/comments/{s.comment.comment_id}',
+        headers=s.comment_author_headers
+    )
+    assert resp.status_code == 204
+
+    async with test_db_session_factory() as session:
+        like_repo = CommentLikeRepository(session)
+        assert len(await like_repo.find_by_comment_id(s.comment.comment_id)) == 0
+
+
+@pytest.mark.asyncio
+async def test_delete_post_cascades_comments(
+        comment_like_setup: CommentSetup,
+        test_db_session_factory: async_sessionmaker[AsyncSession]
+):
+    s = comment_like_setup
+    await s.client.put(_like_url(s), headers=s.comment_author_headers)
+    async with test_db_session_factory() as session:
+        comment_repo = CommentRepository(session)
+        like_repo = CommentLikeRepository(session)
+        assert await comment_repo.find_by_id(s.comment.comment_id) is not None
+        assert len(await like_repo.find_by_comment_id(s.comment.comment_id)) == 1
+
+    resp = await s.client.delete(
+        f'/users/me/posts/{s.post.post_id}',
+        headers=s.post_author_headers
+    )
+    assert resp.status_code == 204
+
+    async with test_db_session_factory() as session:
+        comment_repo = CommentRepository(session)
+        like_repo = CommentLikeRepository(session)
+        assert await comment_repo.find_by_id(s.comment.comment_id) is None
+        assert len(await like_repo.find_by_comment_id(s.comment.comment_id)) == 0

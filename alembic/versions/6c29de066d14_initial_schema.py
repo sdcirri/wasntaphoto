@@ -1,8 +1,8 @@
 """initial schema
 
-Revision ID: 246dba833063
+Revision ID: 6c29de066d14
 Revises: 
-Create Date: 2026-03-30 17:38:27.127875
+Create Date: 2026-07-26 13:46:10.318734
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '246dba833063'
+revision: str = '6c29de066d14'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -34,8 +34,8 @@ def upgrade() -> None:
     sa.Column('blocked_id', sa.BigInteger(), nullable=False),
     sa.Column('blocker_id', sa.BigInteger(), nullable=False),
     sa.CheckConstraint('blocked_id != blocker_id', name='ck_no_self_block'),
-    sa.ForeignKeyConstraint(['blocked_id'], ['wasntaphoto.users.user_id'], ),
-    sa.ForeignKeyConstraint(['blocker_id'], ['wasntaphoto.users.user_id'], ),
+    sa.ForeignKeyConstraint(['blocked_id'], ['wasntaphoto.users.user_id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['blocker_id'], ['wasntaphoto.users.user_id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('blocked_id', 'blocker_id'),
     schema='wasntaphoto'
     )
@@ -43,8 +43,8 @@ def upgrade() -> None:
     sa.Column('follower_id', sa.BigInteger(), nullable=False),
     sa.Column('following_id', sa.BigInteger(), nullable=False),
     sa.CheckConstraint('follower_id != following_id', name='ck_no_self_follow'),
-    sa.ForeignKeyConstraint(['follower_id'], ['wasntaphoto.users.user_id'], ),
-    sa.ForeignKeyConstraint(['following_id'], ['wasntaphoto.users.user_id'], ),
+    sa.ForeignKeyConstraint(['follower_id'], ['wasntaphoto.users.user_id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['following_id'], ['wasntaphoto.users.user_id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('follower_id', 'following_id'),
     schema='wasntaphoto'
     )
@@ -53,7 +53,7 @@ def upgrade() -> None:
     sa.Column('author_id', sa.BigInteger(), nullable=False),
     sa.Column('caption', sa.String(length=2048), nullable=True),
     sa.Column('pub_time', sa.DateTime(), nullable=False),
-    sa.ForeignKeyConstraint(['author_id'], ['wasntaphoto.users.user_id'], ),
+    sa.ForeignKeyConstraint(['author_id'], ['wasntaphoto.users.user_id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('post_id'),
     schema='wasntaphoto'
     )
@@ -61,7 +61,7 @@ def upgrade() -> None:
     sa.Column('session_id', sa.String(length=43), nullable=False),
     sa.Column('user_id', sa.BigInteger(), nullable=False),
     sa.Column('valid_until', sa.BigInteger(), nullable=False),
-    sa.ForeignKeyConstraint(['user_id'], ['wasntaphoto.users.user_id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['wasntaphoto.users.user_id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('session_id'),
     schema='wasntaphoto'
     )
@@ -71,24 +71,24 @@ def upgrade() -> None:
     sa.Column('author_id', sa.BigInteger(), nullable=False),
     sa.Column('content', sa.String(length=2048), nullable=False),
     sa.Column('pub_time', sa.DateTime(), nullable=False),
-    sa.ForeignKeyConstraint(['author_id'], ['wasntaphoto.users.user_id'], ),
-    sa.ForeignKeyConstraint(['post_id'], ['wasntaphoto.posts.post_id'], ),
+    sa.ForeignKeyConstraint(['author_id'], ['wasntaphoto.users.user_id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['post_id'], ['wasntaphoto.posts.post_id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('comment_id'),
     schema='wasntaphoto'
     )
     op.create_table('post_like_relationship',
     sa.Column('post_id', sa.BigInteger(), nullable=False),
     sa.Column('user_id', sa.BigInteger(), nullable=False),
-    sa.ForeignKeyConstraint(['post_id'], ['wasntaphoto.posts.post_id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['wasntaphoto.users.user_id'], ),
+    sa.ForeignKeyConstraint(['post_id'], ['wasntaphoto.posts.post_id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['user_id'], ['wasntaphoto.users.user_id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('post_id', 'user_id'),
     schema='wasntaphoto'
     )
     op.create_table('comment_like_relationship',
     sa.Column('comment_id', sa.BigInteger(), nullable=False),
     sa.Column('user_id', sa.BigInteger(), nullable=False),
-    sa.ForeignKeyConstraint(['comment_id'], ['wasntaphoto.comments.comment_id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['wasntaphoto.users.user_id'], ),
+    sa.ForeignKeyConstraint(['comment_id'], ['wasntaphoto.comments.comment_id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['user_id'], ['wasntaphoto.users.user_id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('comment_id', 'user_id'),
     schema='wasntaphoto'
     )

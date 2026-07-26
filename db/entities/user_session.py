@@ -11,7 +11,11 @@ class UserSessionModel(Base):
     __tablename__ = 'user_sessions'
 
     session_id: Mapped[str] = mapped_column(String(43), primary_key=True)
-    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('users.user_id'), nullable=False)
+    user_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey('users.user_id', ondelete='CASCADE'),
+        nullable=False,
+    )
     valid_until: Mapped[int] = mapped_column(BigInteger, nullable=False)
 
     user = relationship('UserModel', back_populates='sessions', uselist=False)

@@ -13,8 +13,16 @@ class BlockRelationship(Base):
         CheckConstraint('blocked_id != blocker_id', name='ck_no_self_block'),
     )
 
-    blocked_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('users.user_id'), primary_key=True)
-    blocker_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('users.user_id'), primary_key=True)
+    blocked_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey('users.user_id', ondelete='CASCADE'),
+        primary_key=True,
+    )
+    blocker_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey('users.user_id', ondelete='CASCADE'),
+        primary_key=True,
+    )
 
     blocked = relationship(
         'UserModel',
