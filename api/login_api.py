@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, Path, Response, status
 
+from security.bearer_auth import get_user, set_session_cookie
 from providers.rate_limiting import auth_limiter
 from providers.services import get_auth_service
-from security.bearer_auth import get_user, SESSION_COOKIE_NAME
 from model import UserCredentials
 from service import AuthService
 
@@ -23,16 +23,7 @@ async def login(
     :return: the session token on successful login
     """
     token = await auth_service.login(request.username, request.password)
-    response.set_cookie(
-        key=SESSION_COOKIE_NAME,
-        value=token,
-        httponly=True,
-        # Should be True in prod, since this is a demo
-        # project it should be False to work in local
-        secure=False,
-        samesite='lax',
-        max_age=AuthService.SESSION_MAX_AGE
-    )
+    set_session_cookie(response, token)
     return token
 
 

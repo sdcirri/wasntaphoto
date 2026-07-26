@@ -12,6 +12,8 @@ paths:
 
         :param request: login request
 
+        :param response: response object, used to set session cookie
+
         :param auth_service: auth service
 
         :return: the session token on successful login'
@@ -674,9 +676,11 @@ paths:
       tags:
       - Users
       summary: Register User
-      description: 'Registers in the user
+      description: 'Registers in the user and logs them in
 
         :param request: registration request
+
+        :param response: response object, used to set the session cookie
 
         :param auth_service: auth service
 

@@ -3,9 +3,9 @@ from fastapi.responses import Response
 
 from providers.rate_limiting import read_limiter, auth_limiter, user_edit_limiter
 from providers.services import get_auth_service, get_user_service
+from security.bearer_auth import get_user, set_session_cookie
 from model import RegistrationRequest, UserAccount
 from service import AuthService, UserService
-from security.bearer_auth import get_user
 
 from .post_api import post_router
 
@@ -41,14 +41,21 @@ async def search_users(
 
 
 @user_router.post('/', dependencies=[Depends(auth_limiter)])
-async def register_user(request: RegistrationRequest, auth_service: AuthService = Depends(get_auth_service)) -> str:
+async def register_user(
+        request: RegistrationRequest,
+        response: Response,
+        auth_service: AuthService = Depends(get_auth_service)
+) -> str:
     """
-    Registers in the user
+    Registers in the user and logs them in
     :param request: registration request
+    :param response: response object, used to set the session cookie
     :param auth_service: auth service
     :return: the session token on successful registration
     """
-    return await auth_service.register(request.username, request.password)
+    token = await auth_service.register(request.username, request.password)
+    set_session_cookie(response, token)
+    return token
 
 
 @user_router.get('/{user_id}', dependencies=[Depends(read_limiter)])

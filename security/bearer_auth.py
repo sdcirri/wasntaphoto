@@ -1,5 +1,5 @@
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi import Request, Depends
+from fastapi import Request, Response, Depends
 
 from providers.services import get_auth_service
 from exceptions import BadAuthError
@@ -27,3 +27,21 @@ async def get_user(
     if not token:
         raise BadAuthError
     return await auth_service.resolve_token(token)
+
+
+def set_session_cookie(response: Response, token: str) -> None:
+    """
+    Sets the session cookie
+    :param response: outgoing response
+    :param token: token to set
+    """
+    response.set_cookie(
+        key=SESSION_COOKIE_NAME,
+        value=token,
+        httponly=True,
+        # Should be True in prod, since this is a demo
+        # project it should be False to work in local
+        secure=False,
+        samesite='lax',
+        max_age=AuthService.SESSION_MAX_AGE
+    )
