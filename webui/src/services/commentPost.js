@@ -1,6 +1,6 @@
 import api from "./axios";
 
-import { authHeaders, clearAuth, ensureAuthenticated } from "./login";
+import { clearAuth, ensureAuthenticated } from "./login";
 import {
 	BadAuthException,
 	BadCommentException,
@@ -14,7 +14,7 @@ export default async function commentPost(pid, text) {
 	const authorId = await resolvePostAuthorId(pid);
 	const resp = await api.post(`/users/${authorId}/posts/${pid}/comments/`,
 		JSON.stringify(text),
-		{ headers: authHeaders({ "Content-Type": "application/json" }) }
+		{ headers: { "Content-Type": "application/json" } }
 	);
 	switch (resp.status) {
 		case 200:

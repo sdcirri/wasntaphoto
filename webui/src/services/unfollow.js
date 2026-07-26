@@ -1,6 +1,6 @@
 import api from "./axios";
 
-import { authHeaders, clearAuth, ensureAuthenticated } from "./login";
+import { clearAuth, ensureAuthenticated } from "./login";
 import {
 	BadFollowOperation,
 	BadAuthException,
@@ -11,9 +11,7 @@ import {
 
 export default async function unfollow(toUnfollow) {
 	await ensureAuthenticated();
-	const resp = await api.delete(`/users/me/following/${toUnfollow}`, {
-		headers: authHeaders()
-	});
+	const resp = await api.delete(`/users/me/following/${toUnfollow}`);
 	switch (resp.status) {
 		case 204:
 			return;

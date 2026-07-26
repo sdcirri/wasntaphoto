@@ -1,6 +1,6 @@
 <script>
 import b64AsBlob from '@/utils/b64AsBlob'
-import { authStatus } from '@/services/login'
+import { getCachedUserId } from '@/services/login'
 import getProfile from '@/services/getProfile'
 import getProfilePicture from '@/services/getProfilePicture'
 
@@ -13,7 +13,6 @@ export default {
 	data: function () {
 		return {
 			propicSrc: '/propic_default.jpg',
-			authStatus: authStatus,
 			errormsg: null,
 			loading: true,
 			profile: null,
@@ -31,7 +30,7 @@ export default {
 				if (this.propicSrc?.startsWith('blob:'))
                     URL.revokeObjectURL(this.propicSrc);
                 this.propicSrc = (await getProfilePicture(this.userID)) ?? '/propic_default.jpg';
-				this.ownProfile = (authStatus.userId === this.profile.userID);
+				this.ownProfile = (getCachedUserId() === this.profile.userID);
 				if (this.profile.proPicB64) {
 					const blob = b64AsBlob(this.profile.proPicB64);
 					this.blobUrl = URL.createObjectURL(blob);

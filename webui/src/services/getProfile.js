@@ -1,6 +1,6 @@
 import api from "./axios";
 
-import { authHeaders, authStatus, clearAuth, ensureAuthenticated } from "./login";
+import { clearAuth, ensureAuthenticated } from "./login";
 import {
 	BadAuthException,
 	BadIdsException,
@@ -10,11 +10,11 @@ import {
 } from "./apiErrors";
 import { cacheAuthorPosts } from "./getPost";
 
-function profilePath(uid) {
+function profilePath(uid, meId) {
 	if (uid == null || uid === "me")
 		return "me";
 	const parsedUid = Number(uid);
-	if (Number.isInteger(parsedUid) && parsedUid === authStatus.userId)
+	if (Number.isInteger(parsedUid) && parsedUid === meId)
 		return "me";
 	return uid;
 }
@@ -31,12 +31,12 @@ function normalizeProfile(profile, posts) {
 }
 
 export default async function getProfile(uid) {
-	await ensureAuthenticated();
-	const path = profilePath(uid);
+	const meId = await ensureAuthenticated();
+	const path = profilePath(uid, meId);
 
 	const [profileResp, postsResp] = await Promise.all([
-		api.get(`/users/${path}`, { headers: authHeaders() }),
-		api.get(`/users/${path}/posts/`, { headers: authHeaders() })
+		api.get(`/users/${path}`),
+		api.get(`/users/${path}/posts/`)
 	]);
 
 	switch (profileResp.status) {

@@ -1,7 +1,7 @@
 <script>
 import { ref } from 'vue'
 
-import { authStatus } from '../services/login'
+import { currentUserId } from '../services/login'
 import getPost from '../services/getPost'
 import commentPost from '../services/commentPost'
 
@@ -23,7 +23,8 @@ export default {
 		async refresh() {
 			this.errormsg = "";
 			this.commentList = [];
-			if (authStatus.status == null)
+			const userId = await currentUserId();
+			if (userId == null)
 				this.$router.push("/login");
 			else {
 				this.loading = true;

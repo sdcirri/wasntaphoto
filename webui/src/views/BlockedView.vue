@@ -1,5 +1,5 @@
 <script>
-import { authStatus } from '../services/login'
+import { currentUserId } from '../services/login'
 import getBlocked from '../services/getBlocked'
 
 export default {
@@ -13,7 +13,8 @@ export default {
 	methods: {
 		async refresh() {
 			this.userList = [];
-			if (authStatus.status == null)
+			const userId = await currentUserId();
+			if (userId == null)
 				this.$router.push("/login");
 			else {
 				this.loading = true;

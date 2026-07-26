@@ -1,5 +1,5 @@
 <script>
-import { authStatus } from '../services/login'
+import { getCachedUserId } from '../services/login'
 import isCommentLiked from '../services/isCommentLiked'
 import likeComment from '../services/likeComment'
 import unlikeComment from '../services/unlikeComment'
@@ -46,7 +46,7 @@ export default {
                 this.comment = await getComment(this.commentID);
                 this.comment.time = new Date(this.comment.time);
                 this.likeCount = this.comment.likes;
-                this.ownComment = (this.comment.author == authStatus.userId);
+                this.ownComment = (this.comment.author == getCachedUserId());
                 this.loading = false;
                 this.indicatorsRefresh();
             } catch (e) {

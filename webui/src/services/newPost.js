@@ -1,6 +1,6 @@
 import api from "./axios";
 
-import { authHeaders, clearAuth, ensureAuthenticated } from "./login";
+import { clearAuth, ensureAuthenticated } from "./login";
 import {
 	BadAuthException,
 	BadUploadException,
@@ -14,7 +14,7 @@ export default async function newPost(image, caption) {
 		image,
 		caption
 	}, {
-		headers: authHeaders({ "Content-Type": "application/json" })
+		headers: { "Content-Type": "application/json" }
 	});
 	switch (resp.status) {
 		case 200:

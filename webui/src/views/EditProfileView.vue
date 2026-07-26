@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 
 import { UsernameAlreadyTakenException } from '@/services/apiErrors'
-import { authStatus } from '@/services/login'
+import getProfilePicture from "@/services/getProfilePicture"
 import setUsername from '@/services/setUsername'
 import getProfile from '@/services/getProfile'
 import setPP from '@/services/setPP'
@@ -21,7 +21,6 @@ export default {
             usernameChanged: false,
             usernameValid: true,
             usernameTaken: false,
-            authStatus: authStatus
         }
     },
     methods: {
@@ -131,7 +130,7 @@ export default {
             <h1 class="h2">Edit profile</h1>
         </div>
         <div class="editContainer" v-if="!loading">
-            <img class="propicPreview" :src="this.uploadB64" alt="Your profile picture" />
+            <img class="propicPreview" :src="propicSrc" alt="Your profile picture" />
             <div class="editPanel">
                 <span>
                     Upload a new profile picture

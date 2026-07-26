@@ -1,5 +1,5 @@
 <script>
-import { authStatus } from '@/services/login'
+import { getCachedUserId } from '@/services/login'
 import getProfile from '@/services/getProfile'
 import getProfilePicture from '@/services/getProfilePicture'
 
@@ -52,7 +52,7 @@ export default {
     async mounted() {
         await this.refresh();
         if (this.profile != null)
-            this.ownProfile = (this.profile.userID === authStatus.userId);
+            this.ownProfile = (this.profile.userID === getCachedUserId());
     },
     beforeUnmount() {
         if (this.propicSrc?.startsWith('blob:'))

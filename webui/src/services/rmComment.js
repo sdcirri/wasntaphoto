@@ -1,6 +1,6 @@
 import api from "./axios";
 
-import { authHeaders, clearAuth, ensureAuthenticated } from "./login";
+import { clearAuth, ensureAuthenticated } from "./login";
 import {
 	AccessDeniedException,
 	BadAuthException,
@@ -12,9 +12,7 @@ import { resolveCommentContext } from "./getPost";
 export default async function rmComment(cid) {
 	await ensureAuthenticated();
 	const { postId, authorId } = await resolveCommentContext(cid);
-	const resp = await api.delete(`/users/${authorId}/posts/${postId}/comments/${cid}`, {
-		headers: authHeaders()
-	});
+	const resp = await api.delete(`/users/${authorId}/posts/${postId}/comments/${cid}`);
 	switch (resp.status) {
 		case 204:
 			return;

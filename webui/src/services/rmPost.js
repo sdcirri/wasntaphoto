@@ -1,6 +1,6 @@
 import api from "./axios";
 
-import { authHeaders, clearAuth, ensureAuthenticated } from "./login";
+import { clearAuth, ensureAuthenticated } from "./login";
 import {
 	AccessDeniedException,
 	BadAuthException,
@@ -10,9 +10,7 @@ import {
 
 export default async function rmPost(postID) {
 	await ensureAuthenticated();
-	const resp = await api.delete(`/users/me/posts/${postID}`, {
-		headers: authHeaders()
-	});
+	const resp = await api.delete(`/users/me/posts/${postID}`);
 	switch (resp.status) {
 		case 204:
 			return;

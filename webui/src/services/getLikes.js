@@ -1,6 +1,6 @@
 import api from "./axios";
 
-import { authHeaders, clearAuth, ensureAuthenticated } from "./login";
+import { clearAuth, ensureAuthenticated } from "./login";
 import {
 	AccessDeniedException,
 	BadAuthException,
@@ -10,9 +10,7 @@ import {
 
 export default async function getLikes(postID) {
 	await ensureAuthenticated();
-	const resp = await api.get(`/users/me/posts/${postID}/likes`, {
-		headers: authHeaders()
-	});
+	const resp = await api.get(`/users/me/posts/${postID}/likes`);
 	switch (resp.status) {
 		case 200:
 			return resp.data;

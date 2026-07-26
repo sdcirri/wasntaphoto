@@ -1,4 +1,4 @@
-import { authHeaders, clearAuth, ensureAuthenticated } from "@/services/login";
+import { clearAuth, ensureAuthenticated } from "@/services/login";
 import api from "@/services/axios";
 import {
     BadAuthException,
@@ -13,7 +13,6 @@ export default async function getPostMedia(postId) {
 	await ensureAuthenticated();
 	const authorId = await resolvePostAuthorId(postId);
 	const resp = await api.get(`/users/${authorId}/posts/${postId}/media`, {
-		headers: authHeaders(),
 		responseType: "blob"
 	});
 

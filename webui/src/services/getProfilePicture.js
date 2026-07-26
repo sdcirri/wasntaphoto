@@ -1,5 +1,5 @@
 import api from "./axios";
-import { authHeaders, authStatus, clearAuth, ensureAuthenticated } from "./login";
+import { clearAuth, ensureAuthenticated } from "./login";
 import {
 	BadAuthException,
 	BlockedException,
@@ -7,19 +7,18 @@ import {
 	UserNotFoundException
 } from "./apiErrors";
 
-function propicPath(uid) {
+function propicPath(uid, meId) {
 	if (uid == null || uid === "me")
 		return "me";
 	const parsedUid = Number(uid);
-	if (Number.isInteger(parsedUid) && parsedUid === authStatus.userId)
+	if (Number.isInteger(parsedUid) && parsedUid === meId)
 		return "me";
 	return uid;
 }
 
 export default async function getProfilePicture(uid) {
-	await ensureAuthenticated();
-	const resp = await api.get(`/users/${propicPath(uid)}/propic`, {
-		headers: authHeaders(),
+	const meId = await ensureAuthenticated();
+	const resp = await api.get(`/users/${propicPath(uid, meId)}/propic`, {
 		responseType: "blob"
 	});
 

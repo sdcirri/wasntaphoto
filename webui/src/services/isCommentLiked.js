@@ -1,6 +1,6 @@
 import api from "./axios";
 
-import { authHeaders, clearAuth, ensureAuthenticated } from "./login";
+import { clearAuth, ensureAuthenticated } from "./login";
 import {
 	BadAuthException,
 	CommentNotFoundException,
@@ -11,9 +11,7 @@ import { resolveCommentContext } from "./getPost";
 export default async function isCommentLiked(cid) {
 	await ensureAuthenticated();
 	const { postId, authorId } = await resolveCommentContext(cid);
-	const resp = await api.get(`/users/${authorId}/posts/${postId}/comments/${cid}/like`, {
-		headers: authHeaders()
-	});
+	const resp = await api.get(`/users/${authorId}/posts/${postId}/comments/${cid}/like`);
 	switch (resp.status) {
 		case 200:
 			return resp.data;

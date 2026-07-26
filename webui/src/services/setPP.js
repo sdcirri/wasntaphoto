@@ -1,6 +1,6 @@
 import api from "./axios";
 
-import { authHeaders, clearAuth, ensureAuthenticated } from "./login";
+import { clearAuth, ensureAuthenticated } from "./login";
 import {
 	BadAuthException,
 	ImageTooBigException,
@@ -19,7 +19,7 @@ export default async function setPP(imgB64) {
 	await ensureAuthenticated();
 	const resp = await api.put("/users/me/pp",
 		bytesFromBase64(imgB64),
-		{ headers: authHeaders({ "Content-Type": "application/octet-stream" }) }
+		{ headers: { "Content-Type": "application/octet-stream" } }
 	);
 	switch (resp.status) {
 		case 204:

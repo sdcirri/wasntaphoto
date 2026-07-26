@@ -1,15 +1,13 @@
 import api from "./axios";
 
-import { authHeaders, authStatus, clearAuth, ensureAuthenticated } from "./login";
+import { clearAuth, ensureAuthenticated } from "./login";
 import { BadAuthException, InternalServerError } from "./apiErrors";
 import { cacheAuthorPosts } from "./getPost";
 
 export default async function getFeed() {
-	await ensureAuthenticated();
+	const userId = await ensureAuthenticated();
 
-	const feedResp = await api.get("/feed/", {
-		headers: authHeaders()
-	});
+	const feedResp = await api.get("/feed/");
 
 	switch (feedResp.status) {
 		case 200:
@@ -23,9 +21,7 @@ export default async function getFeed() {
 
 	// Seed post -> author lookups for feed cards by enumerating followed users'
 	// post id lists. The backend feed itself only returns bare post ids.
-	const followingResp = await api.get("/users/me/following", {
-		headers: authHeaders()
-	});
+	const followingResp = await api.get("/users/me/following");
 
 	switch (followingResp.status) {
 		case 200:
@@ -37,12 +33,10 @@ export default async function getFeed() {
 			throw InternalServerError;
 	}
 
-	const authorIds = [authStatus.userId, ...followingResp.data.filter(id => id !== authStatus.userId)];
+	const authorIds = [userId, ...followingResp.data.filter(id => id !== userId)];
 	const postsResponses = await Promise.all(
 		authorIds.map(authorId =>
-			api.get(`/users/${authorId}/posts/`, {
-				headers: authHeaders()
-			})
+			api.get(`/users/${authorId}/posts/`)
 		)
 	);
 

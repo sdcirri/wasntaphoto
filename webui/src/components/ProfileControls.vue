@@ -1,5 +1,5 @@
 <script>
-import { authStatus } from '@/services/login'
+import { loggedInUserId } from '@/services/login'
 import getFollowing from '@/services/getFollowing'
 import getFollowers from '@/services/getFollowers'
 import getBlocked from '@/services/getBlocked'
@@ -22,7 +22,7 @@ export default {
 		return {
 			propicSrc: '/propic_default.jpg',
 			loading: true,
-			authStatus: authStatus,
+			loggedInUserId: loggedInUserId,
 			following: null,
 			follower: null,
 			blocked: null,
@@ -109,7 +109,7 @@ export default {
 </script>
 
 <template>
-	<div class="profileCtrl" v-if="!loading && authStatus.status != null">
+	<div class="profileCtrl" v-if="!loading && loggedInUserId != null">
 		<button class="btn btn-sm btn-outline-primary" v-if="!following" @click="this.follow">Follow</button>
 		<button class="btn btn-sm btn-danger" v-else @click="this.unfollow">Unfollow</button>
 		<button class="btn btn-sm btn-danger" v-if="follower" @click="this.rmFollower">Remove follower</button>

@@ -1,15 +1,13 @@
 import api from "./axios";
 
-import { authHeaders, clearAuth, ensureAuthenticated } from "./login";
+import { clearAuth, ensureAuthenticated } from "./login";
 import { BadAuthException, InternalServerError, PostNotFoundException } from "./apiErrors";
 import { resolvePostAuthorId } from "./getPost";
 
 export default async function likePost(pid) {
 	await ensureAuthenticated();
 	const authorId = await resolvePostAuthorId(pid);
-	const resp = await api.put(`/users/${authorId}/posts/${pid}/like`, null, {
-		headers: authHeaders()
-	});
+	const resp = await api.put(`/users/${authorId}/posts/${pid}/like`, null);
 	switch (resp.status) {
 		case 204:
 			return;

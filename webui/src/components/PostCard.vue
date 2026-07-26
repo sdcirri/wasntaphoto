@@ -1,5 +1,5 @@
 <script>
-import { authStatus } from '@/services/login'
+import { getCachedUserId } from '@/services/login'
 import getPost from '@/services/getPost'
 import getPostMedia from "@/services/getPostMedia";
 import isLiked from '@/services/isLiked'
@@ -56,7 +56,7 @@ export default {
                 }
 
                 this.likeCount = this.post.likeCount;
-                this.ownPost = (this.post.author === authStatus.userId);
+                this.ownPost = (this.post.author === getCachedUserId());
                 this.post.pubTime = new Date(this.post.pubTime);
                 this.loading = false;
                 this.indicatorsRefresh();

@@ -1,12 +1,12 @@
 <script>
 import { RouterLink, RouterView } from 'vue-router'
-import { authStatus } from './services/login'
+import { loggedInUserId } from './services/login'
 import logout from './services/logout'
 
 export default {
 	data: function () {
 		return {
-			authStatus: authStatus,
+			loggedInUserId: loggedInUserId,
 			loading: true
 		}
 	},
@@ -42,7 +42,7 @@ export default {
 									Home
 								</RouterLink>
 							</li>
-							<li class="nav-item" v-if="authStatus.status">
+							<li class="nav-item" v-if="loggedInUserId != null">
 								<RouterLink to="/newpost" class="nav-link">
 									<svg class="feather">
 										<use href="/feather-sprite-v4.29.0.svg#plus" />
@@ -50,7 +50,7 @@ export default {
 									New post
 								</RouterLink>
 							</li>
-							<li class="nav-item" v-if="authStatus.status">
+							<li class="nav-item" v-if="loggedInUserId != null">
 								<RouterLink to="/profile/me" class="nav-link">
 									<svg class="feather">
 										<use href="/feather-sprite-v4.29.0.svg#user" />
@@ -58,7 +58,7 @@ export default {
 									My profile
 								</RouterLink>
 							</li>
-							<li class="nav-item" v-if="authStatus.status">
+							<li class="nav-item" v-if="loggedInUserId != null">
 								<RouterLink to="/search" class="nav-link">
 									<svg class="feather">
 										<use href="/feather-sprite-v4.29.0.svg#search" />
@@ -66,7 +66,7 @@ export default {
 									Search
 								</RouterLink>
 							</li>
-							<li class="nav-item" v-if="authStatus.status">
+							<li class="nav-item" v-if="loggedInUserId != null">
 								<RouterLink to="/login" class="nav-link" @click="logout">
 									<svg class="feather">
 										<use href="/feather-sprite-v4.29.0.svg#log-out" />
@@ -74,7 +74,7 @@ export default {
 									Logout
 								</RouterLink>
 							</li>
-							<li class="nav-item" v-if="!authStatus.status">
+							<li class="nav-item" v-if="loggedInUserId == null">
 								<RouterLink to="/login" class="nav-link">
 									<svg class="feather">
 										<use href="/feather-sprite-v4.29.0.svg#log-in" />

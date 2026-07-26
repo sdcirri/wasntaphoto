@@ -1,6 +1,6 @@
 import api from "./axios";
 
-import { authHeaders, clearAuth, ensureAuthenticated } from "./login";
+import { clearAuth, ensureAuthenticated } from "./login";
 import {
 	BadAuthException,
 	BlockedException,
@@ -62,9 +62,7 @@ export function normalizePost(post) {
 
 async function getCandidateAuthors() {
 	const userId = await ensureAuthenticated();
-	const resp = await api.get("/users/me/following", {
-		headers: authHeaders()
-	});
+	const resp = await api.get("/users/me/following");
 	switch (resp.status) {
 		case 200:
 			return [userId, ...resp.data.filter(id => id !== userId)];
@@ -80,9 +78,7 @@ async function refreshPostAuthorCache() {
 	const authorIds = await getCandidateAuthors();
 	const responses = await Promise.all(
 		authorIds.map(authorId =>
-			api.get(`/users/${authorId}/posts/`, {
-				headers: authHeaders()
-			})
+			api.get(`/users/${authorId}/posts/`)
 		)
 	);
 
@@ -133,15 +129,11 @@ export async function resolveCommentContext(commentId) {
 export default async function getPost(pid) {
 	await ensureAuthenticated();
 	let authorId = await resolvePostAuthorId(pid);
-	let resp = await api.get(`/users/${authorId}/posts/${pid}`, {
-		headers: authHeaders()
-	});
+	let resp = await api.get(`/users/${authorId}/posts/${pid}`);
 
 	if (resp.status === 404) {
 		authorId = await resolvePostAuthorId(pid, true);
-		resp = await api.get(`/users/${authorId}/posts/${pid}`, {
-			headers: authHeaders()
-		});
+		resp = await api.get(`/users/${authorId}/posts/${pid}`);
 	}
 
 	switch (resp.status) {

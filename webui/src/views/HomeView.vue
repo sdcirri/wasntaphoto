@@ -1,5 +1,5 @@
 <script>
-import { authStatus } from '../services/login'
+import { currentUserId } from '../services/login'
 import getFeed from '../services/getFeed'
 
 export default {
@@ -14,7 +14,8 @@ export default {
 		async refresh() {
 			this.errormsg = "";
 			this.postList = [];
-			if (authStatus.status == null)
+			const userId = await currentUserId();
+			if (userId == null)
 				this.$router.push("/login");
 			else {
 				this.loading = true;

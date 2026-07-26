@@ -1,6 +1,6 @@
 import api from "./axios";
 
-import { authHeaders, clearAuth, ensureAuthenticated } from "./login";
+import { clearAuth, ensureAuthenticated } from "./login";
 import {
 	BadAuthException,
 	InternalServerError,
@@ -11,7 +11,7 @@ export default async function setUsername(username) {
 	await ensureAuthenticated();
 	const resp = await api.put("/users/me/username",
 		JSON.stringify(username),
-		{ headers: authHeaders({ "Content-Type": "application/json" }) }
+		{ headers: { "Content-Type": "application/json" } }
 	);
 	switch (resp.status) {
 		case 204:

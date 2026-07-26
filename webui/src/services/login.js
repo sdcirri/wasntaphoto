@@ -1,4 +1,4 @@
-import { reactive } from "vue";
+import { ref } from "vue";
 
 import api from "./axios";
 import {
@@ -7,101 +7,55 @@ import {
 	InternalServerError
 } from "./apiErrors";
 
-const SESSION_COOKIE = "WASASESSIONID";
-const USER_COOKIE = "WASAUSERID";
+let cachedUserId = null;
+let syncPromise = null;
 
-function readCookie(name) {
-	const cookies = decodeURIComponent(document.cookie).split(";");
-	for (let i = 0; i < cookies.length; i++) {
-		let cookie = cookies[i];
-		while (cookie.charAt(0) === " ")
-			cookie = cookie.substring(1);
-		if (cookie.indexOf(`${name}=`) === 0)
-			return cookie.substring(name.length + 1);
-	}
-	return null;
+export const loggedInUserId = ref(null);
+
+function setUserId(userId) {
+	cachedUserId = userId;
+	loggedInUserId.value = userId;
 }
 
-function writeCookie(name, value) {
-	document.cookie = `${name}=${value}; path=/; SameSite=Strict;`;
-}
-
-function clearCookie(name) {
-	document.cookie = `${name}=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT`;
-}
-
-function parseUserId(raw) {
-	const parsed = Number(raw);
-	return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
-}
-
-let syncCurrentUserPromise = null;
-
-export const authStatus = reactive({
-	status: readCookie(SESSION_COOKIE),
-	userId: parseUserId(readCookie(USER_COOKIE))
-});
-
-export function authHeaders(extraHeaders = {}) {
-	if (authStatus.status == null)
-		return extraHeaders;
-	return {
-		Authorization: `Bearer ${authStatus.status}`,
-		...extraHeaders
-	};
+export function getCachedUserId() {
+	return cachedUserId;
 }
 
 export function clearAuth() {
-	if (authStatus.status != null) {
-		api.delete(`/session/${authStatus.status}`, {
-			headers: authHeaders()
-		});
-	}
-	clearCookie(SESSION_COOKIE);
-	clearCookie(USER_COOKIE);
-	authStatus.status = null;
-	authStatus.userId = null;
+	if (cachedUserId != null)
+		api.delete("/session/current");
+	setUserId(null);
 }
 
-export async function syncCurrentUserId(force = false) {
-	if (authStatus.status == null) {
-		authStatus.userId = null;
-		clearCookie(USER_COOKIE);
-		return null;
-	}
-	if (!force && authStatus.userId != null)
-		return authStatus.userId;
-	if (syncCurrentUserPromise != null)
-		return syncCurrentUserPromise;
+export async function currentUserId(force = false) {
+	if (!force && cachedUserId != null)
+		return cachedUserId;
+	if (syncPromise != null)
+		return syncPromise;
 
-	syncCurrentUserPromise = (async function () {
-		const resp = await api.get("/users/me", {
-			headers: authHeaders()
-		});
+	syncPromise = (async function () {
+		const resp = await api.get("/users/me");
 		switch (resp.status) {
 			case 200:
-				authStatus.userId = resp.data.user_id;
-				writeCookie(USER_COOKIE, resp.data.user_id);
-				return authStatus.userId;
+				setUserId(resp.data.user_id);
+				return cachedUserId;
 			case 401:
 				clearAuth();
-				throw BadAuthException;
+				return null;
 			default:
 				throw InternalServerError;
 		}
 	})();
 
 	try {
-		return await syncCurrentUserPromise;
+		return await syncPromise;
 	} finally {
-		syncCurrentUserPromise = null;
+		syncPromise = null;
 	}
 }
 
 export async function ensureAuthenticated() {
-	if (authStatus.status == null)
-		throw BadAuthException;
-	const userId = await syncCurrentUserId();
+	const userId = await currentUserId();
 	if (userId == null)
 		throw BadAuthException;
 	return userId;
@@ -116,11 +70,8 @@ export default async function login(username, password) {
 
 	switch (resp.status) {
 		case 200:
-			authStatus.status = resp.data;
-			authStatus.userId = null;
-			writeCookie(SESSION_COOKIE, resp.data);
-			clearCookie(USER_COOKIE);
-			return await syncCurrentUserId(true);
+			setUserId(null);
+			return await currentUserId(true);
 		case 403:
 		case 422:
 			throw FailedLoginException;
@@ -129,5 +80,4 @@ export default async function login(username, password) {
 	}
 }
 
-if (authStatus.status != null && authStatus.userId == null)
-	syncCurrentUserId().catch(() => clearAuth());
+currentUserId().catch(() => {});

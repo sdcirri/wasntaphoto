@@ -1,6 +1,6 @@
 import api from "./axios";
 
-import { authHeaders, clearAuth, ensureAuthenticated } from "./login";
+import { clearAuth, ensureAuthenticated } from "./login";
 import {
 	BadFollowOperation,
 	BadAuthException,
@@ -11,9 +11,7 @@ import {
 
 export default async function unblock(toUnblock) {
 	await ensureAuthenticated();
-	const resp = await api.delete(`/users/me/blocked/${toUnblock}`, {
-		headers: authHeaders()
-	});
+	const resp = await api.delete(`/users/me/blocked/${toUnblock}`);
 	switch (resp.status) {
 		case 204:
 			return;

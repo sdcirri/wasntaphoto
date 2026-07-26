@@ -1,6 +1,6 @@
 import api from "./axios";
 
-import { authHeaders, clearAuth, ensureAuthenticated } from "./login";
+import { clearAuth, ensureAuthenticated } from "./login";
 import {
 	BadAuthException,
 	CommentNotFoundException,
@@ -22,9 +22,7 @@ function normalizeComment(comment, postId) {
 export default async function getComment(cid) {
 	await ensureAuthenticated();
 	const { postId, authorId } = await resolveCommentContext(cid);
-	const resp = await api.get(`/users/${authorId}/posts/${postId}/comments/${cid}`, {
-		headers: authHeaders()
-	});
+	const resp = await api.get(`/users/${authorId}/posts/${postId}/comments/${cid}`);
 	switch (resp.status) {
 		case 200:
 			return normalizeComment(resp.data, postId);
