@@ -38,6 +38,16 @@ app.add_middleware(
     allow_headers=['Accept', 'Authorization', 'Content-Type'],
 )
 
+@app.middleware('http')
+async def add_csp_header(request: Request, call_next):
+    response = await call_next(request)
+    response.headers['Content-Security-Policy'] = (
+        'default-src \'none\'; '
+        'frame-ancestors \'none\'; '
+        'base-uri \'none\''
+    )
+    return response
+
 app.include_router(login_router)
 app.include_router(user_router)
 app.include_router(feed_router)
