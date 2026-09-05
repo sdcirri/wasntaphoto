@@ -1,14 +1,16 @@
 from typing import Callable, Any, Coroutine
 from types import SimpleNamespace
 from httpx import AsyncClient
+from hashlib import sha512
 import pytest_asyncio
+import secrets
 import asyncio
 import base64
 
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
 from db.repositories import SessionRepository, UserRepository
-from db.entities import UserModel
+from db.entities import UserModel, UserSessionModel
 from service import AuthService
 
 
@@ -59,7 +61,6 @@ async def user_api_setup(
     """
     Registers alice and bob, and logs in as alice.
     """
-
     alice, bob = await asyncio.gather(
         user_factory('alice', 'H@xx0r.2026'),
         user_factory('bob', 'T0P.S3cr3t!'),
@@ -101,7 +102,6 @@ async def following_setup(
     """
     Registers and logs in three users: alice, bob, and annoying.
     """
-
     alice, bob, annoying = await asyncio.gather(
         user_factory('alice', 'H@xx0r.2026'),
         user_factory('bob', 'T0P.S3cr3t!'),
@@ -128,7 +128,6 @@ async def registered_user(client: AsyncClient) -> str:
     an existing account already in place.
     Returns the user's session_id
     """
-
     resp = await client.post('/users/', json={'username': 'bob', 'password': '$up3rS33kr3t!!!!'})
     assert resp.status_code == 200
     return resp.json()
@@ -145,12 +144,13 @@ async def registered_user_with_expired_session(
     """
     async with test_db_session_factory() as session:
         session_repo = SessionRepository(session)
-        for user_session in await session_repo.find_all():
-            user_session.valid_until = 0
-            await session_repo.save(user_session)
-            await session.commit()
-            return user_session.session_id
-        return ''
+        token_hash = sha512(registered_user.encode('utf-8')).hexdigest()
+        user_session = await session_repo.find_by_id(token_hash)
+        assert user_session is not None
+        user_session.valid_until = 0
+        await session.commit()
+
+    return registered_user
 
 
 @pytest_asyncio.fixture
@@ -158,7 +158,6 @@ async def alice_following_bob(following_setup: FollowingSetup) -> FollowingSetup
     """
     Builds on following_setup with alice already following bob.
     """
-
     s = following_setup
     resp = await s.client.post(f'/users/me/following/{s.bob.user_id}', headers=s.alice_headers)
     assert resp.status_code == 200
@@ -170,7 +169,6 @@ async def alice_and_annoying_following_each_other(following_setup: FollowingSetu
     """
     Builds on following_setup with alice and annoying following each other.
     """
-
     s = following_setup
     await s.client.post(f'/users/me/following/{s.annoying.user_id}', headers=s.alice_headers)
     await s.client.post(f'/users/me/following/{s.alice.user_id}', headers=s.annoying_headers)
@@ -182,7 +180,6 @@ async def alice_blocked_annoying(following_setup: FollowingSetup) -> FollowingSe
     """
     Builds on following_setup with alice blocking annoying.
     """
-
     s = following_setup
     resp = await s.client.post(f'/users/me/blocked/{s.annoying.user_id}', headers=s.alice_headers)
     assert resp.status_code in (200, 204)
@@ -195,7 +192,6 @@ async def alice_followed_and_blocked_annoying(alice_and_annoying_following_each_
     Builds on following_setup with alice and blocked annoying following each other,
     then alice blocks annoying
     """
-
     s = alice_and_annoying_following_each_other
     resp = await s.client.post(f'/users/me/blocked/{s.annoying.user_id}', headers=s.alice_headers)
     assert resp.status_code in (200, 204)
@@ -207,7 +203,6 @@ async def extra_users_for_search(test_db_session_factory: async_sessionmaker[Asy
     """
     Creates a bunch of users with similar usernames for testing search mechanics
     """
-
     password_hash = AuthService.ph.hash("$up3rS33kr3t!!!!")
     users = [
         UserModel(
