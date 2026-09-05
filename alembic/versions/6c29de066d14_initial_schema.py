@@ -58,7 +58,7 @@ def upgrade() -> None:
     schema='wasntaphoto'
     )
     op.create_table('user_sessions',
-    sa.Column('session_id', sa.String(length=43), nullable=False),
+    sa.Column('session_id', sa.String(length=128), nullable=False),
     sa.Column('user_id', sa.BigInteger(), nullable=False),
     sa.Column('valid_until', sa.BigInteger(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['wasntaphoto.users.user_id'], ondelete='CASCADE'),

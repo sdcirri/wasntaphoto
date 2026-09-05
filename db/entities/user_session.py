@@ -10,7 +10,7 @@ class UserSessionModel(Base):
     """
     __tablename__ = 'user_sessions'
 
-    session_id: Mapped[str] = mapped_column(String(43), primary_key=True)
+    session_id: Mapped[str] = mapped_column(String(128), primary_key=True)
     user_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey('users.user_id', ondelete='CASCADE'),

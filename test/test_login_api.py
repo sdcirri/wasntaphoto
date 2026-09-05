@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+from hashlib import sha1, sha512
 from redis.asyncio import Redis
 from httpx import AsyncClient
-from hashlib import sha1
 import secrets
 import string
 import pytest
@@ -137,15 +137,17 @@ async def test_revoke_session_no_idor(
     s = user_api_setup
     async with test_db_session_factory() as session:
         session_repo = SessionRepository(session)
-        assert await session_repo.find_by_user_id_and_session_id(s.alice.user_id, s.alice_session) is not None
-        assert await session_repo.find_by_user_id_and_session_id(s.bob.user_id, s.alice_session) is None
+        alice_session_hash = sha512(s.alice_session.encode('utf-8')).hexdigest()
+
+        assert await session_repo.find_by_user_id_and_session_id(s.alice.user_id, alice_session_hash) is not None
+        assert await session_repo.find_by_user_id_and_session_id(s.bob.user_id, alice_session_hash) is None
 
         # Other user session is treated as nonexisting to protect from bruteforce,
         # so deleting is silently denied (204 but the DB is not touched)
         resp = await s.client.delete(f'/session/{s.alice_session}', headers={'Authorization': f'Bearer {s.bob_session}'})
         assert resp.status_code == 204
 
-        assert await session_repo.find_by_user_id_and_session_id(s.alice.user_id, s.alice_session) is not None
+        assert await session_repo.find_by_user_id_and_session_id(s.alice.user_id, alice_session_hash) is not None
 
 
 @pytest.mark.asyncio

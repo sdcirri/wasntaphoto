@@ -1,9 +1,9 @@
 from argon2.exceptions import VerifyMismatchError, VerificationError, InvalidHashError
 from argon2 import PasswordHasher
+from hashlib import sha1, sha512
 
 from sqlalchemy.exc import IntegrityError
 from redis.asyncio import Redis
-from hashlib import sha1
 import secrets
 import logging
 import httpx
@@ -87,7 +87,7 @@ class AuthService:
                 token = secrets.token_urlsafe(32)
                 session = UserSessionModel(
                     user_id=user_id,
-                    session_id=token,
+                    session_id=sha512(token.encode('utf-8')).hexdigest(),
                     valid_until=int(time.time()) + self.SESSION_MAX_AGE
                 )
 
@@ -102,9 +102,10 @@ class AuthService:
         :param user_id: user whose session is to be revoked
         :param session: token to be revoked
         """
-        if db_session := await self.session_repo.find_by_user_id_and_session_id(user_id, session):
+        token_hash = sha512(session.encode('utf-8')).hexdigest()
+        if db_session := await self.session_repo.find_by_user_id_and_session_id(user_id, token_hash):
             await self.session_repo.delete(db_session)
-            await self.redis.delete(f'{self.REDIS_TOKEN_PREFIX}:{session}')
+            await self.redis.delete(f'{self.REDIS_TOKEN_PREFIX}:{token_hash}')
 
     async def login(self, username: str, password: str) -> str:
         """
@@ -158,10 +159,12 @@ class AuthService:
         :param token: bearer token
         :return: the corresponding user ID, if the token is valid
         """
-        if cached := await self.redis.get(f'{self.REDIS_TOKEN_PREFIX}:{token}'):
+        token_hash = sha512(token.encode('utf-8')).hexdigest()
+
+        if cached := await self.redis.get(f'{self.REDIS_TOKEN_PREFIX}:{token_hash}'):
             return int(cached)
 
-        if not (session := await self.session_repo.find_by_id(token)):
+        if not (session := await self.session_repo.find_by_id(token_hash)):
             raise BadAuthError
 
         if session.valid_until < time.time():
@@ -170,6 +173,6 @@ class AuthService:
 
         session.valid_until = int(time.time()) + self.SESSION_MAX_AGE
         await self.session_repo.save(session)
-        await self.redis.set(f'{self.REDIS_TOKEN_PREFIX}:{token}', session.user_id, ex=self.REDIS_TOKEN_TTL)
+        await self.redis.set(f'{self.REDIS_TOKEN_PREFIX}:{token_hash}', session.user_id, ex=self.REDIS_TOKEN_TTL)
 
         return session.user_id
