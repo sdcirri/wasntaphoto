@@ -12,8 +12,8 @@ feed_router = APIRouter(prefix='/feed', tags=['Feed'], dependencies=[Depends(rea
 async def get_feed(
         post_service: PostService = Depends(get_post_service),
         user_id: int = Depends(get_user),
-        page_size: int = Query(100, alias='n'),
-        page_number: int = Query(0, alias='p')
+        page_size: int = Query(100, alias='n', ge=1, le=100),
+        page_number: int = Query(0, alias='p', ge=0)
 ) -> list[int]:
     """
     Gets the user's feed
