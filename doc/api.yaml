@@ -1,13 +1,261 @@
-openapi: 3.1.0
+components:
+  schemas:
+    Comment:
+      description: A comment on a post
+      properties:
+        author_id:
+          minimum: 0.0
+          title: Author Id
+          type: integer
+        comment_id:
+          minimum: 0.0
+          title: Comment Id
+          type: integer
+        content:
+          maxLength: 2048
+          title: Content
+          type: string
+        like_cnt:
+          minimum: 0.0
+          title: Like Cnt
+          type: integer
+        pub_time:
+          format: date-time
+          title: Pub Time
+          type: string
+      required:
+      - comment_id
+      - author_id
+      - pub_time
+      - content
+      - like_cnt
+      title: Comment
+      type: object
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          title: Detail
+          type: array
+      title: HTTPValidationError
+      type: object
+    Post:
+      description: A user post
+      properties:
+        author_id:
+          minimum: 0.0
+          title: Author Id
+          type: integer
+        caption:
+          anyOf:
+          - maxLength: 2048
+            type: string
+          - type: 'null'
+          title: Caption
+        comments:
+          items:
+            type: integer
+          title: Comments
+          type: array
+        like_cnt:
+          minimum: 0.0
+          title: Like Cnt
+          type: integer
+        post_id:
+          minimum: 0.0
+          title: Post Id
+          type: integer
+        pub_time:
+          format: date-time
+          title: Pub Time
+          type: string
+      required:
+      - post_id
+      - author_id
+      - pub_time
+      - like_cnt
+      - comments
+      title: Post
+      type: object
+    PostRequest:
+      description: A user request to create a new post
+      properties:
+        caption:
+          anyOf:
+          - maxLength: 2048
+            type: string
+          - type: 'null'
+          title: Caption
+        image:
+          contentMediaType: application/octet-stream
+          format: base64
+          title: Image
+          type: string
+      required:
+      - image
+      title: PostRequest
+      type: object
+    RegistrationRequest:
+      description: Data required in order to register a new user
+      properties:
+        password:
+          maxLength: 255
+          minLength: 8
+          title: Password
+          type: string
+        username:
+          maxLength: 40
+          minLength: 3
+          title: Username
+          type: string
+      required:
+      - username
+      - password
+      title: RegistrationRequest
+      type: object
+    UserAccount:
+      description: A user account
+      properties:
+        followers_cnt:
+          minimum: 0.0
+          title: Followers Cnt
+          type: integer
+        following_cnt:
+          minimum: 0.0
+          title: Following Cnt
+          type: integer
+        user_id:
+          minimum: 0.0
+          title: User Id
+          type: integer
+        username:
+          maxLength: 40
+          minLength: 3
+          title: Username
+          type: string
+      required:
+      - user_id
+      - username
+      - followers_cnt
+      - following_cnt
+      title: UserAccount
+      type: object
+    UserCredentials:
+      description: Credentials from a login form
+      properties:
+        password:
+          maxLength: 255
+          minLength: 8
+          title: Password
+          type: string
+        username:
+          maxLength: 40
+          minLength: 3
+          title: Username
+          type: string
+      required:
+      - username
+      - password
+      title: UserCredentials
+      type: object
+    ValidationError:
+      properties:
+        ctx:
+          title: Context
+          type: object
+        input:
+          title: Input
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          title: Location
+          type: array
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+      type: object
+  securitySchemes:
+    HTTPBearer:
+      scheme: bearer
+      type: http
 info:
   title: WASNTAPhoto Backend
   version: 0.1.0
+openapi: 3.1.0
 paths:
+  /feed/:
+    get:
+      description: 'Gets the user''s feed
+
+        :param post_service: post service
+
+        :param user_id: user ID
+
+        :param page_size: max number of posts to return (for pagination, default=100)
+
+        :param page_number: page number (for pagination, default=0)
+
+        :return: list of posts in the user''s feed in descending chronological order'
+      operationId: get_feed_feed__get
+      parameters:
+      - in: query
+        name: n
+        required: false
+        schema:
+          default: 100
+          title: N
+          type: integer
+      - in: query
+        name: p
+        required: false
+        schema:
+          default: 0
+          title: P
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  type: integer
+                title: Response Get Feed Feed  Get
+                type: array
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Get Feed
+      tags:
+      - Feed
+  /liveness:
+    get:
+      operationId: liveness_liveness_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      summary: Liveness
   /session/:
     post:
-      tags:
-      - Login
-      summary: Login
       description: 'Logs in the user
 
         :param request: login request
@@ -26,23 +274,43 @@ paths:
         required: true
       responses:
         '200':
-          description: Successful Response
           content:
             application/json:
               schema:
-                type: string
                 title: Response Login Session  Post
+                type: string
+          description: Successful Response
         '422':
-          description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /session/{session_id}:
-    delete:
+          description: Validation Error
+      summary: Login
       tags:
       - Login
-      summary: Logout Session
+  /session/current:
+    delete:
+      description: 'Revokes the current session token
+
+        :param response: response object, used to revoke the session cookie
+
+        :param session_id: current session ID
+
+        :param user_id: authenticated user ID
+
+        :param auth_service: auth service'
+      operationId: logout_current_session_session_current_delete
+      responses:
+        '204':
+          description: Successful Response
+      security:
+      - HTTPBearer: []
+      summary: Logout Current Session
+      tags:
+      - Login
+  /session/{session_id}:
+    delete:
       description: 'Revokes the session token
 
         :param user_id: authenticated user ID
@@ -51,265 +319,404 @@ paths:
 
         :param auth_service: auth service'
       operationId: logout_session_session__session_id__delete
-      security:
-      - HTTPBearer: []
       parameters:
-      - name: session_id
-        in: path
+      - in: path
+        name: session_id
         required: true
         schema:
-          type: string
-          minLength: 43
           maxLength: 43
+          minLength: 43
           pattern: ^[A-Za-z0-9_-]+$
           title: Session Id
+          type: string
       responses:
         '204':
           description: Successful Response
         '422':
-          description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /users/{author_id}/posts/{post_id}/comments/:
-    post:
-      tags:
-      - Users
-      - Posts
-      - Comments
-      summary: Comment Post
-      description: 'Comment on a post
-
-        :param content: the comment text
-
-        :param post_id: post ID of the post to comment
-
-        :param comment_service: comment service
-
-        :param user_id: authenticated user ID
-
-        :return: the newly created comment'
-      operationId: comment_post_users__author_id__posts__post_id__comments__post
+          description: Validation Error
       security:
       - HTTPBearer: []
+      summary: Logout Session
+      tags:
+      - Login
+  /users/:
+    get:
+      description: 'Search for users
+
+        :param user_service: user service
+
+        :param q: query string
+
+        :param l: number of results to return (max 100, default 10)
+
+        :return: the list of the first *l* matching user IDs'
+      operationId: search_users_users__get
       parameters:
-      - name: post_id
-        in: path
+      - in: query
+        name: q
         required: true
         schema:
+          maxLength: 40
+          minLength: 3
+          title: Q
+          type: string
+      - in: query
+        name: limit
+        required: false
+        schema:
+          default: 10
+          maximum: 100
+          minimum: 1
+          title: Limit
           type: integer
-          minimum: 0
-          title: Post Id
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  type: integer
+                title: Response Search Users Users  Get
+                type: array
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Search Users
+      tags:
+      - Users
+    post:
+      description: 'Registers in the user and logs them in
+
+        :param request: registration request
+
+        :param response: response object, used to set the session cookie
+
+        :param auth_service: auth service
+
+        :return: the session token on successful registration'
+      operationId: register_user_users__post
       requestBody:
-        required: true
         content:
           application/json:
             schema:
-              type: string
-              minLength: 1
-              maxLength: 2048
-              title: Content
+              $ref: '#/components/schemas/RegistrationRequest'
+        required: true
       responses:
         '200':
-          description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Comment'
+                title: Response Register User Users  Post
+                type: string
+          description: Successful Response
         '422':
-          description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /users/{author_id}/posts/{post_id}/comments/{comment_id}:
+          description: Validation Error
+      summary: Register User
+      tags:
+      - Users
+  /users/me/blocked:
     get:
-      tags:
-      - Users
-      - Posts
-      - Comments
-      summary: Get Comment
-      description: 'Gets a comment
+      description: 'Get the current user blocked accounts
 
-        :param comment_id: comment ID
-
-        :param comment_service: comment service
-
-        :param _: authenticated user ID (unused)
-
-        :return: the comment info'
-      operationId: get_comment_users__author_id__posts__post_id__comments__comment_id__get
-      security:
-      - HTTPBearer: []
-      parameters:
-      - name: comment_id
-        in: path
-        required: true
-        schema:
-          type: integer
-          minimum: 0
-          title: Comment Id
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Comment'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-    delete:
-      tags:
-      - Users
-      - Posts
-      - Comments
-      summary: Delete Comment
-      description: 'Deletes a comment
-
-        :param comment_id: comment ID
-
-        :param comment_service: comment service
-
-        :param user_id: authenticated user ID'
-      operationId: delete_comment_users__author_id__posts__post_id__comments__comment_id__delete
-      security:
-      - HTTPBearer: []
-      parameters:
-      - name: comment_id
-        in: path
-        required: true
-        schema:
-          type: integer
-          minimum: 0
-          title: Comment Id
-      responses:
-        '204':
-          description: Successful Response
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /users/{author_id}/posts/{post_id}/comments/{comment_id}/like:
-    get:
-      tags:
-      - Users
-      - Posts
-      - Comments
-      summary: Is Liked
-      description: 'Gets whether the comment was liked by the current user
-
-        :param comment_id: comment ID
-
-        :param comment_service: comment service
+        :param user_service: user service
 
         :param user_id: authenticated user ID
 
-        :return: whether the comment was liked by the current user'
-      operationId: is_liked_users__author_id__posts__post_id__comments__comment_id__like_get
-      security:
-      - HTTPBearer: []
-      parameters:
-      - name: comment_id
-        in: path
-        required: true
-        schema:
-          type: integer
-          minimum: 0
-          title: Comment Id
+        :return: the current user blocked accounts'
+      operationId: get_blocked_users_me_blocked_get
       responses:
         '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  type: integer
+                title: Response Get Blocked Users Me Blocked Get
+                type: array
           description: Successful Response
-          content:
-            application/json:
-              schema:
-                type: boolean
-                title: Response Is Liked Users  Author Id  Posts  Post Id  Comments  Comment
-                  Id  Like Get
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-    put:
-      tags:
-      - Users
-      - Posts
-      - Comments
-      summary: Like Comment
-      description: 'Likes a comment
-
-        :param comment_id: comment ID
-
-        :param comment_service: comment service
-
-        :param user_id: authenticated user ID'
-      operationId: like_comment_users__author_id__posts__post_id__comments__comment_id__like_put
       security:
       - HTTPBearer: []
+      summary: Get Blocked
+      tags:
+      - Users
+  /users/me/blocked/{to_block_id}:
+    post:
+      description: 'Blocks a user
+
+        :param to_block_id: user ID of the user to block
+
+        :param user_service: user service
+
+        :param user_id: authenticated user ID'
+      operationId: block_user_users_me_blocked__to_block_id__post
       parameters:
-      - name: comment_id
-        in: path
+      - in: path
+        name: to_block_id
         required: true
         schema:
-          type: integer
           minimum: 0
-          title: Comment Id
+          title: To Block Id
+          type: integer
       responses:
         '204':
           description: Successful Response
         '422':
-          description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Block User
+      tags:
+      - Users
+  /users/me/blocked/{to_unblock_id}:
     delete:
-      tags:
-      - Users
-      - Posts
-      - Comments
-      summary: Unlike Comment
-      description: 'Unlikes a comment
+      description: 'Unblocks a user
 
-        :param comment_id: comment ID
+        :param to_unblock_id: user ID of the user to block
 
-        :param comment_service: comment service
+        :param user_service: user service
 
         :param user_id: authenticated user ID'
-      operationId: unlike_comment_users__author_id__posts__post_id__comments__comment_id__like_delete
-      security:
-      - HTTPBearer: []
+      operationId: unblock_user_users_me_blocked__to_unblock_id__delete
       parameters:
-      - name: comment_id
-        in: path
+      - in: path
+        name: to_unblock_id
         required: true
         schema:
-          type: integer
           minimum: 0
-          title: Comment Id
+          title: To Unblock Id
+          type: integer
       responses:
         '204':
           description: Successful Response
         '422':
-          description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Unblock User
+      tags:
+      - Users
+  /users/me/followers:
+    get:
+      description: 'Get the current user followers
+
+        :param user_service: user service
+
+        :param user_id: authenticated user ID
+
+        :return: the current user followers'
+      operationId: get_followers_users_me_followers_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  type: integer
+                title: Response Get Followers Users Me Followers Get
+                type: array
+          description: Successful Response
+      security:
+      - HTTPBearer: []
+      summary: Get Followers
+      tags:
+      - Users
+  /users/me/followers/{to_remove_id}:
+    delete:
+      description: 'Removes a follower
+
+        :param to_remove_id: user ID of the follower to remove
+
+        :param user_service: user service
+
+        :param user_id: authenticated user ID'
+      operationId: remove_follower_users_me_followers__to_remove_id__delete
+      parameters:
+      - in: path
+        name: to_remove_id
+        required: true
+        schema:
+          minimum: 0
+          title: To Remove Id
+          type: integer
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Remove Follower
+      tags:
+      - Users
+  /users/me/following:
+    get:
+      description: 'Get the current user followed accounts
+
+        :param user_service: user service
+
+        :param user_id: authenticated user ID
+
+        :return: the current user followed accounts'
+      operationId: get_following_users_me_following_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  type: integer
+                title: Response Get Following Users Me Following Get
+                type: array
+          description: Successful Response
+      security:
+      - HTTPBearer: []
+      summary: Get Following
+      tags:
+      - Users
+  /users/me/following/{to_follow_id}:
+    post:
+      description: 'Follows a user
+
+        :param to_follow_id: user ID of the user to follow
+
+        :param user_service: user service
+
+        :param user_id: authenticated user ID'
+      operationId: follow_user_users_me_following__to_follow_id__post
+      parameters:
+      - in: path
+        name: to_follow_id
+        required: true
+        schema:
+          minimum: 0
+          title: To Follow Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Follow User
+      tags:
+      - Users
+  /users/me/following/{to_unfollow_id}:
+    delete:
+      description: 'Unfollows a user
+
+        :param to_unfollow_id: user ID of the user to unfollow
+
+        :param user_service: user service
+
+        :param user_id: authenticated user ID'
+      operationId: unfollow_user_users_me_following__to_unfollow_id__delete
+      parameters:
+      - in: path
+        name: to_unfollow_id
+        required: true
+        schema:
+          minimum: 0
+          title: To Unfollow Id
+          type: integer
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Unfollow User
+      tags:
+      - Users
+  /users/me/pp:
+    put:
+      description: 'Updates the current user propic
+
+        :param request: new propic (raw bytes)
+
+        :param user_service: user service
+
+        :param user_id: authenticated user ID'
+      operationId: update_propic_users_me_pp_put
+      responses:
+        '204':
+          description: Successful Response
+      security:
+      - HTTPBearer: []
+      summary: Update Propic
+      tags:
+      - Users
+  /users/me/username:
+    put:
+      description: 'Updates the current user username
+
+        :param username: new username to set
+
+        :param user_service: user service
+
+        :param user_id: authenticated user ID'
+      operationId: update_username_users_me_username_put
+      requestBody:
+        content:
+          application/json:
+            schema:
+              maxLength: 40
+              minLength: 3
+              title: Username
+              type: string
+        required: true
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Update Username
+      tags:
+      - Users
   /users/{author_id}/posts/:
     get:
-      tags:
-      - Users
-      - Posts
-      summary: Get User Posts
       description: 'Get all posts from a specific user
 
         :param author_id: user ID (can also be "me")
@@ -322,21 +729,21 @@ paths:
       operationId: get_user_posts_users__author_id__posts__get
       responses:
         '200':
-          description: Successful Response
           content:
             application/json:
               schema:
                 items:
                   type: integer
-                type: array
                 title: Response Get User Posts Users  Author Id  Posts  Get
+                type: array
+          description: Successful Response
       security:
       - HTTPBearer: []
-    post:
+      summary: Get User Posts
       tags:
       - Users
       - Posts
-      summary: New Post
+    post:
       description: 'Get a post
 
         :param request: post creation request
@@ -357,25 +764,59 @@ paths:
         required: true
       responses:
         '200':
-          description: Successful Response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Post'
+          description: Successful Response
         '422':
-          description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
       security:
       - HTTPBearer: []
-  /users/{author_id}/posts/{post_id}:
-    get:
+      summary: New Post
       tags:
       - Users
       - Posts
-      summary: Get Post
+  /users/{author_id}/posts/{post_id}:
+    delete:
+      description: 'Deletes a post
+
+        :param target_id: user ID (must be "me")
+
+        :param post_id: post ID
+
+        :param post_service: post service
+
+        :param user_id: authenticated user ID'
+      operationId: delete_post_users__author_id__posts__post_id__delete
+      parameters:
+      - in: path
+        name: post_id
+        required: true
+        schema:
+          minimum: 0
+          title: Post Id
+          type: integer
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Delete Post
+      tags:
+      - Users
+      - Posts
+    get:
       description: 'Get a post
 
         :param author_id: post author ID
@@ -388,98 +829,299 @@ paths:
 
         :return: the requested post'
       operationId: get_post_users__author_id__posts__post_id__get
-      security:
-      - HTTPBearer: []
       parameters:
-      - name: post_id
-        in: path
+      - in: path
+        name: post_id
         required: true
         schema:
-          type: integer
           minimum: 0
           title: Post Id
+          type: integer
       responses:
         '200':
-          description: Successful Response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Post'
+          description: Successful Response
         '422':
-          description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-    delete:
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Get Post
       tags:
       - Users
       - Posts
-      summary: Delete Post
-      description: 'Deletes a post
+  /users/{author_id}/posts/{post_id}/comments/:
+    post:
+      description: 'Comment on a post
 
-        :param target_id: user ID (must be "me")
+        :param content: the comment text
+
+        :param post_id: post ID of the post to comment
+
+        :param comment_service: comment service
+
+        :param user_id: authenticated user ID
+
+        :return: the newly created comment'
+      operationId: comment_post_users__author_id__posts__post_id__comments__post
+      parameters:
+      - in: path
+        name: post_id
+        required: true
+        schema:
+          minimum: 0
+          title: Post Id
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              maxLength: 2048
+              minLength: 1
+              title: Content
+              type: string
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Comment Post
+      tags:
+      - Users
+      - Posts
+      - Comments
+  /users/{author_id}/posts/{post_id}/comments/{comment_id}:
+    delete:
+      description: 'Deletes a comment
+
+        :param comment_id: comment ID
+
+        :param comment_service: comment service
+
+        :param user_id: authenticated user ID'
+      operationId: delete_comment_users__author_id__posts__post_id__comments__comment_id__delete
+      parameters:
+      - in: path
+        name: comment_id
+        required: true
+        schema:
+          minimum: 0
+          title: Comment Id
+          type: integer
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Delete Comment
+      tags:
+      - Users
+      - Posts
+      - Comments
+    get:
+      description: 'Gets a comment
+
+        :param comment_id: comment ID
+
+        :param comment_service: comment service
+
+        :param _: authenticated user ID (unused)
+
+        :return: the comment info'
+      operationId: get_comment_users__author_id__posts__post_id__comments__comment_id__get
+      parameters:
+      - in: path
+        name: comment_id
+        required: true
+        schema:
+          minimum: 0
+          title: Comment Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Get Comment
+      tags:
+      - Users
+      - Posts
+      - Comments
+  /users/{author_id}/posts/{post_id}/comments/{comment_id}/like:
+    delete:
+      description: 'Unlikes a comment
+
+        :param comment_id: comment ID
+
+        :param comment_service: comment service
+
+        :param user_id: authenticated user ID'
+      operationId: unlike_comment_users__author_id__posts__post_id__comments__comment_id__like_delete
+      parameters:
+      - in: path
+        name: comment_id
+        required: true
+        schema:
+          minimum: 0
+          title: Comment Id
+          type: integer
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Unlike Comment
+      tags:
+      - Users
+      - Posts
+      - Comments
+    get:
+      description: 'Gets whether the comment was liked by the current user
+
+        :param comment_id: comment ID
+
+        :param comment_service: comment service
+
+        :param user_id: authenticated user ID
+
+        :return: whether the comment was liked by the current user'
+      operationId: is_liked_users__author_id__posts__post_id__comments__comment_id__like_get
+      parameters:
+      - in: path
+        name: comment_id
+        required: true
+        schema:
+          minimum: 0
+          title: Comment Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                title: Response Is Liked Users  Author Id  Posts  Post Id  Comments  Comment
+                  Id  Like Get
+                type: boolean
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Is Liked
+      tags:
+      - Users
+      - Posts
+      - Comments
+    put:
+      description: 'Likes a comment
+
+        :param comment_id: comment ID
+
+        :param comment_service: comment service
+
+        :param user_id: authenticated user ID'
+      operationId: like_comment_users__author_id__posts__post_id__comments__comment_id__like_put
+      parameters:
+      - in: path
+        name: comment_id
+        required: true
+        schema:
+          minimum: 0
+          title: Comment Id
+          type: integer
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Like Comment
+      tags:
+      - Users
+      - Posts
+      - Comments
+  /users/{author_id}/posts/{post_id}/like:
+    delete:
+      description: 'Unlikes a post
 
         :param post_id: post ID
 
         :param post_service: post service
 
         :param user_id: authenticated user ID'
-      operationId: delete_post_users__author_id__posts__post_id__delete
-      security:
-      - HTTPBearer: []
+      operationId: unlike_post_users__author_id__posts__post_id__like_delete
       parameters:
-      - name: post_id
-        in: path
+      - in: path
+        name: post_id
         required: true
         schema:
-          type: integer
           minimum: 0
           title: Post Id
+          type: integer
       responses:
         '204':
           description: Successful Response
         '422':
-          description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /users/{author_id}/posts/{post_id}/media:
-    get:
-      tags:
-      - Users
-      - Posts
-      summary: Get Post Media
-      operationId: get_post_media_users__author_id__posts__post_id__media_get
+          description: Validation Error
       security:
       - HTTPBearer: []
-      parameters:
-      - name: post_id
-        in: path
-        required: true
-        schema:
-          type: integer
-          minimum: 0
-          title: Post Id
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /users/{author_id}/posts/{post_id}/like:
-    get:
+      summary: Unlike Post
       tags:
       - Users
       - Posts
-      summary: Is Liked
+    get:
       description: 'Gets whether the post was liked by the current user
 
         :param post_id: post ID
@@ -490,35 +1132,35 @@ paths:
 
         :return: whether the post was liked by the current user'
       operationId: is_liked_users__author_id__posts__post_id__like_get
-      security:
-      - HTTPBearer: []
       parameters:
-      - name: post_id
-        in: path
+      - in: path
+        name: post_id
         required: true
         schema:
-          type: integer
           minimum: 0
           title: Post Id
+          type: integer
       responses:
         '200':
-          description: Successful Response
           content:
             application/json:
               schema:
-                type: boolean
                 title: Response Is Liked Users  Author Id  Posts  Post Id  Like Get
+                type: boolean
+          description: Successful Response
         '422':
-          description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-    put:
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Is Liked
       tags:
       - Users
       - Posts
-      summary: Like Post
+    put:
       description: 'Likes a post
 
         :param post_id: post ID
@@ -527,63 +1169,31 @@ paths:
 
         :param user_id: authenticated user ID'
       operationId: like_post_users__author_id__posts__post_id__like_put
-      security:
-      - HTTPBearer: []
       parameters:
-      - name: post_id
-        in: path
+      - in: path
+        name: post_id
         required: true
         schema:
-          type: integer
           minimum: 0
           title: Post Id
+          type: integer
       responses:
         '204':
           description: Successful Response
         '422':
-          description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-    delete:
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Like Post
       tags:
       - Users
       - Posts
-      summary: Unlike Post
-      description: 'Unlikes a post
-
-        :param post_id: post ID
-
-        :param post_service: post service
-
-        :param user_id: authenticated user ID'
-      operationId: unlike_post_users__author_id__posts__post_id__like_delete
-      security:
-      - HTTPBearer: []
-      parameters:
-      - name: post_id
-        in: path
-        required: true
-        schema:
-          type: integer
-          minimum: 0
-          title: Post Id
-      responses:
-        '204':
-          description: Successful Response
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
   /users/{author_id}/posts/{post_id}/likes:
     get:
-      tags:
-      - Users
-      - Posts
-      summary: Get Likes
       description: 'Get your posts likes
 
         :param target_id: user ID (must be "me")
@@ -596,121 +1206,68 @@ paths:
 
         :return: list of users who liked the post'
       operationId: get_likes_users__author_id__posts__post_id__likes_get
-      security:
-      - HTTPBearer: []
       parameters:
-      - name: post_id
-        in: path
+      - in: path
+        name: post_id
         required: true
         schema:
-          type: integer
           minimum: 0
           title: Post Id
+          type: integer
       responses:
         '200':
-          description: Successful Response
           content:
             application/json:
               schema:
-                type: array
                 items:
                   type: integer
                 title: Response Get Likes Users  Author Id  Posts  Post Id  Likes
                   Get
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /users/:
-    get:
-      tags:
-      - Users
-      summary: Search Users
-      description: 'Search for users
-
-        :param user_service: user service
-
-        :param q: query string
-
-        :param l: number of results to return (max 100, default 10)
-
-        :return: the list of the first *l* matching user IDs'
-      operationId: search_users_users__get
-      parameters:
-      - name: q
-        in: query
-        required: true
-        schema:
-          type: string
-          minLength: 3
-          maxLength: 40
-          title: Q
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          maximum: 100
-          minimum: 1
-          default: 10
-          title: Limit
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
                 type: array
-                items:
-                  type: integer
-                title: Response Search Users Users  Get
+          description: Successful Response
         '422':
-          description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-    post:
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Get Likes
       tags:
       - Users
-      summary: Register User
-      description: 'Registers in the user and logs them in
-
-        :param request: registration request
-
-        :param response: response object, used to set the session cookie
-
-        :param auth_service: auth service
-
-        :return: the session token on successful registration'
-      operationId: register_user_users__post
-      requestBody:
+      - Posts
+  /users/{author_id}/posts/{post_id}/media:
+    get:
+      operationId: get_post_media_users__author_id__posts__post_id__media_get
+      parameters:
+      - in: path
+        name: post_id
         required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RegistrationRequest'
+        schema:
+          minimum: 0
+          title: Post Id
+          type: integer
       responses:
         '200':
-          description: Successful Response
           content:
             application/json:
-              schema:
-                type: string
-                title: Response Register User Users  Post
+              schema: {}
+          description: Successful Response
         '422':
-          description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Get Post Media
+      tags:
+      - Users
+      - Posts
   /users/{user_id}:
     get:
-      tags:
-      - Users
-      summary: Get User Account
       description: 'Gets the specified user account info
 
         :param user_service: user service
@@ -723,18 +1280,18 @@ paths:
       operationId: get_user_account_users__user_id__get
       responses:
         '200':
-          description: Successful Response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserAccount'
+          description: Successful Response
       security:
       - HTTPBearer: []
-  /users/{user_id}/propic:
-    get:
+      summary: Get User Account
       tags:
       - Users
-      summary: Get User Propic
+  /users/{user_id}/propic:
+    get:
       description: 'Gets the specified user profile picture
 
         :param user_service: user service
@@ -747,549 +1304,12 @@ paths:
       operationId: get_user_propic_users__user_id__propic_get
       responses:
         '200':
-          description: Successful Response
           content:
             application/json:
               schema: {}
+          description: Successful Response
       security:
       - HTTPBearer: []
-  /users/me/username:
-    put:
+      summary: Get User Propic
       tags:
       - Users
-      summary: Update Username
-      description: 'Updates the current user username
-
-        :param username: new username to set
-
-        :param user_service: user service
-
-        :param user_id: authenticated user ID'
-      operationId: update_username_users_me_username_put
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: string
-              maxLength: 40
-              minLength: 3
-              title: Username
-        required: true
-      responses:
-        '204':
-          description: Successful Response
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-      security:
-      - HTTPBearer: []
-  /users/me/pp:
-    put:
-      tags:
-      - Users
-      summary: Update Propic
-      description: 'Updates the current user propic
-
-        :param request: new propic (raw bytes)
-
-        :param user_service: user service
-
-        :param user_id: authenticated user ID'
-      operationId: update_propic_users_me_pp_put
-      responses:
-        '204':
-          description: Successful Response
-      security:
-      - HTTPBearer: []
-  /users/me/followers:
-    get:
-      tags:
-      - Users
-      summary: Get Followers
-      description: 'Get the current user followers
-
-        :param user_service: user service
-
-        :param user_id: authenticated user ID
-
-        :return: the current user followers'
-      operationId: get_followers_users_me_followers_get
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                items:
-                  type: integer
-                type: array
-                title: Response Get Followers Users Me Followers Get
-      security:
-      - HTTPBearer: []
-  /users/me/followers/{to_remove_id}:
-    delete:
-      tags:
-      - Users
-      summary: Remove Follower
-      description: 'Removes a follower
-
-        :param to_remove_id: user ID of the follower to remove
-
-        :param user_service: user service
-
-        :param user_id: authenticated user ID'
-      operationId: remove_follower_users_me_followers__to_remove_id__delete
-      security:
-      - HTTPBearer: []
-      parameters:
-      - name: to_remove_id
-        in: path
-        required: true
-        schema:
-          type: integer
-          minimum: 0
-          title: To Remove Id
-      responses:
-        '204':
-          description: Successful Response
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /users/me/following:
-    get:
-      tags:
-      - Users
-      summary: Get Following
-      description: 'Get the current user followed accounts
-
-        :param user_service: user service
-
-        :param user_id: authenticated user ID
-
-        :return: the current user followed accounts'
-      operationId: get_following_users_me_following_get
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                items:
-                  type: integer
-                type: array
-                title: Response Get Following Users Me Following Get
-      security:
-      - HTTPBearer: []
-  /users/me/following/{to_follow_id}:
-    post:
-      tags:
-      - Users
-      summary: Follow User
-      description: 'Follows a user
-
-        :param to_follow_id: user ID of the user to follow
-
-        :param user_service: user service
-
-        :param user_id: authenticated user ID'
-      operationId: follow_user_users_me_following__to_follow_id__post
-      security:
-      - HTTPBearer: []
-      parameters:
-      - name: to_follow_id
-        in: path
-        required: true
-        schema:
-          type: integer
-          minimum: 0
-          title: To Follow Id
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /users/me/following/{to_unfollow_id}:
-    delete:
-      tags:
-      - Users
-      summary: Unfollow User
-      description: 'Unfollows a user
-
-        :param to_unfollow_id: user ID of the user to unfollow
-
-        :param user_service: user service
-
-        :param user_id: authenticated user ID'
-      operationId: unfollow_user_users_me_following__to_unfollow_id__delete
-      security:
-      - HTTPBearer: []
-      parameters:
-      - name: to_unfollow_id
-        in: path
-        required: true
-        schema:
-          type: integer
-          minimum: 0
-          title: To Unfollow Id
-      responses:
-        '204':
-          description: Successful Response
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /users/me/blocked:
-    get:
-      tags:
-      - Users
-      summary: Get Blocked
-      description: 'Get the current user blocked accounts
-
-        :param user_service: user service
-
-        :param user_id: authenticated user ID
-
-        :return: the current user blocked accounts'
-      operationId: get_blocked_users_me_blocked_get
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                items:
-                  type: integer
-                type: array
-                title: Response Get Blocked Users Me Blocked Get
-      security:
-      - HTTPBearer: []
-  /users/me/blocked/{to_block_id}:
-    post:
-      tags:
-      - Users
-      summary: Block User
-      description: 'Blocks a user
-
-        :param to_block_id: user ID of the user to block
-
-        :param user_service: user service
-
-        :param user_id: authenticated user ID'
-      operationId: block_user_users_me_blocked__to_block_id__post
-      security:
-      - HTTPBearer: []
-      parameters:
-      - name: to_block_id
-        in: path
-        required: true
-        schema:
-          type: integer
-          minimum: 0
-          title: To Block Id
-      responses:
-        '204':
-          description: Successful Response
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /users/me/blocked/{to_unblock_id}:
-    delete:
-      tags:
-      - Users
-      summary: Unblock User
-      description: 'Unblocks a user
-
-        :param to_unblock_id: user ID of the user to block
-
-        :param user_service: user service
-
-        :param user_id: authenticated user ID'
-      operationId: unblock_user_users_me_blocked__to_unblock_id__delete
-      security:
-      - HTTPBearer: []
-      parameters:
-      - name: to_unblock_id
-        in: path
-        required: true
-        schema:
-          type: integer
-          minimum: 0
-          title: To Unblock Id
-      responses:
-        '204':
-          description: Successful Response
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /feed/:
-    get:
-      tags:
-      - Feed
-      summary: Get Feed
-      description: 'Gets the user''s feed
-
-        :param post_service: post service
-
-        :param user_id: user ID
-
-        :param page_size: max number of posts to return (for pagination, default=100)
-
-        :param page_number: page number (for pagination, default=0)
-
-        :return: list of posts in the user''s feed in descending chronological order'
-      operationId: get_feed_feed__get
-      security:
-      - HTTPBearer: []
-      parameters:
-      - name: n
-        in: query
-        required: false
-        schema:
-          type: integer
-          default: 100
-          title: N
-      - name: p
-        in: query
-        required: false
-        schema:
-          type: integer
-          default: 0
-          title: P
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: integer
-                title: Response Get Feed Feed  Get
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /liveness:
-    get:
-      summary: Liveness
-      operationId: liveness_liveness_get
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-components:
-  schemas:
-    Comment:
-      properties:
-        comment_id:
-          type: integer
-          minimum: 0.0
-          title: Comment Id
-        author_id:
-          type: integer
-          minimum: 0.0
-          title: Author Id
-        pub_time:
-          type: string
-          format: date-time
-          title: Pub Time
-        content:
-          type: string
-          maxLength: 2048
-          title: Content
-        like_cnt:
-          type: integer
-          minimum: 0.0
-          title: Like Cnt
-      type: object
-      required:
-      - comment_id
-      - author_id
-      - pub_time
-      - content
-      - like_cnt
-      title: Comment
-      description: A comment on a post
-    HTTPValidationError:
-      properties:
-        detail:
-          items:
-            $ref: '#/components/schemas/ValidationError'
-          type: array
-          title: Detail
-      type: object
-      title: HTTPValidationError
-    Post:
-      properties:
-        post_id:
-          type: integer
-          minimum: 0.0
-          title: Post Id
-        author_id:
-          type: integer
-          minimum: 0.0
-          title: Author Id
-        pub_time:
-          type: string
-          format: date-time
-          title: Pub Time
-        caption:
-          anyOf:
-          - type: string
-            maxLength: 2048
-          - type: 'null'
-          title: Caption
-        like_cnt:
-          type: integer
-          minimum: 0.0
-          title: Like Cnt
-        comments:
-          items:
-            type: integer
-          type: array
-          title: Comments
-      type: object
-      required:
-      - post_id
-      - author_id
-      - pub_time
-      - like_cnt
-      - comments
-      title: Post
-      description: A user post
-    PostRequest:
-      properties:
-        caption:
-          anyOf:
-          - type: string
-            maxLength: 2048
-          - type: 'null'
-          title: Caption
-        image:
-          type: string
-          format: base64
-          contentMediaType: application/octet-stream
-          title: Image
-      type: object
-      required:
-      - image
-      title: PostRequest
-      description: A user request to create a new post
-    RegistrationRequest:
-      properties:
-        username:
-          type: string
-          maxLength: 30
-          minLength: 3
-          title: Username
-        password:
-          type: string
-          maxLength: 255
-          minLength: 8
-          title: Password
-      type: object
-      required:
-      - username
-      - password
-      title: RegistrationRequest
-      description: Data required in order to register a new user
-    UserAccount:
-      properties:
-        user_id:
-          type: integer
-          minimum: 0.0
-          title: User Id
-        username:
-          type: string
-          maxLength: 30
-          minLength: 3
-          title: Username
-        followers_cnt:
-          type: integer
-          minimum: 0.0
-          title: Followers Cnt
-        following_cnt:
-          type: integer
-          minimum: 0.0
-          title: Following Cnt
-      type: object
-      required:
-      - user_id
-      - username
-      - followers_cnt
-      - following_cnt
-      title: UserAccount
-      description: A user account
-    UserCredentials:
-      properties:
-        username:
-          type: string
-          maxLength: 30
-          minLength: 3
-          title: Username
-        password:
-          type: string
-          maxLength: 255
-          minLength: 8
-          title: Password
-      type: object
-      required:
-      - username
-      - password
-      title: UserCredentials
-      description: Credentials from a login form
-    ValidationError:
-      properties:
-        loc:
-          items:
-            anyOf:
-            - type: string
-            - type: integer
-          type: array
-          title: Location
-        msg:
-          type: string
-          title: Message
-        type:
-          type: string
-          title: Error Type
-        input:
-          title: Input
-        ctx:
-          type: object
-          title: Context
-      type: object
-      required:
-      - loc
-      - msg
-      - type
-      title: ValidationError
-  securitySchemes:
-    HTTPBearer:
-      type: http
-      scheme: bearer
