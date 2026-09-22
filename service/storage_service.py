@@ -19,9 +19,15 @@ class StorageService:
         :param storage_path: object path
         :return: the object path if it exists, None otherwise
         """
+        def read_object() -> bytes:
+            response = self.minio_client.get_object(bucket, storage_path)
+            try:
+                return response.read()
+            finally:
+                response.close()
+                response.release_conn()
         try:
-            req = await to_thread(self.minio_client.get_object, bucket, storage_path)
-            return req.data
+            return await to_thread(read_object)
         except S3Error as e:
             if e.code == 'NoSuchKey':
                 return None
