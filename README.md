@@ -92,5 +92,17 @@ $ npm run dev
 ```
 Then follow the link on your terminal.
 
+## Production notes
+
+The sample Docker Compose configuration is intended for local/demo deployments.
+
+For production deployments:
+- terminate TLS at a trusted reverse proxy;
+- enable secure session cookies;
+- configure explicit CORS origins;
+- provide PostgreSQL and MinIO credentials through secrets/environment variables;
+- do not expose the backend directly to the public network;
+- preserve the trusted reverse-proxy configuration used for client IP rate limiting.
+
 ## The name
 The original project was named "WASAPhoto" → "Was-A-Photo" → "Wasn't-A-Photo".
