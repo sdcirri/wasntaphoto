@@ -3,9 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 
+from providers.minio import connect_minio_from_env, ensure_buckets
 from providers.rate_limiting import liveness_limiter
 from providers.redis import connect_redis_from_env
-from providers.minio import connect_minio_from_env
 from providers.db import get_engine_from_env
 from db.engine import get_sessionmaker
 
@@ -21,6 +21,7 @@ async def lifespan(app: FastAPI):
     app.state.sessionmaker = get_sessionmaker(app.state.db_engine)
     app.state.redis = await connect_redis_from_env()
     app.state.minio = connect_minio_from_env()
+    ensure_buckets(app.state.minio)
 
     yield
 

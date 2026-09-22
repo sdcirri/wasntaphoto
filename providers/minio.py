@@ -2,6 +2,8 @@ from fastapi import Request
 from minio import Minio
 from os import getenv
 
+from service.storage_service import StorageService
+
 
 def connect_minio_from_env() -> Minio:
     minio_url = getenv('MINIO_URL')
@@ -21,3 +23,9 @@ def connect_minio_from_env() -> Minio:
 
 def get_minio_client(request: Request) -> Minio:
     return request.app.state.minio
+
+
+def ensure_buckets(client: Minio) -> None:
+    for bucket in StorageService.PROPIC_BUCKET, StorageService.POST_BUCKET:
+        if not client.bucket_exists(bucket):
+            client.make_bucket(bucket)

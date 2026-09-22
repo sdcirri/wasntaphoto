@@ -11,9 +11,6 @@ class StorageService:
 
     def __init__(self, minio_client: Minio) -> None:
         self.minio_client = minio_client
-        for bucket in self.PROPIC_BUCKET, self.POST_BUCKET:
-            if not self.minio_client.bucket_exists(bucket):
-                self.minio_client.make_bucket(bucket)
 
     async def _get_blob(self, bucket: str, storage_path: str) -> bytes | None:
         """
