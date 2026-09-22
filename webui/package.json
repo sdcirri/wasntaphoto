@@ -3,6 +3,8 @@
 	"version": "0.0.0",
 	"scripts": {
 		"dev": "vite",
+		"test": "vitest run",
+  		"test:coverage": "vitest run --coverage",
 		"build-dev": "vite build --mode development",
 		"build-prod": "vite build --mode production",
 		"build-embed": "vite build --mode production --base=/dashboard/",
