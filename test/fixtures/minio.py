@@ -11,10 +11,10 @@ from providers.minio import connect_minio_from_env
 @pytest.fixture(scope='session', autouse=True)
 def minio_container() -> Generator[MinioContainer, Any, None]:
     with MinioContainer(
-        'minio/minio:RELEASE.2025-09-07T16-13-09Z',
+        'alpine/minio:RELEASE.2025-10-15T17-29-55Z',
         access_key='minioadmin',
         secret_key='minioadmin',
-    ) as container:
+    ).with_command('server /home/minio/data') as container:
         os.environ['MINIO_URL'] = f'{container.get_container_host_ip()}:{container.get_exposed_port(9000)}'
         os.environ['MINIO_ACCESS_KEY'] = 'minioadmin'
         os.environ['MINIO_SECRET_KEY'] = 'minioadmin'
