@@ -2,7 +2,9 @@ from pyrate_limiter import Limiter, Rate, RedisBucket, BucketAsyncWrapper
 from fastapi_limiter.depends import RateLimiter
 from fastapi import Request, Response
 from redis.asyncio import Redis
+from hashlib import sha512
 
+from security.bearer_auth import SESSION_COOKIE_NAME
 from service import AuthService
 
 
@@ -20,9 +22,17 @@ async def do_rl(rate: Rate, key: str, request: Request, response: Response, redi
         :return: the request identifier
         """
         ip = request_.headers.get('X-Forwarded-For', request_.client.host).split(',')[0].strip()
-        token = request_.headers.get('Authorization', '').lower().removeprefix('bearer')
+
+        token = request_.cookies.get(SESSION_COOKIE_NAME)
+        if not token:
+            authorization = request_.headers.get('Authorization', '')
+            scheme, _, credentials = authorization.partition(' ')
+            if scheme.lower() == 'bearer' and credentials:
+                token = credentials.strip()
+
         if token:
-            user_id = str(await redis.get(f'{AuthService.REDIS_TOKEN_PREFIX}:{token}')) or 'anon'
+            session_key = sha512(token.encode('utf-8')).hexdigest()
+            user_id = (await redis.get(f'{AuthService.REDIS_TOKEN_PREFIX}:{session_key}')) or 'anon'
         else:
             user_id = 'anon'
 
