@@ -1,17 +1,27 @@
-from db.repositories import CommentRepository, CommentLikeRepository
+from db.repositories import CommentRepository, CommentLikeRepository, PostRepository, BlockRepository
 from db.entities import CommentModel, CommentLikeRelationship
 
-from exceptions import AccessDeniedError, CommentNotFoundError
+from exceptions import AccessDeniedError, CommentNotFoundError, PostNotFoundError
 from model import Comment
 
 
 class CommentService:
     comment_repo: CommentRepository
+    post_repo: PostRepository
     like_repo: CommentLikeRepository
+    block_repo: BlockRepository
 
-    def __init__(self, comment_repo: CommentRepository, like_repo: CommentLikeRepository) -> None:
+    def __init__(
+            self,
+            comment_repo: CommentRepository,
+            post_repo: PostRepository,
+            like_repo: CommentLikeRepository,
+            block_repo: BlockRepository
+    ) -> None:
         self.comment_repo = comment_repo
+        self.post_repo = post_repo
         self.like_repo = like_repo
+        self.block_repo = block_repo
 
     async def get_comment(self, comment_id: int) -> Comment:
         """
@@ -31,6 +41,11 @@ class CommentService:
         :param content: comment content
         :return: the newly created comment
         """
+        if not (post := await self.post_repo.find_by_id(post_id)):
+            raise PostNotFoundError
+        if await self.block_repo.find_by_id((post.author_id, user_id)):
+            raise AccessDeniedError
+
         db_comment = await self.comment_repo.save(
             CommentModel(author_id=user_id, post_id=post_id, content=content)
         )
@@ -74,8 +89,10 @@ class CommentService:
         :param user_id: user ID
         :param comment_id: comment ID
         """
-        if not await self.comment_repo.find_by_id(comment_id):
+        if not (comment := await self.comment_repo.find_by_id(comment_id)):
             raise CommentNotFoundError
+        if await self.block_repo.find_by_id((comment.author_id, user_id)):
+            raise AccessDeniedError
         await self.like_repo.save(CommentLikeRelationship(user_id=user_id, comment_id=comment_id))
 
     async def unlike_comment(self, user_id: int, comment_id: int) -> None:

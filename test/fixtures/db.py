@@ -166,6 +166,20 @@ async def next_unused_user_id(test_db_session_factory: async_sessionmaker[AsyncS
 
 
 @pytest_asyncio.fixture
+async def next_unused_post_id(test_db_session_factory: async_sessionmaker[AsyncSession]) -> int:
+    """
+    Returns the next unused post ID. Useful when a
+    nonexisting post ID is needed
+    """
+    async with test_db_session_factory() as session:
+        post_repo = PostRepository(session)
+        posts = await post_repo.find_all()
+        if len(posts) == 0:
+            return 0
+        return 1 + max(posts, key=lambda p: p.post_id).post_id
+
+
+@pytest_asyncio.fixture
 async def next_unused_comment_id(test_db_session_factory: async_sessionmaker[AsyncSession]) -> int:
     """
     Returns the next unused comment ID. Useful when a

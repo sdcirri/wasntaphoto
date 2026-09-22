@@ -139,8 +139,10 @@ class PostService:
         :param user_id: user ID
         :param post_id: post ID
         """
-        if not await self.post_repo.find_by_id(post_id):
+        if not (post := await self.post_repo.find_by_id(post_id, load_comments=True)):
             raise PostNotFoundError
+        if await self.block_repo.find_by_id((post.author_id, user_id)):
+            raise AccessDeniedError
         await self.like_repo.save(PostLikeRelationship(user_id=user_id, post_id=post_id))
 
     async def unlike_post(self, user_id: int, post_id: int) -> None:

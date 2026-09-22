@@ -1,7 +1,10 @@
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+from typing import Callable, Coroutine, Any
+from httpx import AsyncClient
 import pytest
 
 from db.repositories import CommentLikeRepository, CommentRepository
+from db.entities import UserModel
 from model import Comment
 
 from .fixtures.comments import CommentSetup
@@ -33,6 +36,30 @@ async def test_create_comment_returns_expected_fields(comment_setup: CommentSetu
     assert comment.author_id == s.comment_author.user_id
     assert comment.like_cnt == 0
     assert comment.content == 'Very cool'
+
+
+@pytest.mark.asyncio
+async def test_create_comment_errors_on_nonexisting_post(comment_setup: CommentSetup, next_unused_post_id: int):
+    s = comment_setup
+    resp = await s.client.post(
+        f'/users/{s.post_author.user_id}/posts/{next_unused_post_id}/comments/',
+        headers=s.comment_author_headers,
+        json='Very cool'
+    )
+    assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_blocked_user_cannot_comment_post(comment_setup: CommentSetup):
+    s = comment_setup
+    await s.client.post(f'/users/me/blocked/{s.comment_author.user_id}', headers=s.post_author_headers)
+
+    resp = await s.client.post(
+        f'/users/{s.post_author.user_id}/posts/{s.post.post_id}/comments/',
+        headers=s.comment_author_headers,
+        json='Very cool'
+    )
+    assert resp.status_code == 403
 
 
 @pytest.mark.asyncio
@@ -130,6 +157,23 @@ async def test_liking_comment_sets_like_status(comment_like_setup: CommentSetup)
 
     get_resp = await s.client.get(_like_url(s), headers=s.comment_author_headers)
     assert get_resp.json() is True
+
+
+@pytest.mark.asyncio
+async def test_blocked_user_cannot_like_comment(
+        client: AsyncClient,
+        comment_like_setup: CommentSetup,
+        user_factory: Callable[[str, str], Coroutine[Any, Any, UserModel]],
+):
+    s = comment_like_setup
+    annoying = await user_factory('annoying', 'H@xx0r.2026')
+    login = await client.post('/session/', json={'username': 'annoying', 'password': 'H@xx0r.2026'})
+    annoying_headers = {'Authorization': f'Bearer {login.json()}'}
+
+    await s.client.post(f'/users/me/blocked/{annoying.user_id}', headers=s.comment_author_headers)
+
+    resp = await s.client.put(_like_url(s), headers=annoying_headers)
+    assert resp.status_code == 403
 
 
 @pytest.mark.asyncio

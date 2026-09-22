@@ -46,6 +46,8 @@ def get_post_service(
 
 def get_comment_service(
         comment_repo: CommentRepository = Depends(get_comment_repository),
-        like_repo: CommentLikeRepository = Depends(get_comment_like_repository)
+        post_repo: PostRepository = Depends(get_post_repository),
+        like_repo: CommentLikeRepository = Depends(get_comment_like_repository),
+        block_repo: BlockRepository = Depends(get_block_repository)
 ) -> CommentService:
-    return CommentService(comment_repo, like_repo)
+    return CommentService(comment_repo, post_repo, like_repo, block_repo)

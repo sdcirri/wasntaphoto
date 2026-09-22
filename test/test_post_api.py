@@ -197,6 +197,14 @@ async def test_liking_post_increments_like_count(liked_by_both: PostInteractionS
 
 
 @pytest.mark.asyncio
+async def test_blocked_user_cannot_like_post(post_interaction_setup: PostInteractionSetup):
+    s = post_interaction_setup
+    await s.client.post(f'/users/me/blocked/{s.user.user_id}', headers=s.author_auth)
+    resp = await s.client.put(_like_url(s), headers=s.user_auth)
+    assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
 async def test_liking_post_is_idempotent(liked_by_both: PostInteractionSetup):
     s = liked_by_both
     resp = await s.client.put(_like_url(s), headers=s.user_auth)
